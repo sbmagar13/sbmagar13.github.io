@@ -1,7 +1,7 @@
 import { asciiArt } from './ascii';
 
 // Command history for persistence
-let commandHistory: string[] = [];
+const commandHistory: string[] = [];
 
 // Helper functions for visualizations
 function generateBar(percentage: number): string {
@@ -29,7 +29,7 @@ function generateSparkline(): string {
 
 // Available commands
 const commands: Record<string, (args: string[]) => string> = {
-  help: (args: string[]) => {
+  help: () => {
     return `
 \x1b[1;32m=== AVAILABLE COMMANDS ===\x1b[0m
 
@@ -284,7 +284,6 @@ Whois Server Response:
   },
   
   uptime: () => {
-    const currentDate = new Date();
     // Calculate days based on 4 years
     const uptimeDays = 4 * 365 + Math.floor(Math.random() * 200); // Randomize for realism
     const availability = (99.99).toFixed(2);

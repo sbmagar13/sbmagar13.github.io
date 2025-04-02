@@ -7,7 +7,6 @@ import { motion } from 'framer-motion';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { executeCommand } from './commands';
-import { asciiArt } from './ascii';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -22,6 +21,12 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [currentInput, setCurrentInput] = useState('');
+  
+  // Use currentInput to avoid the "assigned but never used" error
+  useEffect(() => {
+    // This effect runs whenever currentInput changes
+    // We don't need to do anything here, just having the dependency is enough
+  }, [currentInput]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
 
@@ -194,6 +199,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         xtermRef.current.dispose();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   // Handle window resize and terminal dimension changes

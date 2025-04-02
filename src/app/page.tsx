@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import About from '@/components/About/About';
 import Projects from '@/components/Projects/Projects';
 import TechStack from '@/components/Tools/TechStack';
-import { FaServer, FaNetworkWired, FaDocker, FaCloudUploadAlt, FaTerminal, FaUser, FaProjectDiagram, FaTools } from 'react-icons/fa';
+import { FaTerminal, FaUser, FaProjectDiagram, FaTools } from 'react-icons/fa';
 
 // Dynamically import the Terminal component with no SSR
 const Terminal = dynamic(() => import('@/components/Terminal/Terminal'), {

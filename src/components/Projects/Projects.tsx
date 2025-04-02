@@ -10,7 +10,7 @@ interface Project {
   namespace: string;
   description: string;
   tech: string[];
-  status: 'Running' | 'Completed' | 'Maintenance';
+  status: 'Running' | 'Completed' | 'Maintenance' | 'In Progress';
   metrics: {
     uptime: string;
     performance: number;
@@ -30,16 +30,85 @@ const Projects = () => {
   
   const projects: Project[] = [
     {
-      id: 2,
-      name: 'ai-agent-automation',
-      namespace: 'ai',
-      description: 'Intelligent automation system using AI agents and MCP frameworks to streamline DevOps workflows and enhance productivity.',
-      tech: ['Python', 'AI Agents', 'MCP', 'LLMs', 'Automation'],
-      status: 'Running',
+      id: 10,
+      name: 'kubernetes-cluster-planner',
+      namespace: 'infrastructure',
+      description: 'Planning tool for Kubernetes cluster architecture, resource allocation, and scaling strategies. Currently in design phase.',
+      tech: ['Kubernetes', 'Infrastructure Planning', 'Resource Optimization', 'Go'],
+      status: 'In Progress',
       metrics: {
-        uptime: '99.5%',
-        performance: 92,
-        reliability: 95,
+        uptime: 'N/A',
+        performance: 60,
+        reliability: 65,
+      },
+      links: {
+        github: '#',
+      },
+      logs: [
+        '2025-03-28T16:30:10Z [INFO] Initial architecture design completed',
+        '2025-03-28T14:15:22Z [INFO] Resource calculation algorithm drafted',
+        '2025-03-28T11:40:05Z [INFO] Started research on auto-scaling strategies',
+        '2025-03-28T09:20:45Z [INFO] Project kickoff meeting',
+        '2025-03-27T17:30:15Z [INFO] Requirements gathering completed'
+      ]
+    },
+    {
+      id: 11,
+      name: 'mcp-agent-framework',
+      namespace: 'ai',
+      description: 'Framework for building specialized MCP agents with domain-specific knowledge and capabilities. Focused on DevOps and infrastructure management.',
+      tech: ['TypeScript', 'MCP', 'AI Agents', 'Node.js'],
+      status: 'In Progress',
+      metrics: {
+        uptime: 'N/A',
+        performance: 55,
+        reliability: 60,
+      },
+      links: {
+        github: '#',
+      },
+      logs: [
+        '2025-03-28T15:50:10Z [INFO] Core agent interface defined',
+        '2025-03-28T13:25:22Z [INFO] Started implementing MCP server integration',
+        '2025-03-28T10:45:05Z [INFO] Researching agent orchestration patterns',
+        '2025-03-28T08:30:45Z [INFO] Project structure initialized',
+        '2025-03-27T16:15:15Z [INFO] Initial planning completed'
+      ]
+    },
+    {
+      id: 12,
+      name: 'llm-infrastructure-analyzer',
+      namespace: 'ai',
+      description: 'AI-powered tool that analyzes infrastructure configurations, identifies optimization opportunities, and suggests improvements based on best practices.',
+      tech: ['Python', 'LLMs', 'Infrastructure Analysis', 'Terraform'],
+      status: 'In Progress',
+      metrics: {
+        uptime: 'N/A',
+        performance: 50,
+        reliability: 55,
+      },
+      links: {
+        github: '#',
+      },
+      logs: [
+        '2025-03-28T16:40:10Z [INFO] Started building training dataset',
+        '2025-03-28T14:20:22Z [INFO] Defined infrastructure schema parser',
+        '2025-03-28T12:10:05Z [INFO] Researching LLM fine-tuning approaches',
+        '2025-03-28T09:45:45Z [INFO] Project initialization',
+        '2025-03-27T18:20:15Z [INFO] Concept validation completed'
+      ]
+    },
+    {
+      id: 2,
+      name: 'devops-ai-assistant',
+      namespace: 'ai',
+      description: 'Personal AI assistant for automating routine DevOps tasks using LLMs and MCP frameworks. A learning project to explore AI agent capabilities.',
+      tech: ['Python', 'AI Agents', 'MCP', 'LLMs', 'Automation'],
+      status: 'In Progress',
+      metrics: {
+        uptime: 'N/A',
+        performance: 85,
+        reliability: 88,
       },
       links: {
         github: '#',
@@ -49,32 +118,79 @@ const Projects = () => {
         '2025-03-28T15:45:10Z [INFO] Agent task completed successfully',
         '2025-03-28T14:30:22Z [INFO] New agent capability deployed',
         '2025-03-28T12:15:05Z [INFO] MCP server connection established',
-        '2025-03-28T10:20:45Z [INFO] Model context updated',
+        '2025-03-28T10:20:45Z [WARN] Model context limit reached',
         '2025-03-27T18:30:15Z [INFO] System health check passed'
       ]
     },
     {
-      id: 3,
-      name: 'kubernetes-cluster-automation',
-      namespace: 'infrastructure',
-      description: 'Automated Kubernetes cluster provisioning and management system with GitOps workflow integration.',
-      tech: ['Kubernetes', 'Terraform', 'ArgoCD', 'Helm', 'Go'],
-      status: 'Running',
+      id: 7,
+      name: 'llm-powered-documentation',
+      namespace: 'ai',
+      description: 'Documentation generator that uses LLMs to analyze codebases and create comprehensive, up-to-date technical documentation automatically.',
+      tech: ['Python', 'LLMs', 'NLP', 'Documentation', 'API'],
+      status: 'In Progress',
       metrics: {
-        uptime: '99.99%',
-        performance: 95,
-        reliability: 98,
+        uptime: '97.2%',
+        performance: 82,
+        reliability: 85,
       },
       links: {
         github: '#',
         docs: '#',
       },
       logs: [
-        '2025-03-28T14:32:10Z [INFO] Cluster health check passed',
-        '2025-03-28T12:15:22Z [INFO] Auto-scaling event triggered',
-        '2025-03-28T08:45:01Z [INFO] Deployed new version v1.2.5',
+        '2025-03-28T16:10:15Z [INFO] Documentation generated for project X',
+        '2025-03-28T14:22:30Z [INFO] New template added',
+        '2025-03-28T11:45:05Z [WARN] Token limit reached for large codebase',
+        '2025-03-28T09:30:45Z [INFO] API endpoint updated',
+        '2025-03-27T17:15:20Z [INFO] System health check passed'
+      ]
+    },
+    {
+      id: 8,
+      name: 'mcp-tools-explorer',
+      namespace: 'ai',
+      description: 'Experimental project to explore Model Context Protocol capabilities and build custom MCP servers for various DevOps automation tasks.',
+      tech: ['TypeScript', 'MCP', 'Node.js', 'API Integration', 'Automation'],
+      status: 'In Progress',
+      metrics: {
+        uptime: 'N/A',
+        performance: 78,
+        reliability: 80,
+      },
+      links: {
+        github: '#',
+      },
+      logs: [
+        '2025-03-28T15:30:20Z [INFO] New MCP server deployed',
+        '2025-03-28T13:45:10Z [WARN] API rate limit approaching',
+        '2025-03-28T11:20:05Z [INFO] Added weather service integration',
+        '2025-03-28T09:15:30Z [INFO] Fixed TypeScript type definitions',
+        '2025-03-27T16:40:15Z [INFO] Initial project setup completed'
+      ]
+    },
+    {
+      id: 3,
+      name: 'kubernetes-monitoring',
+      namespace: 'infrastructure',
+      description: 'Kubernetes monitoring solution with custom dashboards for visualizing cluster health, resource usage, and application performance.',
+      tech: ['Kubernetes', 'Prometheus', 'Grafana', 'Helm'],
+      status: 'Maintenance',
+      metrics: {
+        uptime: '98.5%',
+        performance: 90,
+        reliability: 92,
+      },
+      links: {
+        github: '#',
+        docs: '#',
+      },
+      logs: [
+        '2025-03-28T14:32:10Z [INFO] Dashboard update deployed',
+        '2025-03-28T12:15:22Z [INFO] Alert rules updated',
+        '2025-03-28T08:45:01Z [INFO] Added memory usage panels',
         '2025-03-27T22:30:45Z [WARN] High CPU utilization detected',
-        '2025-03-27T16:20:33Z [INFO] Backup completed successfully'
+        '2025-03-27T16:20:33Z [INFO] Initial metrics collection configured'
       ]
     },
     {
@@ -128,10 +244,10 @@ const Projects = () => {
     },
     {
       id: 6,
-      name: 'infrastructure-as-code-framework',
+      name: 'terraform-modules-library',
       namespace: 'infrastructure',
-      description: 'Modular, reusable infrastructure components with built-in security and compliance checks.',
-      tech: ['Terraform', 'Pulumi', 'AWS CDK', 'CloudFormation'],
+      description: 'Collection of reusable Terraform modules for AWS infrastructure with built-in security and compliance checks.',
+      tech: ['Terraform', 'AWS', 'IaC', 'Security'],
       status: 'Maintenance',
       metrics: {
         uptime: '100%',
@@ -148,6 +264,29 @@ const Projects = () => {
         '2025-03-27T22:10:20Z [INFO] New AWS region support added',
         '2025-03-27T16:30:15Z [INFO] Documentation updated',
         '2025-03-27T11:45:00Z [INFO] Dependency versions updated'
+      ]
+    },
+    {
+      id: 9,
+      name: 'llm-code-reviewer',
+      namespace: 'ai',
+      description: 'Automated code review tool that uses LLMs to analyze pull requests, suggest improvements, and detect potential bugs or security issues.',
+      tech: ['Python', 'LLMs', 'GitHub API', 'Code Analysis'],
+      status: 'Running',
+      metrics: {
+        uptime: '94.3%',
+        performance: 80,
+        reliability: 83,
+      },
+      links: {
+        github: '#',
+      },
+      logs: [
+        '2025-03-28T16:05:10Z [INFO] Reviewed PR #142',
+        '2025-03-28T14:20:22Z [INFO] Updated language model',
+        '2025-03-28T11:35:05Z [INFO] Added security vulnerability detection',
+        '2025-03-28T09:50:45Z [WARN] Rate limit exceeded on GitHub API',
+        '2025-03-27T18:15:15Z [INFO] System health check passed'
       ]
     },
     {
@@ -207,6 +346,10 @@ const Projects = () => {
               <span className="inline-block w-2 h-2 bg-yellow-500 rounded-full mr-1.5"></span>
               <span>Maintenance</span>
             </div>
+            <div className="flex items-center text-xs text-blue-400">
+              <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>
+              <span>In Progress</span>
+            </div>
           </div>
           
           <h3 className="text-lg font-semibold text-green-400 mb-6">Cluster Overview</h3>
@@ -218,7 +361,9 @@ const Projects = () => {
                 className={`p-4 rounded-lg border cursor-pointer transition-all ${
                   project.status === 'Running' 
                     ? 'border-green-600 bg-gray-800' 
-                    : 'border-yellow-600 bg-gray-800'
+                    : project.status === 'Maintenance'
+                    ? 'border-yellow-600 bg-gray-800'
+                    : 'border-blue-600 bg-gray-800'
                 }`}
                 whileHover={{ scale: 1.02, boxShadow: '0 4px 6px rgba(0, 255, 0, 0.1)' }}
                 onClick={() => handleProjectClick(project)}
@@ -234,7 +379,9 @@ const Projects = () => {
                   <div className={`px-2 py-1 text-xs rounded-full ${
                     project.status === 'Running' 
                       ? 'bg-green-900 text-green-400' 
-                      : 'bg-yellow-900 text-yellow-400'
+                      : project.status === 'Maintenance'
+                      ? 'bg-yellow-900 text-yellow-400'
+                      : 'bg-blue-900 text-blue-400'
                   }`}>
                     {project.status}
                   </div>
@@ -278,7 +425,9 @@ const Projects = () => {
               <span className={`ml-3 px-2 py-1 text-xs rounded-full ${
                 selectedProject.status === 'Running' 
                   ? 'bg-green-900 text-green-400' 
-                  : 'bg-yellow-900 text-yellow-400'
+                  : selectedProject.status === 'Maintenance'
+                  ? 'bg-yellow-900 text-yellow-400'
+                  : 'bg-blue-900 text-blue-400'
               }`}>
                 {selectedProject.status}
               </span>

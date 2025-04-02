@@ -6,8 +6,10 @@ const commandHistory: string[] = [];
 // Helper functions for visualizations
 function generateBar(percentage: number): string {
   const width = 20;
-  const filledChars = Math.floor((percentage / 100) * width);
-  return '█'.repeat(filledChars) + '░'.repeat(width - filledChars);
+  // Ensure percentage is between 0 and 100
+  const clampedPercentage = Math.max(0, Math.min(100, percentage));
+  const filledChars = Math.floor((clampedPercentage / 100) * width);
+  return '█'.repeat(filledChars) + '-'.repeat(width - filledChars);
 }
 
 function generateSparkline(): string {
@@ -29,6 +31,33 @@ function generateSparkline(): string {
 
 // Available commands
 const commands: Record<string, (args: string[]) => string> = {
+  '404': () => {
+    return `
+\x1b[1;31m   _____ _    _  _____   _   _  ____ _______   ______ ____  _    _ _   _ _____  \x1b[0m
+\x1b[1;31m  / ____| |  | |/ ____| | \\ | |/ __ \\__   __| |  ____/ __ \\| |  | | \\ | |  __ \\ \x1b[0m
+\x1b[1;31m | |    | |  | | (___   |  \\| | |  | | | |    | |__ | |  | | |  | |  \\| | |  | |\x1b[0m
+\x1b[1;31m | |    | |  | |\\___ \\  | . \` | |  | | | |    |  __|| |  | | |  | | . \` | |  | |\x1b[0m
+\x1b[1;31m | |____| |__| |____) | | |\\  | |__| | | |    | |   | |__| | |__| | |\\  | |__| |\x1b[0m
+\x1b[1;31m  \\_____|\\____/|_____/  |_| \\_|\\____/  |_|    |_|    \\____/ \\____/|_| \\_|_____/ \x1b[0m
+                                                                                
+\x1b[1;33mHTTP 404: Resource Not Found\x1b[0m
+
+\x1b[1;36mThe page you're looking for has been:
+  a) Containerized and shipped to another environment
+  b) Load balanced into oblivion
+  c) Scaled to zero instances
+  d) Trapped in a Kubernetes Init Container loop\x1b[0m
+
+\x1b[1;33mTroubleshooting steps:\x1b[0m
+  1. Check your DNS configuration (it's always DNS)
+  2. Verify your Ingress rules aren't sending traffic to /dev/null
+  3. Make sure your service mesh isn't playing practical jokes
+  4. Try turning it off and on again (works 60% of the time, every time)
+
+\x1b[1;32mFor immediate assistance, please submit a ticket to /dev/null\x1b[0m
+\x1b[90mResponse time: Between now and heat death of the universe\x1b[0m
+`;
+  },
   help: () => {
     return `
 \x1b[1;32m=== AVAILABLE COMMANDS ===\x1b[0m
@@ -54,6 +83,7 @@ const commands: Record<string, (args: string[]) => string> = {
   \x1b[1;36mchaos [target]\x1b[0m       Trigger chaos monkey (simulation)
   \x1b[1;36mtrace [request]\x1b[0m      Trace a request through the system
   \x1b[1;36mscale [service] [n]\x1b[0m  Scale a service (simulation)
+  \x1b[1;36mping [host]\x1b[0m          Ping a host (simulation)
 
 \x1b[1;33mContent Commands:\x1b[0m
   \x1b[1;36mblog [id]\x1b[0m            Access my tech blog/runbooks
@@ -65,6 +95,9 @@ const commands: Record<string, (args: string[]) => string> = {
   \x1b[1;36mcoffee\x1b[0m               Get a virtual coffee
   \x1b[1;36mascii [name]\x1b[0m         Show ASCII art
   \x1b[1;36mfortune\x1b[0m              Get a random DevOps fortune
+  \x1b[1;36m404\x1b[0m                  Show a not found page
+
+\x1b[90mTip: Try some undocumented commands - there might be easter eggs!\x1b[0m
 `;
   },
   
@@ -562,6 +595,54 @@ Type 'scale ${service} [replicas]' to adjust capacity.
 `;
   },
   
+  ping: (args: string[]) => {
+    const host = args[0] || 'localhost';
+    const pingTimes = [
+      Math.random() * 10 + 5,
+      Math.random() * 15 + 5,
+      Math.random() * 20 + 5,
+      Math.random() * 25 + 5
+    ].map(n => n.toFixed(2));
+    
+    const packetLoss = Math.random() < 0.8 ? 0 : Math.floor(Math.random() * 30);
+    const isCloudProvider = host.includes('aws') || host.includes('azure') || host.includes('gcp') || host.includes('cloud');
+    const isKubernetes = host.includes('k8s') || host.includes('kube');
+    
+    return `
+\x1b[1;32m=== PING ${host} ===\x1b[0m
+
+\x1b[1;33mSending DevOps packets to ${host}...\x1b[0m
+
+\x1b[1;36m64 bytes from ${host}: icmp_seq=1 ttl=64 time=${pingTimes[0]} ms\x1b[0m
+\x1b[1;36m64 bytes from ${host}: icmp_seq=2 ttl=64 time=${pingTimes[1]} ms\x1b[0m
+\x1b[1;36m64 bytes from ${host}: icmp_seq=3 ttl=64 time=${pingTimes[2]} ms\x1b[0m
+\x1b[1;36m64 bytes from ${host}: icmp_seq=4 ttl=64 time=${pingTimes[3]} ms\x1b[0m
+
+\x1b[1;32m--- ${host} ping statistics ---\x1b[0m
+\x1b[1;36m4 packets transmitted, ${4 - Math.floor(packetLoss / 25)} received, ${packetLoss}% packet loss, time 3ms\x1b[0m
+\x1b[1;36mrtt min/avg/max/mdev = ${Math.min(...pingTimes.map(Number))}/
+${(pingTimes.map(Number).reduce((a, b) => a + b, 0) / 4).toFixed(2)}/
+${Math.max(...pingTimes.map(Number))}/
+${(Math.max(...pingTimes.map(Number)) - Math.min(...pingTimes.map(Number)) / 4).toFixed(2)} ms\x1b[0m
+
+${packetLoss > 0 ? 
+  `\x1b[1;33mPacket loss detected! Possible causes:\x1b[0m
+  • The network is having an identity crisis
+  • Packets decided to take a coffee break
+  • Your firewall is being overprotective
+  • DNS (it's always DNS)` : 
+  `\x1b[1;32mConnection stable!\x1b[0m`}
+
+${isCloudProvider ? 
+  `\x1b[1;33mCloud Provider Detected:\x1b[0m Your packets are now being billed at $0.000001 per millisecond.` : ''}
+
+${isKubernetes ? 
+  `\x1b[1;33mKubernetes Cluster Detected:\x1b[0m Your ping request was load balanced across 17 pods, 3 of which were being evicted.` : ''}
+
+\x1b[90mPro tip: If ping fails, have you tried turning it off and on again?\x1b[0m
+`;
+  },
+  
   trace: (args: string[]) => {
     const requestId = args[0] || Math.random().toString(36).substring(2, 10);
     
@@ -717,6 +798,31 @@ Type 'deploy' to simulate a deployment.
 
 \x1b[1;33mNote:\x1b[0m This command executed successfully because you used sudo.
 If you had just typed 'make me a sandwich', I would have said 'Make it yourself'.
+(Just like a good DevOps engineer knows when to automate vs. when to delegate)
+`;
+    }
+    
+    if (command === 'rm -rf /') {
+      return `
+\x1b[1;32m$ sudo rm -rf /\x1b[0m
+
+\x1b[1;31mNice try! 🧐\x1b[0m
+
+Even in a simulated environment, I respect the sanctity of root directories.
+Instead, I've taken the liberty of removing all your technical debt.
+You're welcome! System runs 73% faster now.
+`;
+    }
+    
+    if (command === 'apt-get install girlfriend' || command === 'apt-get install boyfriend') {
+      return `
+\x1b[1;32m$ sudo apt-get install ${command.split(' ')[3]}\x1b[0m
+
+\x1b[1;33mSearching repositories...\x1b[0m
+
+\x1b[1;31mE: Unable to locate package ${command.split(' ')[3]}\x1b[0m
+\x1b[1;33mSuggested packages:\x1b[0m social-skills, outdoor-activities, dating-app
+\x1b[1;33mTry:\x1b[0m sudo apt-get install hobby --with-recommendation=social
 `;
     }
     
@@ -725,6 +831,7 @@ If you had just typed 'make me a sandwich', I would have said 'Make it yourself'
 \x1b[1;31mError: Missing command\x1b[0m
 Usage: sudo [command]
 Example: sudo make me a sandwich
+Pro tip: Try 'sudo rm -rf /' if you're feeling adventurous (or destructive)
 `;
     }
     
@@ -735,28 +842,44 @@ Example: sudo make me a sandwich
 
 \x1b[1;31mPermission denied\x1b[0m
 
-\x1b[1;33mThis incident will be reported.\x1b[0m
+\x1b[1;33mThis incident will be reported to Santa's naughty list and your Kubernetes cluster admin.\x1b[0m
+\x1b[1;33mPro tip:\x1b[0m Real DevOps engineers don't need sudo. They have properly configured RBAC.
 `;
   },
   
   coffee: () => {
+    // Calculate coffee brewing metrics
+    const brewTemp = 94;
+    const brewPressure = 9 + (Math.random() * 0.5).toFixed(1);
+    const extractionTime = 25 + Math.floor(Math.random() * 5);
+    const caffeineLevel = 85 + Math.floor(Math.random() * 15);
+    const coffeeVersion = '2.5.' + Math.floor(Math.random() * 10);
+    
     return `
-\x1b[1;32m=== BREWING COFFEE ===\x1b[0m
+\x1b[1;32m=== COFFEE DEPLOYMENT PIPELINE ===\x1b[0m
 
-\x1b[1;33mInitiating coffee brewing sequence...\x1b[0m
+\x1b[1;33mInitiating coffee microservice deployment...\x1b[0m
 
-\x1b[1;36m[1/5]\x1b[0m Heating water to 94°C... \x1b[1;32m✓ Done\x1b[0m
-\x1b[1;36m[2/5]\x1b[0m Grinding beans (medium-fine)... \x1b[1;32m✓ Done\x1b[0m
-\x1b[1;36m[3/5]\x1b[0m Blooming grounds... \x1b[1;32m✓ Done\x1b[0m
-\x1b[1;36m[4/5]\x1b[0m Brewing pour-over... \x1b[1;32m✓ Done\x1b[0m
-\x1b[1;36m[5/5]\x1b[0m Serving in your favorite mug... \x1b[1;32m✓ Done\x1b[0m
+\x1b[1;36m[1/6]\x1b[0m Provisioning water resources to ${brewTemp}°C... \x1b[1;32m✓ Done\x1b[0m
+\x1b[1;36m[2/6]\x1b[0m Containerizing coffee beans (Alpine grind)... \x1b[1;32m✓ Done\x1b[0m
+\x1b[1;36m[3/6]\x1b[0m Establishing bean-to-water handshake... \x1b[1;32m✓ Connected\x1b[0m
+\x1b[1;36m[4/6]\x1b[0m Extracting caffeine payload (${extractionTime}s)... \x1b[1;32m✓ Extracted\x1b[0m
+\x1b[1;36m[5/6]\x1b[0m Load balancing to your mug... \x1b[1;32m✓ Distributed\x1b[0m
+\x1b[1;36m[6/6]\x1b[0m Running health checks... \x1b[1;32m✓ Aromatic\x1b[0m
 
-\x1b[1;32mCoffee ready!\x1b[0m
+\x1b[1;32mCoffee v${coffeeVersion} successfully deployed!\x1b[0m
 
 ${asciiArt.coffee}
 
+\x1b[1;33mService Status:\x1b[0m
+  \x1b[1;36mBrew Pressure:   \x1b[0m [${generateBar(parseInt(brewPressure) * 10)}] ${brewPressure} bars
+  \x1b[1;36mCaffeine Level:  \x1b[0m [${generateBar(caffeineLevel)}] ${caffeineLevel}%
+  \x1b[1;36mFlavor Profile:  \x1b[0m [${generateBar(90)}] Excellent
+  \x1b[1;36mUptime Impact:   \x1b[0m [${generateBar(95)}] Productivity +95%
+
 \x1b[1;33mEnjoy your virtual coffee!\x1b[0m
-\x1b[90mRemember: "Coffee is just a hug in a mug."\x1b[0m
+\x1b[90mRemember: The best error message is the one that never needs to be displayed (because you had coffee first).\x1b[0m
+\x1b[90mPro tip: For a stronger brew, try 'coffee | coffee > mug.big'\x1b[0m
 `;
   },
   
@@ -777,6 +900,88 @@ Available options: ${Object.keys(asciiArt).join(', ')}
 `;
   },
   
+  matrix: () => {
+    // Generate a simple matrix-like effect
+    const characters = '01';
+    const lines = [];
+    
+    for (let i = 0; i < 15; i++) {
+      let line = '';
+      for (let j = 0; j < 50; j++) {
+        // Random character from the characters string
+        const char = characters.charAt(Math.floor(Math.random() * characters.length));
+        // Random color intensity
+        const intensity = Math.random() > 0.7 ? '1;32' : '0;32'; // bright green or dark green
+        line += `\x1b[${intensity}m${char}\x1b[0m`;
+      }
+      lines.push(line);
+    }
+    
+    return `
+\x1b[1;32m=== ENTERING THE MATRIX ===\x1b[0m
+
+${lines.join('\n')}
+
+\x1b[1;33mWake up, DevOps Engineer...\x1b[0m
+\x1b[1;33mThe Matrix has you...\x1b[0m
+\x1b[1;33mFollow the white rabbit to Kubernetes...\x1b[0m
+
+\x1b[90mRemember: There is no spoon, only infrastructure as code.\x1b[0m
+`;
+  },
+  
+  cowsay: (args: string[]) => {
+    const message = args.join(' ') || 'Moo! I\'m a DevOps cow!';
+    const messageLines = [];
+    
+    // Split message into lines of max 40 characters
+    let currentLine = '';
+    message.split(' ').forEach(word => {
+      if ((currentLine + ' ' + word).length <= 40) {
+        currentLine += (currentLine ? ' ' : '') + word;
+      } else {
+        messageLines.push(currentLine);
+        currentLine = word;
+      }
+    });
+    if (currentLine) {
+      messageLines.push(currentLine);
+    }
+    
+    // Create the speech bubble
+    const bubbleWidth = Math.max(...messageLines.map(line => line.length)) + 2;
+    const top = ' ' + '_'.repeat(bubbleWidth);
+    const bottom = ' ' + '‾'.repeat(bubbleWidth);
+    const lines = messageLines.map((line, i) => {
+      const padding = ' '.repeat(bubbleWidth - line.length - 2);
+      if (messageLines.length === 1) {
+        return `< ${line}${padding} >`;
+      } else if (i === 0) {
+        return `/ ${line}${padding} \\`;
+      } else if (i === messageLines.length - 1) {
+        return `\\ ${line}${padding} /`;
+      } else {
+        return `| ${line}${padding} |`;
+      }
+    });
+    
+    // Combine the speech bubble with the cow
+    return `
+\x1b[1;32m=== COWSAY ===\x1b[0m
+
+\x1b[1;36m${top}
+${lines.join('\n')}
+${bottom}
+        \\   ^__^
+         \\  (oo)\\_______
+            (__)\\       )\\/\\
+                ||----w |
+                ||     ||\x1b[0m
+
+\x1b[90mPro tip: Try 'cowsay [your message]' to make the cow say something else!\x1b[0m
+`;
+  },
+  
   fortune: () => {
     const fortunes = [
       "The best way to predict the future is to implement it.",
@@ -793,7 +998,21 @@ Available options: ${Object.keys(asciiArt).join(', ')}
       "The 'O' in DevOps stands for 'Oh no, who deployed on Friday?'",
       "The most dangerous phrase in DevOps: 'It works on my machine'.",
       "Chaos engineering is just breaking things with style and purpose.",
-      "The cloud is where your data goes to meet data from other companies."
+      "The cloud is where your data goes to meet data from other companies.",
+      "Kubernetes: Because 'container orchestration' sounds better than 'Docker babysitting'.",
+      "A DevOps engineer walks into a bar. No wait, that was a pub/sub system.",
+      "Why did the developer go broke? Because they used up all their cache.",
+      "What's a DevOps engineer's favorite movie? The NeverEnding Story (also known as log files).",
+      "Docker: Helping developers answer 'but it works on my machine' since 2013.",
+      "Git happens. That's why we have branches.",
+      "I would tell you a UDP joke, but you might not get it.",
+      "I'd tell you a TCP joke, but I'd have to keep repeating it until you got it.",
+      "Why do programmers prefer dark mode? Because light attracts bugs.",
+      "The problem with troubleshooting is that trouble shoots back.",
+      "To understand recursion, you must first understand recursion.",
+      "Always code as if the person who will maintain your code is a violent psychopath who knows where you live.",
+      "The best performance improvement is the one that's not needed. Ship less code.",
+      "Terraform: Making infrastructure so easy to create that you'll have 17 different AWS accounts by lunchtime."
     ];
     
     const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
@@ -804,6 +1023,7 @@ Available options: ${Object.keys(asciiArt).join(', ')}
 \x1b[1;33m" ${randomFortune} "\x1b[0m
 
 \x1b[90mYour DevOps fortune cookie has been consumed. No refunds.\x1b[0m
+\x1b[90mRemember: In case of emergency, break glass and run 'kubectl delete pod --all'.\x1b[0m
 `;
   }
 };

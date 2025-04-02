@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Brain | by Sagar Budhathoki</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #111827;
+            color: #f3f4f6;
+            font-family: 'Courier New', monospace;
+        }
+        .terminal {
+            background-color: #000;
+            border: 1px solid #10B981;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+            height: 70vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .terminal-header {
+            background-color: #000;
+            border-bottom: 1px solid #10B981;
+            padding: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .terminal-body {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            color: #10B981;
+        }
+        .terminal-prompt {
+            color: #10B981;
+            font-weight: bold;
+        }
+        .terminal-output {
+            margin-bottom: 1rem;
+        }
+        .blink {
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .tab-active {
+            color: #10B981;
+        }
+        .section {
+            border: 1px solid #10B981;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+            padding: 1.5rem;
+            background-color: #111827;
+        }
+        .progress-bar {
+            height: 0.625rem;
+            border-radius: 9999px;
+            background-color: #374151;
+        }
+        .progress-value {
+            height: 100%;
+            border-radius: 9999px;
+            background-color: #3B82F6;
+        }
+    </style>
+    <script src="script.js"></script>
+</head>
+<body class="min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="mb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-green-500">DevOps Brain</h1>
+                <p class="text-gray-400 text-sm">Your Brain on the Web - DevOps Edition | by <span class="text-green-400">Sagar Budhathoki</span></p>
+            </div>
+            <div class="flex space-x-3 text-gray-400">
+                <button class="p-2 rounded hover:bg-gray-800 tab-active" title="Terminal" data-tab="terminal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <button class="p-2 rounded hover:bg-gray-800" title="About" data-tab="about">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <button class="p-2 rounded hover:bg-gray-800" title="Projects" data-tab="projects">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <button class="p-2 rounded hover:bg-gray-800" title="Tech Stack" data-tab="techstack">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="mb-4">
+            <!-- Terminal Section -->
+            <div class="terminal" id="terminal-section">
+                <div class="terminal-header">
+                    <div class="flex items-center">
+                        <div class="flex space-x-1.5 mr-4">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="text-xs">~/devops-brain</div>
+                    </div>
+                    <div class="text-xs flex items-center">
+                        <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5 blink"></span>
+                        <span>system operational</span>
+                    </div>
+                </div>
+                <div class="terminal-body">
+                    <pre class="text-green-500">
+  _____             ____              ____            _       
+ |  __ \           / __ \            |  _ \          (_)      
+ | |  | | _____   _| |  | |_ __  ___ | |_) |_ __ __ _ _ _ __  
+ | |  | |/ _ \ \ / / |  | | '_ \/ __||  _ <| '__/ _` | | '_ \ 
+ | |__| |  __/\ V /| |__| | |_) \__ \| |_) | | | (_| | | | | |
+ |_____/ \___| \_/  \____/| .__/|___/|____/|_|  \__,_|_|_| |_|
+                          | |                                 
+                          |_|                                 
+</pre>
+                    <div class="terminal-output">
+                        <div class="text-green-500">Welcome to DevOps Brain Terminal v2.0.0</div>
+                        <div class="text-white">Your Brain on the Web - DevOps Edition</div>
+                        <div class="text-gray-500">Type "help" to see available commands</div>
+                    </div>
+                    <div class="terminal-output">
+                        <div class="terminal-prompt">➜ help</div>
+                        <div class="mt-2">
+                            <div class="text-green-500 font-bold">=== AVAILABLE COMMANDS ===</div>
+                            <div class="mt-2">
+                                <div class="text-yellow-500 font-bold">Core Commands:</div>
+                                <div class="ml-2">
+                                    <span class="text-cyan-500">help</span> - Show this help message<br>
+                                    <span class="text-cyan-500">clear</span> - Clear the terminal<br>
+                                    <span class="text-cyan-500">exit</span> - Exit terminal mode
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="text-yellow-500 font-bold">Profile Commands:</div>
+                                <div class="ml-2">
+                                    <span class="text-cyan-500">about</span> - Show information about me<br>
+                                    <span class="text-cyan-500">skills</span> - Show my technical skills<br>
+                                    <span class="text-cyan-500">projects</span> - List my projects
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="text-yellow-500 font-bold">DevOps Commands:</div>
+                                <div class="ml-2">
+                                    <span class="text-cyan-500">deploy [project]</span> - Deploy a project<br>
+                                    <span class="text-cyan-500">chaos [target]</span> - Trigger chaos monkey
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="terminal-output">
+                        <div class="terminal-prompt">➜ about</div>
+                        <div class="mt-2">
+                            <div class="text-green-500 font-bold">=== SYSTEM INFORMATION ===</div>
+                            <div class="mt-2">
+                                <div><span class="text-cyan-500">Name:</span> Sagar Budhathoki</div>
+                                <div><span class="text-cyan-500">Role:</span> Infrastructure Architect & SRE, Python Web Developer, AI Engineer</div>
+                                <div><span class="text-cyan-500">Uptime:</span> 99.99% (4+ years in production)</div>
+                                <div><span class="text-cyan-500">Kernel:</span> Human v3.7.2</div>
+                                <div><span class="text-cyan-500">Memory:</span> 128TB of technical knowledge</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="terminal-prompt">➜ <span class="blink">_</span></div>
+                </div>
+            </div>
+            
+            <!-- About Section (Hidden) -->
+            <div class="section hidden" id="about-section">
+                <h2 class="text-2xl font-bold text-green-500 mb-2">The Infrastructure Behind Sagar Budhathoki</h2>
+                <p class="text-gray-400 mb-6">
+                    A DevOps and AI Engineer with a passion for automation, infrastructure as code, building resilient systems, and exploring AI agents & MCP technologies.
+                </p>
+                
+                <!-- System Uptime -->
+                <div class="mb-6 p-4 bg-gray-800 rounded-md">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold text-green-400">System Uptime</h3>
+                        <div class="flex items-center">
+                            <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5 blink"></span>
+                            <span class="text-green-500 text-sm">OPERATIONAL</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-gray-700 p-3 rounded">
+                            <div class="text-xs text-gray-400">Years Active</div>
+                            <div class="text-xl font-mono">4+</div>
+                        </div>
+                        <div class="bg-gray-700 p-3 rounded">
+                            <div class="text-xs text-gray-400">Availability</div>
+                            <div class="text-xl font-mono">99.99%</div>
+                        </div>
+                        <div class="bg-gray-700 p-3 rounded">
+                            <div class="text-xs text-gray-400">Projects Deployed</div>
+                            <div class="text-xl font-mono">150+</div>
+                        </div>
+                        <div class="bg-gray-700 p-3 rounded">
+                            <div class="text-xs text-gray-400">Coffee Consumed</div>
+                            <div class="text-xl font-mono">∞</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Metrics -->
+                <div>
+                    <h3 class="text-lg font-semibold text-green-400 mb-4">System Metrics Visualization</h3>
+                    <div class="space-y-4">
+                        <div class="mb-4">
+                            <div class="flex items-center mb-1">
+                                <span class="text-gray-300 mr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                                <span class="text-gray-300">Infrastructure</span>
+                                <span class="ml-auto text-gray-400 font-mono">92%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value" style="width: 92%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex items-center mb-1">
+                                <span class="text-gray-300 mr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                                <span class="text-gray-300">Security</span>
+                                <span class="ml-auto text-gray-400 font-mono">87%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value" style="width: 87%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Projects Section (Hidden) -->
+            <div class="section hidden" id="projects-section">
+                <h2 class="text-2xl font-bold text-green-500 mb-2">The Production Environment</h2>
+                <p class="text-gray-400 mb-6">
+                    Projects displayed as containers in a Kubernetes-style cluster view.
+                </p>
+                
+                <div class="relative p-6 bg-gray-800 rounded-lg border border-gray-700">
+                    <div class="absolute top-4 right-4 flex space-x-2">
+                        <div class="flex items-center text-xs text-green-400">
+                            <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>
+                            <span>Running</span>
+                        </div>
+                        <div class="flex items-center text-xs text-yellow-400">
+                            <span class="inline-block w-2 h-2 bg-yellow-500 rounded-full mr-1.5"></span>
+                            <span>Maintenance</span>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-semibold text-green-400 mb-6">Cluster Overview</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-lg border border-green-600 bg-gray-800">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019a1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019a1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd" />
+                                        </svg>
+                                        <h4 class="font-mono text-green-400">kubernetes-cluster-automation</h4>
+                                    </div>
+                                    <div class="text-xs text-gray-400 mt-1">namespace: infrastructure</div>
+                                </div>
+                                <div class="px-2 py-1 text-xs rounded-full bg-green-900 text-green-400">
+                                    Running
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-300 mb-3">Automated Kubernetes cluster provisioning and management system with GitOps workflow integration.</p>
+                            <div class="flex flex-wrap gap-1 mb-3">
+                                <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">Kubernetes</span>
+                                <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">Terraform</span>
+                                <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">ArgoCD</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-400">
+                                <div>Uptime: 99.99%</div>
+                                <div>Reliability: 98%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 rounded-lg border border-yellow-600 bg-gray-800">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019a1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019a1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd" />
+                                        </svg>
+                                        <h4 class="font-mono text-green-400">infrastructure-as-code-framework</h4>
+                                    </div>
+                                    <div class="text-xs text-gray-400 mt-1">namespace: infrastructure</div>
+                                </div>
+                                <div class="px-2 py-1 text-xs rounded-full bg-yellow-900 text-yellow-400">
+                                    Maintenance
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-300 mb-3">Modular, reusable infrastructure components with built-in security and compliance checks.</p>
+                            <div class="flex flex-wrap gap-1 mb-3">
+                                <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">Terraform</span>
+                                <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">Pulumi</span>
+                                <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">AWS CDK</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-400">
+                                <div>Uptime: 100%</div>
+                                <div>Reliability: 96%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tech Stack Section (Hidden) -->
+            <div class="section hidden" id="techstack-section">
+                <h2 class="text-2xl font-bold text-green-500 mb-2">The Registry</h2>
+                <p class="text-gray-400 mb-6">
+                    Docker-style "images" of technologies I've mastered and am currently learning.
+                </p>
+                
+                <div class="mb-6 flex flex-col md:flex-row gap-4">
+                    <div class="relative flex-1">
+                        <input
+                            type="text"
+                            placeholder="Search technologies..."
+                            class="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-4 pl-10 text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                        <div class="absolute left-3 top-2.5 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-2 overflow-x-auto pb-2">
+                        <button class="px-3 py-2 rounded-md flex items-center space-x-1 whitespace-nowrap bg-green-700 text-white">
+                            <span>All</span>
+                        </button>
+                        <button class="px-3 py-2 rounded-md flex items-center space-x-1 whitespace-nowrap bg-gray-800 text-gray-300 hover:bg-gray-700">
+                            <span>Infrastructure</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Tech Cards would go here -->
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-green-400 mb-2">Kubernetes</h3>
+                        <p class="text-sm text-gray-300 mb-3">Container orchestration platform for automating deployment, scaling, and management of containerized applications.</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <div>Proficiency: Expert</div>
+                            <div>Years: 4+</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-green-400 mb-2">Terraform</h3>
+                        <p class="text-sm text-gray-300 mb-3">Infrastructure as Code tool for building, changing, and versioning infrastructure safely and efficiently.</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <div>Proficiency: Expert</div>
+                            <div>Years: 4+</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-green-400 mb-2">AWS</h3>
+                        <p class="text-sm text-gray-300 mb-3">Cloud computing platform offering reliable, scalable, and inexpensive cloud computing services.</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <div>Proficiency: Expert</div>
+                            <div>Years: 4+</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 border border-purple-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-purple-400 mb-2">Python</h3>
+                        <p class="text-sm text-gray-300 mb-3">Versatile programming language used for automation, data analysis, web development, and AI applications.</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <div>Proficiency: Expert</div>
+                            <div>Years: 4+</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 border border-purple-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-purple-400 mb-2">Django</h3>
+                        <p class="text-sm text-gray-300 mb-3">High-level Python web framework that encourages rapid development and clean, pragmatic design.</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <div>Proficiency: Expert</div>
+                            <div>Years: 4+</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 border border-purple-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-purple-400 mb-2">FastAPI</h3>
+                        <p class="text-sm text-gray-300 mb-3">Modern, fast web framework for building APIs with Python based on standard type hints.</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <div>Proficiency: Advanced</div>
+                            <div>Years: 3+</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 border border-purple-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-purple-400 mb-2">Flask</h3>
+                        <p class="text-sm text-gray-300 mb-3">Lightweight WSGI web application framework designed to make getting started quick and easy.</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <div>Proficiency: Expert</div>
+                            <div>Years: 4+</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 border border-purple-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-purple-400 mb-2">AI & Agents</h3>
+                        <p class="text-sm text-gray-300 mb-3">Exploring AI agent technologies, MCP frameworks, and building intelligent automation systems.</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <div>Proficiency: Advanced</div>
+                            <div>Focus: Current</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 text-xs">
+            <p>© 2025 DevOps Brain | by Sagar Budhathoki</p>
+        </footer>
+    </div>
+</body>
+</html>

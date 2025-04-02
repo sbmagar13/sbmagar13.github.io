@@ -34,7 +34,7 @@ const TechStack = () => {
       category: 'development',
       icon: <FaCode />,
       tags: ['ai', 'agents', 'mcp', 'automation'],
-      experience: 2,
+      experience: 0.5,
       description: 'Exploring AI agent technologies, MCP frameworks, and building intelligent automation systems.',
       pullCount: 1200,
     },
@@ -44,7 +44,7 @@ const TechStack = () => {
       category: 'infrastructure',
       icon: <FaDocker />, // Using Docker icon as a substitute
       tags: ['container-orchestration', 'infrastructure', 'cloud-native'],
-      experience: 4,
+      experience: 1.5,
       description: 'Container orchestration platform for automating deployment, scaling, and management of containerized applications.',
       pullCount: 2500,
     },
@@ -54,7 +54,7 @@ const TechStack = () => {
       category: 'infrastructure',
       icon: <FaDocker />,
       tags: ['containerization', 'infrastructure', 'devops'],
-      experience: 5,
+      experience: 4,
       description: 'Platform for developing, shipping, and running applications in containers.',
       pullCount: 3200,
     },
@@ -64,7 +64,7 @@ const TechStack = () => {
       category: 'infrastructure',
       icon: <FaAws />,
       tags: ['cloud', 'infrastructure', 'services'],
-      experience: 6,
+      experience: 4,
       description: 'Comprehensive cloud computing platform with a wide range of services.',
       pullCount: 2800,
     },
@@ -84,7 +84,7 @@ const TechStack = () => {
       category: 'cicd',
       icon: <FaJenkins />,
       tags: ['ci-cd', 'automation', 'pipeline'],
-      experience: 5,
+      experience: 2,
       description: 'Open-source automation server for building, testing, and deploying code.',
       vulnerabilities: ['Legacy plugin system', 'Resource intensive'],
       pullCount: 1800,
@@ -105,7 +105,7 @@ const TechStack = () => {
       category: 'monitoring',
       icon: <FaChartLine />,
       tags: ['monitoring', 'metrics', 'alerting'],
-      experience: 4,
+      experience: 2,
       description: 'Open-source monitoring and alerting toolkit designed for reliability and scalability.',
       pullCount: 1900,
     },
@@ -115,7 +115,7 @@ const TechStack = () => {
       category: 'monitoring',
       icon: <FaChartBar />,
       tags: ['visualization', 'dashboards', 'monitoring'],
-      experience: 4,
+      experience: 3,
       description: 'Open-source platform for monitoring and observability with beautiful dashboards.',
       pullCount: 1700,
     },
@@ -125,7 +125,7 @@ const TechStack = () => {
       category: 'development',
       icon: <FaPython />,
       tags: ['programming', 'scripting', 'automation', 'web'],
-      experience: 7,
+      experience: 6,
       description: 'High-level programming language known for its readability and versatility.',
       pullCount: 2900,
     },
@@ -165,7 +165,7 @@ const TechStack = () => {
       category: 'development',
       icon: <FaJs />,
       tags: ['programming', 'web', 'frontend'],
-      experience: 6,
+      experience: 3,
       description: 'Programming language that enables interactive web pages and applications.',
       pullCount: 2700,
     },
@@ -175,7 +175,7 @@ const TechStack = () => {
       category: 'development',
       icon: <FaReact />,
       tags: ['frontend', 'ui', 'javascript'],
-      experience: 4,
+      experience: 2,
       description: 'JavaScript library for building user interfaces.',
       vulnerabilities: ['Rapid ecosystem changes'],
       pullCount: 2200,
@@ -196,7 +196,7 @@ const TechStack = () => {
       category: 'infrastructure',
       icon: <FaLinux />,
       tags: ['os', 'server', 'infrastructure'],
-      experience: 8,
+      experience: 7,
       description: 'Open-source operating system kernel that forms the foundation of many distributions.',
       pullCount: 3500,
     },
@@ -289,7 +289,7 @@ const TechStack = () => {
                   </div>
                 </div>
                 <div className="text-xs text-gray-400">
-                  {tech.experience} years
+                  {tech.experience}+ years
                 </div>
               </div>
               

@@ -18,11 +18,11 @@ const About = () => {
     { name: 'Infrastructure', value: 92, icon: <FaServer />, color: 'bg-blue-500' },
     { name: 'Containers', value: 88, icon: <FaDocker />, color: 'bg-blue-400' },
     { name: 'Cloud', value: 90, icon: <FaCloud />, color: 'bg-blue-600' },
-    { name: 'Python', value: 89, icon: <FaServer />, color: 'bg-purple-500' },
-    { name: 'AI & Agents', value: 85, icon: <FaServer />, color: 'bg-purple-600' },
-    { name: 'Networking', value: 85, icon: <FaNetworkWired />, color: 'bg-blue-300' },
+    { name: 'Python', value: 85, icon: <FaServer />, color: 'bg-purple-500' },
+    { name: 'AI & Agents', value: 25, icon: <FaServer />, color: 'bg-purple-600' },
+    { name: 'Networking', value: 80, icon: <FaNetworkWired />, color: 'bg-blue-300' },
     { name: 'Databases', value: 82, icon: <FaDatabase />, color: 'bg-blue-700' },
-    { name: 'Security', value: 87, icon: <FaLock />, color: 'bg-blue-800' },
+    { name: 'Security', value: 84, icon: <FaLock />, color: 'bg-blue-800' },
   ];
   
   const incidents = [

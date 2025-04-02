@@ -112,7 +112,7 @@ export default function Home() {
           >
             <div>
               <h1 className="text-3xl font-bold text-green-500">DevOps Brain</h1>
-              <p className="text-gray-400 text-sm">Your Brain on the Web - DevOps Edition | by <span className="text-green-400">Sagar Budhathoki</span></p>
+              <p className="text-gray-400 text-sm">Your Brain on the Web - DevOps | by <span className="text-green-400">Sagar Budhathoki</span></p>
             </div>
             <div className="flex space-x-3 text-gray-400">
               <button 

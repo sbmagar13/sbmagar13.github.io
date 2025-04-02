@@ -101,7 +101,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     // term.writeln('\x1b[1;32m' + asciiArt.portrait + '\x1b[0m');
     term.writeln('');
     term.writeln('\x1b[1;32mWelcome to DevOps Brain Terminal v2.0.0\x1b[0m');
-    term.writeln('\x1b[1;37mYour Brain on the Web - DevOps Edition\x1b[0m');
+    term.writeln('\x1b[1;37mYour Brain on the Web - DevOps\x1b[0m');
     term.writeln('\x1b[90mType "help" to see available commands\x1b[0m');
     term.writeln('');
     

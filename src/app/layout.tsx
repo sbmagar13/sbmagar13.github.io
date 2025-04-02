@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "DevOps Brain | by Sagar Budhathoki",
-  description: "Your Brain on the Web - DevOps Edition. A portfolio showcasing DevOps expertise and projects.",
+  description: "Your Brain on the Web - DevOps. A portfolio showcasing DevOps expertise and projects.",
   icons: {
     icon: '/file.svg', // Using file.svg as the favicon
     apple: '/file.svg',

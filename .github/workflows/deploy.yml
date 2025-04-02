@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Set this to your default branch
+      - production  # Default: not running.. so set to production (non-existing)
 
 permissions:
   contents: write

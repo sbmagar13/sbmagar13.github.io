@@ -18,14 +18,21 @@ jobs:
       - name: Setup Node.js ⚙️
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies 📦
         run: npm ci
 
       - name: Build 🔧
-        run: npm run build
+        run: |
+          npm run build
+          ls -la out
+          # Create a fallback index.html if the Next.js build doesn't create one
+          if [ ! -f out/index.html ]; then
+            echo "Next.js build did not create index.html, copying fallback"
+            cp public/index-fallback.html out/index.html
+          fi
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4

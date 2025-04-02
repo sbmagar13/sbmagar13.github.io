@@ -56,6 +56,27 @@ npm run build
 
 Then push the contents of the `out` directory to the `gh-pages` branch of your repository.
 
+### Troubleshooting GitHub Pages Deployment
+
+If you encounter issues with the GitHub Pages deployment:
+
+1. **Empty page or 404 error**:
+   - Check that the `.nojekyll` file exists in the `out` directory
+   - Verify that the GitHub Pages source is set to the `gh-pages` branch
+   - Make sure the `basePath` in `next.config.ts` is set correctly (should be `/brain-portfolio` for GitHub Pages)
+
+2. **Missing assets**:
+   - Check that the paths to assets are correct in your code
+   - For images and other static assets, make sure they're in the `public` directory
+
+3. **Debugging**:
+   - Try accessing `/test.html` on your GitHub Pages site to check if static files are being served correctly
+   - Check the GitHub Actions logs for any errors during the build and deployment process
+
+4. **Fixing issues**:
+   - After making changes, push to the `main` branch to trigger a new deployment
+   - You can also manually run the GitHub Action from the "Actions" tab in your repository
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

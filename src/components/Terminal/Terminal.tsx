@@ -67,8 +67,60 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     // Load addon
     term.loadAddon(fitAddon);
     
-    // Open terminal
-    term.open(terminalRef.current);
+      // Open terminal
+      term.open(terminalRef.current);
+      
+      // Add touch support for mobile devices
+      if (terminalRef.current) {
+        terminalRef.current.addEventListener('touchstart', () => {
+          // Create a virtual keyboard input element
+          const input = document.createElement('textarea');
+          input.style.position = 'absolute';
+          input.style.left = '-9999px';
+          input.style.top = '0';
+          input.style.width = '0';
+          input.style.height = '0';
+          input.style.opacity = '0';
+          input.style.pointerEvents = 'none';
+          
+          // Add to DOM
+          document.body.appendChild(input);
+          
+          // Focus the input to show keyboard
+          input.focus();
+          
+          // Listen for input changes
+          input.addEventListener('input', (e) => {
+            const inputValue = (e.target as HTMLTextAreaElement).value;
+            if (inputValue) {
+              // Send the input to the terminal
+              for (const char of inputValue) {
+                term.write(char);
+                currentLine += char;
+                setCurrentInput(currentLine);
+              }
+              // Clear the input for next use
+              (e.target as HTMLTextAreaElement).value = '';
+            }
+          });
+          
+          // Remove when terminal loses focus
+          const cleanup = () => {
+            document.body.removeChild(input);
+            document.removeEventListener('touchstart', handleTouchOutside);
+          };
+          
+          // Handle touch outside terminal
+          const handleTouchOutside = (e: TouchEvent) => {
+            if (!terminalRef.current?.contains(e.target as Node)) {
+              cleanup();
+            }
+          };
+          
+          // Add listener for touches outside terminal
+          document.addEventListener('touchstart', handleTouchOutside);
+        });
+      }
     
     // Add a longer delay before fitting to ensure DOM is fully rendered
     setTimeout(() => {
@@ -328,9 +380,80 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     };
   }, [isLoading, loadingMessage]);
   
+  // Handle mobile keyboard button click
+  const handleMobileKeyboardClick = () => {
+    if (!terminalRef.current) return;
+    
+    // Create a virtual keyboard input element
+    const input = document.createElement('textarea');
+    input.style.position = 'fixed';
+    input.style.bottom = '0';
+    input.style.left = '0';
+    input.style.width = '100%';
+    input.style.height = '40px';
+    input.style.padding = '8px';
+    input.style.backgroundColor = '#0a0a0a';
+    input.style.color = '#33ff33';
+    input.style.border = '1px solid #33ff33';
+    input.style.zIndex = '1000';
+    input.placeholder = 'Type your command here...';
+    
+    // Add to DOM
+    document.body.appendChild(input);
+    
+    // Focus the input to show keyboard
+    input.focus();
+    
+    // Listen for input changes
+    const handleInput = (e: Event) => {
+      if (!xtermRef.current) return;
+      
+      const inputValue = (e.target as HTMLTextAreaElement).value;
+      if (inputValue && inputValue.endsWith('\n')) {
+        // Process command on Enter
+        const command = inputValue.trim();
+        if (command) {
+          // Clear the input
+          (e.target as HTMLTextAreaElement).value = '';
+          
+          // Write command to terminal
+          xtermRef.current.write(command);
+          xtermRef.current.writeln('');
+          
+          // Process command
+          processCommand(command);
+          setCommandHistory(prev => [...prev, command]);
+          setHistoryIndex(commandHistory.length + 1);
+        }
+      }
+    };
+    
+    input.addEventListener('keyup', handleInput);
+    
+    // Add a close button
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close';
+    closeButton.style.position = 'fixed';
+    closeButton.style.bottom = '40px';
+    closeButton.style.right = '0';
+    closeButton.style.padding = '5px 10px';
+    closeButton.style.backgroundColor = '#333';
+    closeButton.style.color = 'white';
+    closeButton.style.border = 'none';
+    closeButton.style.zIndex = '1000';
+    
+    document.body.appendChild(closeButton);
+    
+    // Handle close button click
+    closeButton.addEventListener('click', () => {
+      document.body.removeChild(input);
+      document.body.removeChild(closeButton);
+    });
+  };
+  
   return (
     <motion.div 
-      className="w-full h-full rounded-md overflow-hidden border border-green-500 shadow-lg shadow-green-500/20 flex flex-col"
+      className="w-full h-full rounded-md overflow-hidden border border-green-500 shadow-lg shadow-green-500/20 flex flex-col relative"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -353,6 +476,17 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         ref={terminalRef} 
         className="flex-1 bg-black"
       />
+      
+      {/* Mobile keyboard button - only visible on small screens */}
+      <button
+        className="md:hidden absolute bottom-4 right-4 bg-green-700 text-white p-2 rounded-full shadow-lg"
+        onClick={handleMobileKeyboardClick}
+        aria-label="Open keyboard"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      </button>
     </motion.div>
   );
 };

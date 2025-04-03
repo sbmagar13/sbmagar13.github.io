@@ -1081,19 +1081,55 @@ function adaptOutputForMobile(output: string): string {
   
   // Process each line
   const processedLines = lines.map(line => {
-    // If line is too long (more than 40 chars), truncate it or wrap it
-    if (line.length > 40) {
-      // If it's an ASCII art line (contains lots of special chars), simplify it
-      if (line.includes('\x1b[') && (line.includes('█') || line.includes('═') || line.includes('│'))) {
-        return ''; // Remove complex ASCII art lines
+    // If it's an ASCII art line with complex characters, simplify it for mobile
+    if (line.includes('\x1b[') && (
+        line.includes('█') || 
+        line.includes('═') || 
+        line.includes('│') || 
+        line.includes('┌') || 
+        line.includes('┐') || 
+        line.includes('└') || 
+        line.includes('┘') || 
+        line.includes('├') || 
+        line.includes('┤') || 
+        line.includes('┬') || 
+        line.includes('┴') || 
+        line.includes('┼')
+      )) {
+      // For complex ASCII art, provide a simplified version
+      if (line.includes('Infrastructure Diagram') || line.includes('Kubernetes') || line.includes('Load Balancer')) {
+        return line; // Keep headers
       }
       
-      // For other long lines, keep them as is - they'll wrap naturally
-      return line;
+      // Simplify complex ASCII art lines but don't remove them completely
+      if (line.trim().length > 0) {
+        // Replace complex box drawing characters with simpler ones
+        return line
+          .replace(/[┌┐└┘├┤┬┴┼]/g, '+')
+          .replace(/[═│]/g, '-')
+          .replace(/[█]/g, '#');
+      }
     }
+    
+    // For other lines, keep them as is - they'll wrap naturally
     return line;
   });
   
-  // Remove empty lines that might have been created
-  return processedLines.filter(line => line !== '').join('\n');
+  // Remove consecutive empty lines (keep single empty lines for spacing)
+  const filteredLines = [];
+  let lastLineEmpty = false;
+  
+  for (const line of processedLines) {
+    if (line.trim() === '') {
+      if (!lastLineEmpty) {
+        filteredLines.push(line);
+        lastLineEmpty = true;
+      }
+    } else {
+      filteredLines.push(line);
+      lastLineEmpty = false;
+    }
+  }
+  
+  return filteredLines.join('\n');
 }

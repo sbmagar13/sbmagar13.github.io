@@ -154,9 +154,9 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.3 }}
           >
             {activeSection === 'terminal' && (
-              <div className="h-[calc(100vh-200px)]">
+              <div className="h-[calc(100vh-200px)] sm:h-[calc(100vh-200px)]">
                 <Terminal 
-                  initialCommand="help" 
+                  initialCommand={typeof window !== 'undefined' && window.innerWidth >= 768 ? "help" : ""} 
                   onCommandExecuted={handleTerminalCommand}
                 />
               </div>

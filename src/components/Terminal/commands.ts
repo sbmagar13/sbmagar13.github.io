@@ -81,6 +81,7 @@ const commands: Record<string, (args: string[]) => string> = {
   \x1b[1;36mwhois\x1b[0m                Who am I?
   \x1b[1;36muptime\x1b[0m               Show my experience uptime
   \x1b[1;36mcontact\x1b[0m              Show contact information
+  \x1b[1;36mconnect\x1b[0m              Show social connection endpoints
   \x1b[1;36mskills\x1b[0m               Show my technical skills
   \x1b[1;36mprojects\x1b[0m             List my projects
 
@@ -225,12 +226,43 @@ Type 'deploy [number]' to see deployment details.
 
 \x1b[1;36mName:\x1b[0m Sagar Budhathoki
 \x1b[1;36mEmail:\x1b[0m mail@budhathokisagar.com.np
-\x1b[1;36mGitHub:\x1b[0m github.com/sbmagar13
-\x1b[1;36mLinkedIn:\x1b[0m linkedin.com/in/sbmagar13
-\x1b[1;36mTwitter:\x1b[0m twitter.com/S_agarM_agar
+\x1b[1;36mGitHub:\x1b[0m https://github.com/sbmagar13
+\x1b[1;36mLinkedIn:\x1b[0m https://linkedin.com/in/sbmagar13
+\x1b[1;36mTwitter:\x1b[0m https://twitter.com/S_agarM_agar
 
 \x1b[1;33mPreferred Communication Protocol:\x1b[0m
 SSH into my inbox with a clear subject line and I'll respond within 24 hours.
+
+Type 'connect' for more detailed social connection options.
+`;
+  },
+  
+  connect: () => {
+    return `
+\x1b[1;32m=== SOCIAL CONNECTION ENDPOINTS ===\x1b[0m
+
+\x1b[1;33mProfessional Networks:\x1b[0m
+  \x1b[1;36mLinkedIn:      \x1b[0m https://linkedin.com/in/sbmagar13
+  \x1b[1;36mGitHub:        \x1b[0m https://github.com/sbmagar13
+  \x1b[1;36mStack Overflow:\x1b[0m https://stackoverflow.com/users/10819100/sagar-budhathoki-magar
+  \x1b[1;36mdaily.dev:     \x1b[0m https://app.daily.dev/sbmagar13
+
+\x1b[1;33mSocial Media:\x1b[0m
+  \x1b[1;36mTwitter:       \x1b[0m https://twitter.com/S_agarM_agar
+  \x1b[1;36mroadmap.sh:    \x1b[0m https://roadmap.sh/u/sbmagar13
+  \x1b[1;36mSpotify:       \x1b[0m https://open.spotify.com/user/qzb6mxppi1qt8o50cgkrbyw4v
+
+\x1b[1;33mDirect Contact:\x1b[0m
+  \x1b[1;36mEmail:        \x1b[0m mail@budhathokisagar.com.np
+  \x1b[1;36mWebsite:      \x1b[0m https://budhathokisagar.com.np
+  \x1b[1;36mPhone:        \x1b[0m +9779864420272, +9779805275666
+
+\x1b[1;33mConnection Status:\x1b[0m
+  \x1b[1;32m● ONLINE\x1b[0m - All endpoints available and ready for connection
+  \x1b[1;36mResponse Time:\x1b[0m < 24 hours
+  \x1b[1;36mPreferred Protocols:\x1b[0m Email, LinkedIn
+
+\x1b[90mPro tip: Use 'about' command and navigate to the Connections tab for a more visual interface.\x1b[0m
 `;
   },
   
@@ -314,6 +346,7 @@ DNS Records:
   Skills: See 'skills' command
   Projects: See 'projects' command
   Blog: See 'blog' command
+  Connect: See 'connect' command
 
 Whois Server Response:
   A passionate technologist who believes in automation,

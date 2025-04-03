@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaServer, FaDatabase, FaNetworkWired, FaDocker, FaCloud, FaLock } from 'react-icons/fa';
+import { FaServer, FaDatabase, FaNetworkWired, FaDocker, FaCloud, FaLock, FaUserFriends } from 'react-icons/fa';
+import SocialConnections from './SocialConnections';
 
 interface SkillMetric {
   name: string;
@@ -12,7 +13,7 @@ interface SkillMetric {
 }
 
 const About = () => {
-  const [activeTab, setActiveTab] = useState('metrics');
+  const [activeTab, setActiveTab] = useState('connections');
   
   const skillMetrics: SkillMetric[] = [
     { name: 'Infrastructure', value: 92, icon: <FaServer />, color: 'bg-blue-500' },
@@ -110,6 +111,15 @@ const About = () => {
             onClick={() => setActiveTab('architecture')}
           >
             Architecture
+          </button>
+          <button 
+            className={`py-2 px-4 font-medium ${activeTab === 'connections' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
+            onClick={() => setActiveTab('connections')}
+          >
+            <div className="flex items-center">
+              <FaUserFriends className="mr-1" />
+              <span>Connections</span>
+            </div>
           </button>
         </div>
       </div>
@@ -233,6 +243,8 @@ const About = () => {
             </p>
           </motion.div>
         )}
+        
+        {activeTab === 'connections' && <SocialConnections />}
       </div>
     </div>
   );

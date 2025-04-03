@@ -30,6 +30,23 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
 
+  // Helper function to focus the terminal
+  const focusTerminal = () => {
+    if (!terminalRef.current || !xtermRef.current) return;
+    
+    // Focus the terminal element
+    terminalRef.current.focus();
+    
+    // Try to find and focus the xterm textarea
+    const xtermTextarea = terminalRef.current.querySelector('.xterm-helper-textarea');
+    if (xtermTextarea) {
+      (xtermTextarea as HTMLTextAreaElement).focus();
+    }
+    
+    // Focus the xterm directly
+    xtermRef.current.focus();
+  };
+  
   // Initialize terminal
   useEffect(() => {
     if (!terminalRef.current) return;
@@ -38,6 +55,9 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     if (xtermRef.current) {
       xtermRef.current.dispose();
     }
+    
+    // Flag to track if we've shown the keyboard on mobile
+    let hasShownKeyboard = false;
     
     // Create new terminal
     const term = new XTerm({
@@ -218,6 +238,21 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         currentLine = '';
       }, 1000);
     }
+    
+    // Automatically focus the terminal on all devices
+    setTimeout(() => {
+      // For mobile devices, show the keyboard
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        if (!hasShownKeyboard) {
+          hasShownKeyboard = true;
+          handleMobileKeyboardClick();
+        }
+      } 
+      // For desktop browsers, focus the terminal directly
+      else {
+        focusTerminal();
+      }
+    }, 1500); // Delay to ensure terminal is fully initialized
     
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -482,8 +517,19 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         setCommandHistory(prev => [...prev, command]);
         setHistoryIndex(commandHistory.length + 1);
         
-        // Close the input container after command execution
-        document.body.removeChild(inputContainer);
+        // On mobile, reopen the keyboard after a short delay
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+          // Close the current input container
+          document.body.removeChild(inputContainer);
+          
+          // Reopen keyboard after a short delay to allow command to process
+          setTimeout(() => {
+            handleMobileKeyboardClick();
+          }, 500);
+        } else {
+          // On desktop, just close the input container
+          document.body.removeChild(inputContainer);
+        }
       }
     };
     
@@ -523,7 +569,10 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       </div>
       <div 
         ref={terminalRef} 
-        className="flex-1 bg-black"
+        className="flex-1 bg-black focus:outline-none"
+        tabIndex={0} // Make the terminal div focusable
+        onClick={focusTerminal}
+        onFocus={focusTerminal}
       />
       
       {/* Improved mobile keyboard button - only visible on small screens */}

@@ -44,7 +44,8 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       cursorBlink: true,
       cursorStyle: 'block',
       fontFamily: 'var(--font-geist-mono), monospace',
-      fontSize: window.innerWidth < 768 ? 12 : 14, // Smaller font on mobile
+      fontSize: window.innerWidth < 768 ? 10 : 14, // Even smaller font on mobile
+      lineHeight: window.innerWidth < 768 ? 1.1 : 1.2, // Tighter line height on mobile
       theme: {
         background: '#0a0a0a',
         foreground: '#33ff33',
@@ -55,6 +56,8 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       allowTransparency: true,
       convertEol: true, // Ensures proper line breaks on mobile
       scrollback: 1000, // Increase scrollback for better mobile experience
+      cols: window.innerWidth < 768 ? 40 : 80, // Limit columns on mobile to prevent overflow
+      rows: window.innerWidth < 768 ? 15 : 24, // Fewer rows on mobile
     });
     
     // Save term reference first
@@ -70,55 +73,24 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       // Open terminal
       term.open(terminalRef.current);
       
-      // Add touch support for mobile devices
+      // Improved mobile touch support
       if (terminalRef.current) {
-        terminalRef.current.addEventListener('touchstart', () => {
-          // Create a virtual keyboard input element
-          const input = document.createElement('textarea');
-          input.style.position = 'absolute';
-          input.style.left = '-9999px';
-          input.style.top = '0';
-          input.style.width = '0';
-          input.style.height = '0';
-          input.style.opacity = '0';
-          input.style.pointerEvents = 'none';
+        // Make the terminal container focusable
+        terminalRef.current.tabIndex = 0;
+        
+        // Handle touch on terminal
+        terminalRef.current.addEventListener('touchstart', (e) => {
+          // Prevent default to avoid unwanted scrolling
+          e.preventDefault();
           
-          // Add to DOM
-          document.body.appendChild(input);
-          
-          // Focus the input to show keyboard
-          input.focus();
-          
-          // Listen for input changes
-          input.addEventListener('input', (e) => {
-            const inputValue = (e.target as HTMLTextAreaElement).value;
-            if (inputValue) {
-              // Send the input to the terminal
-              for (const char of inputValue) {
-                term.write(char);
-                currentLine += char;
-                setCurrentInput(currentLine);
-              }
-              // Clear the input for next use
-              (e.target as HTMLTextAreaElement).value = '';
-            }
-          });
-          
-          // Remove when terminal loses focus
-          const cleanup = () => {
-            document.body.removeChild(input);
-            document.removeEventListener('touchstart', handleTouchOutside);
-          };
-          
-          // Handle touch outside terminal
-          const handleTouchOutside = (e: TouchEvent) => {
-            if (!terminalRef.current?.contains(e.target as Node)) {
-              cleanup();
-            }
-          };
-          
-          // Add listener for touches outside terminal
-          document.addEventListener('touchstart', handleTouchOutside);
+          // Show the mobile keyboard button more prominently
+          const keyboardButton = document.getElementById('mobile-keyboard-button');
+          if (keyboardButton) {
+            keyboardButton.classList.add('pulse-animation');
+            setTimeout(() => {
+              keyboardButton.classList.remove('pulse-animation');
+            }, 2000);
+          }
         });
       }
     
@@ -380,74 +352,151 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     };
   }, [isLoading, loadingMessage]);
   
-  // Handle mobile keyboard button click
+  // Improved mobile keyboard handling
   const handleMobileKeyboardClick = () => {
-    if (!terminalRef.current) return;
+    if (!terminalRef.current || !xtermRef.current) return;
     
-    // Create a virtual keyboard input element
-    const input = document.createElement('textarea');
-    input.style.position = 'fixed';
-    input.style.bottom = '0';
-    input.style.left = '0';
+    // Create a better mobile input interface
+    const inputContainer = document.createElement('div');
+    inputContainer.style.position = 'fixed';
+    inputContainer.style.bottom = '0';
+    inputContainer.style.left = '0';
+    inputContainer.style.width = '100%';
+    inputContainer.style.backgroundColor = '#0a0a0a';
+    inputContainer.style.borderTop = '2px solid #33ff33';
+    inputContainer.style.padding = '10px';
+    inputContainer.style.zIndex = '1000';
+    inputContainer.style.display = 'flex';
+    inputContainer.style.flexDirection = 'column';
+    inputContainer.style.gap = '10px';
+    
+    // Add a label to make it clear
+    const label = document.createElement('div');
+    label.textContent = 'Terminal Input';
+    label.style.color = '#33ff33';
+    label.style.fontSize = '14px';
+    label.style.fontWeight = 'bold';
+    inputContainer.appendChild(label);
+    
+    // Create input field
+    const input = document.createElement('input');
+    input.type = 'text';
     input.style.width = '100%';
-    input.style.height = '40px';
-    input.style.padding = '8px';
-    input.style.backgroundColor = '#0a0a0a';
+    input.style.padding = '10px';
+    input.style.backgroundColor = '#1a1a1a';
     input.style.color = '#33ff33';
     input.style.border = '1px solid #33ff33';
-    input.style.zIndex = '1000';
+    input.style.borderRadius = '4px';
+    input.style.fontSize = '16px'; // Larger font size for better mobile typing
     input.placeholder = 'Type your command here...';
+    input.autocapitalize = 'none'; // Prevent auto-capitalization
+    input.autocomplete = 'off'; // Disable autocomplete
+    // Set autocorrect attribute using setAttribute since it's not in the HTMLInputElement type
+    input.setAttribute('autocorrect', 'off');
+    input.spellcheck = false; // Disable spellcheck
+    inputContainer.appendChild(input);
+    
+    // Create button container
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'space-between';
+    buttonContainer.style.marginTop = '5px';
+    
+    // Create submit button
+    const submitButton = document.createElement('button');
+    submitButton.textContent = 'Execute';
+    submitButton.style.padding = '8px 16px';
+    submitButton.style.backgroundColor = '#33ff33';
+    submitButton.style.color = '#0a0a0a';
+    submitButton.style.border = 'none';
+    submitButton.style.borderRadius = '4px';
+    submitButton.style.fontWeight = 'bold';
+    submitButton.style.flex = '1';
+    submitButton.style.marginRight = '5px';
+    buttonContainer.appendChild(submitButton);
+    
+    // Create close button
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close';
+    closeButton.style.padding = '8px 16px';
+    closeButton.style.backgroundColor = '#ff3333';
+    closeButton.style.color = 'white';
+    closeButton.style.border = 'none';
+    closeButton.style.borderRadius = '4px';
+    closeButton.style.fontWeight = 'bold';
+    buttonContainer.appendChild(closeButton);
+    
+    inputContainer.appendChild(buttonContainer);
+    
+    // Add common commands for quick access
+    const quickCommands = ['help', 'about', 'projects', 'skills', 'clear'];
+    const quickCommandsContainer = document.createElement('div');
+    quickCommandsContainer.style.display = 'flex';
+    quickCommandsContainer.style.flexWrap = 'wrap';
+    quickCommandsContainer.style.gap = '5px';
+    quickCommandsContainer.style.marginTop = '10px';
+    
+    quickCommands.forEach(cmd => {
+      const cmdButton = document.createElement('button');
+      cmdButton.textContent = cmd;
+      cmdButton.style.padding = '5px 10px';
+      cmdButton.style.backgroundColor = '#1a1a1a';
+      cmdButton.style.color = '#33ff33';
+      cmdButton.style.border = '1px solid #33ff33';
+      cmdButton.style.borderRadius = '4px';
+      cmdButton.style.fontSize = '14px';
+      
+      cmdButton.addEventListener('click', () => {
+        input.value = cmd;
+      });
+      
+      quickCommandsContainer.appendChild(cmdButton);
+    });
+    
+    inputContainer.appendChild(quickCommandsContainer);
     
     // Add to DOM
-    document.body.appendChild(input);
+    document.body.appendChild(inputContainer);
     
     // Focus the input to show keyboard
-    input.focus();
+    setTimeout(() => {
+      input.focus();
+    }, 100);
     
-    // Listen for input changes
-    const handleInput = (e: Event) => {
+    // Handle submit
+    const handleSubmit = () => {
       if (!xtermRef.current) return;
       
-      const inputValue = (e.target as HTMLTextAreaElement).value;
-      if (inputValue && inputValue.endsWith('\n')) {
-        // Process command on Enter
-        const command = inputValue.trim();
-        if (command) {
-          // Clear the input
-          (e.target as HTMLTextAreaElement).value = '';
-          
-          // Write command to terminal
-          xtermRef.current.write(command);
-          xtermRef.current.writeln('');
-          
-          // Process command
-          processCommand(command);
-          setCommandHistory(prev => [...prev, command]);
-          setHistoryIndex(commandHistory.length + 1);
-        }
+      const command = input.value.trim();
+      if (command) {
+        // Clear the input
+        input.value = '';
+        
+        // Write command to terminal
+        xtermRef.current.writeln('');
+        xtermRef.current.write(`${command}`);
+        xtermRef.current.writeln('');
+        
+        // Process command
+        processCommand(command);
+        setCommandHistory(prev => [...prev, command]);
+        setHistoryIndex(commandHistory.length + 1);
+        
+        // Close the input container after command execution
+        document.body.removeChild(inputContainer);
       }
     };
     
-    input.addEventListener('keyup', handleInput);
-    
-    // Add a close button
-    const closeButton = document.createElement('button');
-    closeButton.textContent = 'Close';
-    closeButton.style.position = 'fixed';
-    closeButton.style.bottom = '40px';
-    closeButton.style.right = '0';
-    closeButton.style.padding = '5px 10px';
-    closeButton.style.backgroundColor = '#333';
-    closeButton.style.color = 'white';
-    closeButton.style.border = 'none';
-    closeButton.style.zIndex = '1000';
-    
-    document.body.appendChild(closeButton);
-    
-    // Handle close button click
+    // Event listeners
+    submitButton.addEventListener('click', handleSubmit);
     closeButton.addEventListener('click', () => {
-      document.body.removeChild(input);
-      document.body.removeChild(closeButton);
+      document.body.removeChild(inputContainer);
+    });
+    
+    input.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') {
+        handleSubmit();
+      }
     });
   };
   
@@ -477,16 +526,35 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         className="flex-1 bg-black"
       />
       
-      {/* Mobile keyboard button - only visible on small screens */}
+      {/* Improved mobile keyboard button - only visible on small screens */}
       <button
-        className="md:hidden absolute bottom-4 right-4 bg-green-700 text-white p-2 rounded-full shadow-lg"
+        id="mobile-keyboard-button"
+        className="md:hidden absolute bottom-4 right-4 bg-green-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
         onClick={handleMobileKeyboardClick}
         aria-label="Open keyboard"
+        style={{
+          animation: 'none',
+          zIndex: 50,
+          boxShadow: '0 0 10px rgba(51, 255, 51, 0.5)'
+        }}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
+        <span className="ml-1 font-bold">Type</span>
       </button>
+      
+      {/* Add some CSS for the pulse animation */}
+      <style jsx>{`
+        @keyframes pulse {
+          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(51, 255, 51, 0.7); }
+          70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(51, 255, 51, 0); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(51, 255, 51, 0); }
+        }
+        .pulse-animation {
+          animation: pulse 1s infinite;
+        }
+      `}</style>
     </motion.div>
   );
 };

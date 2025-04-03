@@ -5,7 +5,10 @@ const commandHistory: string[] = [];
 
 // Helper functions for visualizations
 function generateBar(percentage: number): string {
-  const width = 20;
+  // Use a smaller width on mobile devices
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const width = isMobile ? 10 : 20;
+  
   // Ensure percentage is between 0 and 100
   const clampedPercentage = Math.max(0, Math.min(100, percentage));
   const filledChars = Math.floor((clampedPercentage / 100) * width);
@@ -16,7 +19,12 @@ function generateSparkline(): string {
   const values = [];
   // Generate random values with a slight trend
   let value = 50 + Math.random() * 20;
-  for (let i = 0; i < 24; i++) {
+  
+  // Use fewer points on mobile devices
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const points = isMobile ? 12 : 24;
+  
+  for (let i = 0; i < points; i++) {
     value = Math.max(10, Math.min(90, value + (Math.random() * 20 - 10)));
     values.push(value);
   }
@@ -1038,7 +1046,17 @@ export function executeCommand(input: string): string {
   
   // Check if command exists
   if (command in commands) {
-    return commands[command](args);
+    // Get the command output
+    let output = commands[command](args);
+    
+    // Check if we're on mobile and need to adapt the output
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    if (isMobile) {
+      // For mobile, simplify ASCII art and long outputs
+      output = adaptOutputForMobile(output);
+    }
+    
+    return output;
   }
   
   // Handle unknown command
@@ -1046,4 +1064,28 @@ export function executeCommand(input: string): string {
 \x1b[1;31mCommand not found: ${command}\x1b[0m
 Type 'help' to see available commands.
 `;
+}
+
+// Helper function to adapt command outputs for mobile
+function adaptOutputForMobile(output: string): string {
+  // Split output into lines
+  const lines = output.split('\n');
+  
+  // Process each line
+  const processedLines = lines.map(line => {
+    // If line is too long (more than 40 chars), truncate it or wrap it
+    if (line.length > 40) {
+      // If it's an ASCII art line (contains lots of special chars), simplify it
+      if (line.includes('\x1b[') && (line.includes('█') || line.includes('═') || line.includes('│'))) {
+        return ''; // Remove complex ASCII art lines
+      }
+      
+      // For other long lines, keep them as is - they'll wrap naturally
+      return line;
+    }
+    return line;
+  });
+  
+  // Remove empty lines that might have been created
+  return processedLines.filter(line => line !== '').join('\n');
 }

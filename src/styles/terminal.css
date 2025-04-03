@@ -5,6 +5,24 @@
   user-select: none;
   -ms-user-select: none;
   -webkit-user-select: none;
+  max-width: 100%; /* Ensure terminal doesn't overflow on mobile */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .xterm {
+    font-size: 10px !important; /* Force smaller font on mobile */
+    line-height: 1.1 !important; /* Tighter line height */
+  }
+  
+  .xterm-viewport {
+    overflow-x: hidden !important; /* Prevent horizontal scrolling on mobile */
+  }
+  
+  .xterm-screen canvas {
+    max-width: 100% !important; /* Ensure canvas doesn't overflow */
+  }
 }
 
 .xterm.focus,
@@ -56,6 +74,7 @@
   left: 0;
   top: 0;
   bottom: 0;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
 .xterm .xterm-screen {

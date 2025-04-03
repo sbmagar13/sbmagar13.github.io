@@ -842,7 +842,7 @@ Pro tip: Try 'sudo rm -rf /' if you're feeling adventurous (or destructive)
 
 \x1b[1;31mPermission denied\x1b[0m
 
-\x1b[1;33mThis incident will be reported to Santa's naughty list and your Kubernetes cluster admin.\x1b[0m
+\x1b[1;33mThis incident will be reported to Sagar's ignore-this list.\x1b[0m
 \x1b[1;33mPro tip:\x1b[0m Real DevOps engineers don't need sudo. They have properly configured RBAC.
 `;
   },

@@ -44,7 +44,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       cursorBlink: true,
       cursorStyle: 'block',
       fontFamily: 'var(--font-geist-mono), monospace',
-      fontSize: 14,
+      fontSize: window.innerWidth < 768 ? 12 : 14, // Smaller font on mobile
       theme: {
         background: '#0a0a0a',
         foreground: '#33ff33',
@@ -53,6 +53,8 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         selectionForeground: '#0a0a0a',
       },
       allowTransparency: true,
+      convertEol: true, // Ensures proper line breaks on mobile
+      scrollback: 1000, // Increase scrollback for better mobile experience
     });
     
     // Save term reference first

@@ -62,15 +62,15 @@ const About = () => {
       </div>
       
       {/* System Uptime */}
-      <div className="mb-6 p-4 bg-gray-800 rounded-md">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-semibold text-green-400">System Uptime</h3>
+      <div className="mb-6 p-3 sm:p-4 bg-gray-800 rounded-md">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-2">
+          <h3 className="text-lg font-semibold text-green-400 mb-1 sm:mb-0">System Uptime</h3>
           <div className="flex items-center">
             <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
             <span className="text-green-500 text-sm">OPERATIONAL</span>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
           <div className="bg-gray-700 p-3 rounded">
             <div className="text-xs text-gray-400">Years Active</div>
             <div className="text-xl font-mono">4+</div>
@@ -92,7 +92,7 @@ const About = () => {
       
       {/* Tabs */}
       <div className="mb-4 border-b border-gray-700">
-        <div className="flex space-x-4">
+        <div className="flex flex-wrap gap-2 sm:space-x-4">
           <button 
             className={`py-2 px-4 font-medium ${activeTab === 'metrics' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
             onClick={() => setActiveTab('metrics')}
@@ -141,7 +141,7 @@ const About = () => {
                 </div>
               </div>
             ))}
-            <div className="mt-6 text-sm text-gray-400">
+            <div className="mt-6 text-xs sm:text-sm text-gray-400">
               <p>These metrics represent skill proficiency levels across different DevOps domains.</p>
             </div>
           </motion.div>
@@ -158,7 +158,7 @@ const About = () => {
               {incidents.map((incident, index) => (
                 <motion.div 
                   key={index}
-                  className="bg-gray-800 border border-gray-700 rounded-md p-4"
+                  className="bg-gray-800 border border-gray-700 rounded-md p-3 sm:p-4"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -196,7 +196,7 @@ const About = () => {
             className="text-center"
           >
             <h3 className="text-lg font-semibold text-green-400 mb-4">Infrastructure as Code Representation</h3>
-            <div className="bg-gray-800 p-4 rounded-md font-mono text-sm text-left overflow-x-auto">
+            <div className="bg-gray-800 p-2 sm:p-4 rounded-md font-mono text-xs sm:text-sm text-left overflow-x-auto">
               <pre className="text-gray-300">
 {`resource "human_engineer" "devops_expert" {
   name        = "Sagar Budhathoki"

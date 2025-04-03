@@ -337,7 +337,7 @@ const Projects = () => {
       {/* Cluster View */}
       {!selectedProject && (
         <div className="relative p-6 bg-gray-800 rounded-lg border border-gray-700">
-          <div className="absolute top-4 right-4 flex space-x-2">
+          <div className="absolute top-4 right-4 flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
             <div className="flex items-center text-xs text-green-400">
               <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>
               <span>Running</span>
@@ -354,7 +354,7 @@ const Projects = () => {
           
           <h3 className="text-lg font-semibold text-green-400 mb-6">Cluster Overview</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {projects.map((project) => (
               <motion.div
                 key={project.id}
@@ -417,12 +417,12 @@ const Projects = () => {
           transition={{ duration: 0.3 }}
           className="bg-gray-800 rounded-lg border border-gray-700"
         >
-          <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-            <div className="flex items-center">
-              <FaDocker className="text-blue-400 mr-2" />
-              <h3 className="font-mono text-green-400">{selectedProject.name}</h3>
-              <span className="ml-2 text-xs text-gray-400">namespace: {selectedProject.namespace}</span>
-              <span className={`ml-3 px-2 py-1 text-xs rounded-full ${
+          <div className="p-4 border-b border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <FaDocker className="text-blue-400" />
+              <h3 className="font-mono text-green-400 text-sm sm:text-base">{selectedProject.name}</h3>
+              <span className="text-xs text-gray-400">namespace: {selectedProject.namespace}</span>
+              <span className={`px-2 py-1 text-xs rounded-full ${
                 selectedProject.status === 'Running' 
                   ? 'bg-green-900 text-green-400' 
                   : selectedProject.status === 'Maintenance'
@@ -451,7 +451,7 @@ const Projects = () => {
               ))}
             </div>
             
-            <div className="flex space-x-3 mb-4">
+            <div className="flex flex-wrap gap-3 mb-4">
               {selectedProject.links.github && (
                 <a href={selectedProject.links.github} className="flex items-center text-sm text-blue-400 hover:text-blue-300">
                   <FaGithub className="mr-1" /> Repository
@@ -471,7 +471,7 @@ const Projects = () => {
             
             {/* Tabs */}
             <div className="border-b border-gray-700 mb-4">
-              <div className="flex space-x-4">
+              <div className="flex flex-wrap gap-2 sm:space-x-4">
                 <button 
                   className={`py-2 px-4 font-medium ${activeTab === 'metrics' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
                   onClick={() => setActiveTab('metrics')}
@@ -498,7 +498,7 @@ const Projects = () => {
               {activeTab === 'metrics' && (
                 <div>
                   <h4 className="text-lg font-semibold text-green-400 mb-4">Performance Metrics</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
                     <div className="bg-gray-700 p-3 rounded">
                       <div className="text-xs text-gray-400">Uptime</div>
                       <div className="text-xl font-mono">{selectedProject.metrics.uptime}</div>
@@ -515,7 +515,7 @@ const Projects = () => {
                   
                   <div className="mb-4">
                     <h5 className="text-sm font-semibold text-gray-300 mb-2">Performance Trend (30 days)</h5>
-                    <div className="h-24 bg-gray-700 rounded-md flex items-end p-2">
+                    <div className="h-16 sm:h-24 bg-gray-700 rounded-md flex items-end p-2">
                       {Array.from({ length: 30 }).map((_, i) => {
                         const height = Math.floor(Math.random() * 50) + 30;
                         return (

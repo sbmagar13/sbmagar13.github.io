@@ -76,7 +76,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-2 sm:p-4">
       {loading ? (
         <motion.div 
           className="w-full max-w-4xl text-green-500 font-mono"
@@ -105,14 +105,14 @@ export default function Home() {
       ) : (
         <>
           <motion.header 
-            className="w-full max-w-4xl mb-4 flex justify-between items-center"
+            className="w-full max-w-4xl mb-4 flex flex-col sm:flex-row justify-between items-center gap-3"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div>
-              <h1 className="text-3xl font-bold text-green-500">DevOps Brain</h1>
-              <p className="text-gray-400 text-sm">Your Brain on the Web - DevOps | by <span className="text-green-400">Sagar Budhathoki</span></p>
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl font-bold text-green-500">DevOps Brain</h1>
+              <p className="text-gray-400 text-xs sm:text-sm">Your Brain on the Web - DevOps | by <span className="text-green-400">Sagar Budhathoki</span></p>
             </div>
             <div className="flex space-x-3 text-gray-400">
               <button 
@@ -148,13 +148,13 @@ export default function Home() {
           
           <motion.main 
             className="w-full max-w-4xl mb-4"
-            style={{ minHeight: '70vh' }}
+            style={{ minHeight: 'calc(100vh - 200px)' }}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
             {activeSection === 'terminal' && (
-              <div className="h-[70vh]">
+              <div className="h-[calc(100vh-200px)]">
                 <Terminal 
                   initialCommand="help" 
                   onCommandExecuted={handleTerminalCommand}
@@ -167,20 +167,20 @@ export default function Home() {
           </motion.main>
           
           <motion.div 
-            className="w-full max-w-4xl flex justify-between text-xs text-gray-500 font-mono"
+            className="w-full max-w-4xl flex flex-col sm:flex-row justify-between text-xs text-gray-500 font-mono gap-2 sm:gap-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <div className="flex items-center">
+            <div className="flex items-center justify-center sm:justify-start">
               <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
               <span>System operational</span>
             </div>
-            <div>
+            <div className="text-center sm:text-left">
               <span>Uptime: {Math.floor(Math.random() * 100) + 1}d {Math.floor(Math.random() * 24)}h {Math.floor(Math.random() * 60)}m</span>
             </div>
-            <div>
-              <span>© {new Date().getFullYear()} DevOps Brain | by Sagar Budhathoki</span>
+            <div className="text-center sm:text-right">
+              <span>© {new Date().getFullYear()} DevOps Brain</span>
             </div>
           </motion.div>
         </>

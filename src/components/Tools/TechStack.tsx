@@ -144,7 +144,7 @@ const TechStack = () => {
     // Cloud Technologies
     {
       id: 'aws',
-      name: 'Amazon Web Services',
+      name: 'AWS',
       category: 'cloud',
       icon: <FaAws />,
       tags: ['cloud', 'iaas', 'paas', 'serverless'],
@@ -493,7 +493,7 @@ const TechStack = () => {
       </div>
       
       {/* Search, Filter and View Toggle */}
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <input
             type="text"
@@ -536,7 +536,7 @@ const TechStack = () => {
       </div>
       
       {/* Categories */}
-      <div className="mb-6 flex space-x-2 overflow-x-auto pb-2">
+      <div className="mb-6 flex flex-wrap gap-2 pb-2">
         {categories.map(category => (
           <button
             key={category.id}
@@ -555,7 +555,7 @@ const TechStack = () => {
       
       {/* Tech Grid or Terminal View */}
       {!selectedTech && viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {filteredTech.map(tech => (
             <motion.div
               key={tech.id}
@@ -690,7 +690,7 @@ const TechStack = () => {
               </div>
             )}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
               <div>
                 <h4 className="text-lg font-semibold text-green-400 mb-2">Experience</h4>
                 <div className="bg-gray-700 p-4 rounded-md">
@@ -757,7 +757,7 @@ const TechStack = () => {
               </div>
             )}
             
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row gap-3 sm:justify-between">
               <button className="px-4 py-2 bg-blue-700 text-blue-100 rounded hover:bg-blue-600 transition-colors flex items-center">
                 <FaBook className="mr-2" /> Documentation
               </button>

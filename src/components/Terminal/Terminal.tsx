@@ -357,9 +357,17 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   
   // Write command result to terminal
   const writeCommandResult = (result: string) => {
-    if (!xtermRef.current) return;
+    if (!xtermRef.current || !terminalRef.current) return;
     
     const term = xtermRef.current;
+    
+    // Function to scroll to bottom
+    const scrollToBottom = () => {
+      const viewport = terminalRef.current?.querySelector('.xterm-viewport');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+    };
     
     // Check if this is a sequential output (like coffee command)
     if (result.includes('<<SEQUENTIAL_START>>') && result.includes('<<SEQUENTIAL_END>>')) {
@@ -413,6 +421,9 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       
       // Write prompt
       writePrompt(term);
+      
+      // Scroll to bottom to ensure output is visible
+      scrollToBottom();
     }
   };
   
@@ -469,7 +480,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     
     // Function to update the terminal display
     const updateTerminalDisplay = () => {
-      if (!xtermRef.current) return;
+      if (!xtermRef.current || !terminalRef.current) return;
       
       // Clear the current line
       xtermRef.current.write('\r\x1b[K');
@@ -479,6 +490,12 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       
       // Write the current line
       xtermRef.current.write(currentLine);
+      
+      // Scroll to the bottom to ensure the typing area is visible
+      const viewport = terminalRef.current.querySelector('.xterm-viewport');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
     };
     
     // Handle input

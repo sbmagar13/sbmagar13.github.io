@@ -67,7 +67,7 @@
 
 .xterm .xterm-viewport {
   background-color: #000;
-  overflow-y: scroll;
+  overflow-y: auto;
   cursor: default;
   position: absolute;
   right: 0;
@@ -75,6 +75,20 @@
   top: 0;
   bottom: 0;
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  max-height: 100%;
+}
+
+/* Improve mobile scrolling */
+@media (max-width: 768px) {
+  .xterm-viewport {
+    position: relative;
+    height: 100%;
+    overflow-y: auto !important;
+  }
+  
+  .xterm-screen {
+    position: relative !important;
+  }
 }
 
 .xterm .xterm-screen {

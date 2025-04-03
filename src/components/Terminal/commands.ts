@@ -361,6 +361,7 @@ Example: deploy 1
 
 \x1b[1;33mInitiating deployment for Project #${projectNumber}...\x1b[0m
 
+<<SEQUENTIAL_START>>
 \x1b[1;36m[1/7]\x1b[0m Running tests... \x1b[1;32m✓ Passed\x1b[0m
 \x1b[1;36m[2/7]\x1b[0m Building artifacts... \x1b[1;32m✓ Completed\x1b[0m
 \x1b[1;36m[3/7]\x1b[0m Scanning for vulnerabilities... \x1b[1;32m✓ No issues found\x1b[0m
@@ -368,6 +369,7 @@ Example: deploy 1
 \x1b[1;36m[5/7]\x1b[0m Updating infrastructure... \x1b[1;32m✓ Applied\x1b[0m
 \x1b[1;36m[6/7]\x1b[0m Deploying to production... \x1b[1;32m✓ Deployed\x1b[0m
 \x1b[1;36m[7/7]\x1b[0m Running smoke tests... \x1b[1;32m✓ Verified\x1b[0m
+<<SEQUENTIAL_END>>
 
 \x1b[1;32mDeployment completed successfully!\x1b[0m
 \x1b[1;36mDeployment ID:\x1b[0m d-${Math.random().toString(36).substring(2, 10)}
@@ -485,11 +487,13 @@ with existing build scripts and test frameworks.
 \x1b[1;33mDuration:\x1b[0m 5 minutes
 \x1b[1;33mScope:\x1b[0m 25% of service instances
 
+<<SEQUENTIAL_START>>
 \x1b[1;36m[1/5]\x1b[0m Preparing experiment... \x1b[1;32m✓ Ready\x1b[0m
 \x1b[1;36m[2/5]\x1b[0m Verifying monitoring... \x1b[1;32m✓ Active\x1b[0m
 \x1b[1;36m[3/5]\x1b[0m Executing chaos... \x1b[1;32m✓ Injected\x1b[0m
 \x1b[1;36m[4/5]\x1b[0m Monitoring service health... \x1b[1;33m⚠ Degraded but functioning\x1b[0m
 \x1b[1;36m[5/5]\x1b[0m Restoring normal operation... \x1b[1;32m✓ Recovered\x1b[0m
+<<SEQUENTIAL_END>>
 
 \x1b[1;32mExperiment completed successfully!\x1b[0m
 
@@ -863,17 +867,21 @@ Pro tip: Try 'sudo rm -rf /' if you're feeling adventurous (or destructive)
     const caffeineLevel = 85 + Math.floor(Math.random() * 15);
     const coffeeVersion = '2.5.' + Math.floor(Math.random() * 10);
     
+    // For sequential display, we'll use a special marker that the terminal component will recognize
+    // The terminal will look for this marker and handle the sequential display
     return `
 \x1b[1;32m=== COFFEE DEPLOYMENT PIPELINE ===\x1b[0m
 
 \x1b[1;33mInitiating coffee microservice deployment...\x1b[0m
 
+<<SEQUENTIAL_START>>
 \x1b[1;36m[1/6]\x1b[0m Provisioning water resources to ${brewTemp}°C... \x1b[1;32m✓ Done\x1b[0m
 \x1b[1;36m[2/6]\x1b[0m Containerizing coffee beans (Alpine grind)... \x1b[1;32m✓ Done\x1b[0m
 \x1b[1;36m[3/6]\x1b[0m Establishing bean-to-water handshake... \x1b[1;32m✓ Connected\x1b[0m
 \x1b[1;36m[4/6]\x1b[0m Extracting caffeine payload (${extractionTime}s)... \x1b[1;32m✓ Extracted\x1b[0m
 \x1b[1;36m[5/6]\x1b[0m Load balancing to your mug... \x1b[1;32m✓ Distributed\x1b[0m
 \x1b[1;36m[6/6]\x1b[0m Running health checks... \x1b[1;32m✓ Aromatic\x1b[0m
+<<SEQUENTIAL_END>>
 
 \x1b[1;32mCoffee v${coffeeVersion} successfully deployed!\x1b[0m
 

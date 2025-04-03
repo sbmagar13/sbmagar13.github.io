@@ -77,7 +77,7 @@ const Projects = () => {
     },
     {
       id: 12,
-      name: 'llm-infrastructure-analyzer',
+      name: 'llm-infra-analyzer',
       namespace: 'ai',
       description: 'AI-powered tool that analyzes infrastructure configurations, identifies optimization opportunities, and suggests improvements based on best practices.',
       tech: ['Python', 'LLMs', 'Infrastructure Analysis', 'Terraform'],

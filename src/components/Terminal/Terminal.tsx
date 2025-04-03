@@ -20,13 +20,6 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   const fitAddonRef = useRef<FitAddon | null>(null);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [currentInput, setCurrentInput] = useState('');
-  
-  // Use currentInput to avoid the "assigned but never used" error
-  useEffect(() => {
-    // This effect runs whenever currentInput changes
-    // We don't need to do anything here, just having the dependency is enough
-  }, [currentInput]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
 
@@ -34,17 +27,21 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   const focusTerminal = () => {
     if (!terminalRef.current || !xtermRef.current) return;
     
-    // Focus the terminal element
-    terminalRef.current.focus();
-    
-    // Try to find and focus the xterm textarea
-    const xtermTextarea = terminalRef.current.querySelector('.xterm-helper-textarea');
-    if (xtermTextarea) {
-      (xtermTextarea as HTMLTextAreaElement).focus();
+    try {
+      // Focus the terminal element
+      terminalRef.current.focus();
+      
+      // Try to find and focus the xterm textarea
+      const xtermTextarea = terminalRef.current.querySelector('.xterm-helper-textarea');
+      if (xtermTextarea) {
+        (xtermTextarea as HTMLTextAreaElement).focus();
+      }
+      
+      // Focus the xterm directly
+      xtermRef.current.focus();
+    } catch (error) {
+      console.error('Error focusing terminal:', error);
     }
-    
-    // Focus the xterm directly
-    xtermRef.current.focus();
   };
   
   // Initialize terminal
@@ -55,9 +52,6 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     if (xtermRef.current) {
       xtermRef.current.dispose();
     }
-    
-    // Flag to track if we've shown the keyboard on mobile
-    let hasShownKeyboard = false;
     
     // Create new terminal
     const term = new XTerm({
@@ -90,31 +84,31 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     // Load addon
     term.loadAddon(fitAddon);
     
-      // Open terminal
-      term.open(terminalRef.current);
-      
-      // Improved mobile touch support
-      if (terminalRef.current) {
-        // Make the terminal container focusable
-        terminalRef.current.tabIndex = 0;
-        
-        // Handle touch on terminal
-        terminalRef.current.addEventListener('touchstart', (e) => {
-          // Prevent default to avoid unwanted scrolling
-          e.preventDefault();
-          
-          // Show the mobile keyboard button more prominently
-          const keyboardButton = document.getElementById('mobile-keyboard-button');
-          if (keyboardButton) {
-            keyboardButton.classList.add('pulse-animation');
-            setTimeout(() => {
-              keyboardButton.classList.remove('pulse-animation');
-            }, 2000);
-          }
-        });
-      }
+    // Open terminal
+    term.open(terminalRef.current);
     
-    // Add a longer delay before fitting to ensure DOM is fully rendered
+    // Improved mobile touch support
+    if (terminalRef.current) {
+      // Make the terminal container focusable
+      terminalRef.current.tabIndex = 0;
+      
+      // Handle touch on terminal
+      terminalRef.current.addEventListener('touchstart', (e) => {
+        // Prevent default to avoid unwanted scrolling
+        e.preventDefault();
+        
+        // Show the mobile keyboard button more prominently
+        const keyboardButton = document.getElementById('mobile-keyboard-button');
+        if (keyboardButton) {
+          keyboardButton.classList.add('pulse-animation');
+          setTimeout(() => {
+            keyboardButton.classList.remove('pulse-animation');
+          }, 2000);
+        }
+      });
+    }
+    
+    // Add a small delay before fitting to ensure DOM is fully rendered
     setTimeout(() => {
       if (fitAddonRef.current && terminalRef.current) {
         try {
@@ -128,7 +122,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           console.error('Error fitting terminal:', error);
         }
       }
-    }, 300);
+    }, 100); // Small delay to ensure terminal is properly initialized
     
     // Handle window resize
     const handleResize = () => {
@@ -171,11 +165,9 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           writePrompt(term);
         }
         currentLine = '';
-        setCurrentInput('');
       } else if (domEvent.keyCode === 8) { // Backspace
         if (currentLine.length > 0) {
           currentLine = currentLine.slice(0, -1);
-          setCurrentInput(currentLine);
           // Move cursor backward
           term.write('\b \b');
         }
@@ -192,7 +184,6 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           // Write history command
           term.write(historyCommand);
           currentLine = historyCommand;
-          setCurrentInput(historyCommand);
         }
       } else if (domEvent.keyCode === 40) { // Down arrow
         if (historyIndex < commandHistory.length - 1) {
@@ -207,7 +198,6 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           // Write history command
           term.write(historyCommand);
           currentLine = historyCommand;
-          setCurrentInput(historyCommand);
         } else if (historyIndex === commandHistory.length - 1) {
           setHistoryIndex(commandHistory.length);
           
@@ -216,17 +206,15 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           writePrompt(term);
           
           currentLine = '';
-          setCurrentInput('');
         }
       } else if (printable) {
         currentLine += key;
-        setCurrentInput(currentLine);
         term.write(key);
       }
     });
     
-    // Execute initial command if provided
-    if (initialCommand) {
+    // Execute initial command only on desktop (not mobile)
+    if (initialCommand && typeof window !== 'undefined' && window.innerWidth >= 768) {
       setTimeout(() => {
         currentLine = initialCommand;
         term.writeln('');
@@ -236,23 +224,13 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         setCommandHistory(prev => [...prev, initialCommand]);
         setHistoryIndex(1);
         currentLine = '';
-      }, 1000);
+      }, 300); // Reduced delay for faster startup
     }
     
-    // Automatically focus the terminal on all devices
+    // Automatically focus the terminal on desktop devices
     setTimeout(() => {
-      // For mobile devices, show the keyboard
-      if (typeof window !== 'undefined' && window.innerWidth < 768) {
-        if (!hasShownKeyboard) {
-          hasShownKeyboard = true;
-          handleMobileKeyboardClick();
-        }
-      } 
-      // For desktop browsers, focus the terminal directly
-      else {
-        focusTerminal();
-      }
-    }, 1500); // Delay to ensure terminal is fully initialized
+      focusTerminal();
+    }, 300); // Reduced delay for better performance
     
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -268,27 +246,36 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     // Skip if terminal or fit addon is not initialized
     if (!terminalRef.current || !fitAddonRef.current || !xtermRef.current) return;
     
-    // Create a ResizeObserver to detect changes in terminal dimensions
-    const resizeObserver = new ResizeObserver(() => {
-      if (fitAddonRef.current && terminalRef.current) {
-        try {
-          // Check if terminal element has dimensions
-          if (terminalRef.current.clientWidth > 0 && terminalRef.current.clientHeight > 0) {
-            fitAddonRef.current.fit();
+    try {
+      // Create a ResizeObserver to detect changes in terminal dimensions
+      const resizeObserver = new ResizeObserver(() => {
+        if (fitAddonRef.current && terminalRef.current) {
+          try {
+            // Check if terminal element has dimensions
+            if (terminalRef.current.clientWidth > 0 && terminalRef.current.clientHeight > 0) {
+              fitAddonRef.current.fit();
+            }
+          } catch (error) {
+            console.error('Error fitting terminal on dimension change:', error);
           }
-        } catch (error) {
-          console.error('Error fitting terminal on dimension change:', error);
         }
-      }
-    });
-    
-    // Observe the terminal element
-    resizeObserver.observe(terminalRef.current);
-    
-    // Clean up
-    return () => {
-      resizeObserver.disconnect();
-    };
+      });
+      
+      // Observe the terminal element
+      resizeObserver.observe(terminalRef.current);
+      
+      // Clean up
+      return () => {
+        try {
+          resizeObserver.disconnect();
+        } catch (error) {
+          console.error('Error disconnecting ResizeObserver:', error);
+        }
+      };
+    } catch (error) {
+      console.error('Error setting up ResizeObserver:', error);
+      return () => {}; // Return empty cleanup function
+    }
   }, []);
   
   // Write prompt to terminal
@@ -330,12 +317,12 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
                         command.startsWith('chaos') ? 'Releasing chaos monkey...' : 
                         'Loading...');
       
-      // Simulate loading
+      // Simulate loading (with reduced delay)
       setTimeout(() => {
         setIsLoading(false);
         const result = executeCommand(command);
         writeCommandResult(result);
-      }, 1500);
+      }, 800); // Reduced delay for faster response
     } else {
       // Execute command immediately
       const result = executeCommand(command);
@@ -349,16 +336,59 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     
     const term = xtermRef.current;
     
-    // Split result by newlines
-    const lines = result.split('\n');
-    
-    // Write each line
-    lines.forEach(line => {
-      term.writeln(line);
-    });
-    
-    // Write prompt
-    writePrompt(term);
+    // Check if this is a sequential output (like coffee command)
+    if (result.includes('<<SEQUENTIAL_START>>') && result.includes('<<SEQUENTIAL_END>>')) {
+      // Extract the sequential part
+      const startMarker = '<<SEQUENTIAL_START>>';
+      const endMarker = '<<SEQUENTIAL_END>>';
+      const startIndex = result.indexOf(startMarker) + startMarker.length;
+      const endIndex = result.indexOf(endMarker);
+      
+      // Get the content before, sequential part, and after
+      const beforeSequential = result.substring(0, result.indexOf(startMarker));
+      const sequentialContent = result.substring(startIndex, endIndex).trim();
+      const afterSequential = result.substring(endIndex + endMarker.length);
+      
+      // Write the content before sequential part
+      beforeSequential.split('\n').forEach(line => {
+        term.writeln(line);
+      });
+      
+      // Get the sequential lines
+      const sequentialLines = sequentialContent.split('\n');
+      
+      // Write sequential lines with delay
+      let lineIndex = 0;
+      
+      const writeSequentialLine = () => {
+        if (lineIndex < sequentialLines.length) {
+          term.writeln(sequentialLines[lineIndex]);
+          lineIndex++;
+          setTimeout(writeSequentialLine, 800); // Reduced delay for faster display
+        } else {
+          // After all sequential lines, write the rest and the prompt
+          afterSequential.split('\n').forEach(line => {
+            term.writeln(line);
+          });
+          writePrompt(term);
+        }
+      };
+      
+      // Start writing sequential lines
+      writeSequentialLine();
+    } else {
+      // Regular output (not sequential)
+      // Split result by newlines
+      const lines = result.split('\n');
+      
+      // Write each line
+      lines.forEach(line => {
+        term.writeln(line);
+      });
+      
+      // Write prompt
+      writePrompt(term);
+    }
   };
   
   // Loading animation
@@ -387,163 +417,41 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     };
   }, [isLoading, loadingMessage]);
   
-  // Improved mobile keyboard handling
+  // Direct terminal input handling for mobile
   const handleMobileKeyboardClick = () => {
     if (!terminalRef.current || !xtermRef.current) return;
     
-    // Create a better mobile input interface
-    const inputContainer = document.createElement('div');
-    inputContainer.style.position = 'fixed';
-    inputContainer.style.bottom = '0';
-    inputContainer.style.left = '0';
-    inputContainer.style.width = '100%';
-    inputContainer.style.backgroundColor = '#0a0a0a';
-    inputContainer.style.borderTop = '2px solid #33ff33';
-    inputContainer.style.padding = '10px';
-    inputContainer.style.zIndex = '1000';
-    inputContainer.style.display = 'flex';
-    inputContainer.style.flexDirection = 'column';
-    inputContainer.style.gap = '10px';
+    // Focus the terminal to ensure it receives input
+    focusTerminal();
     
-    // Add a label to make it clear
-    const label = document.createElement('div');
-    label.textContent = 'Terminal Input';
-    label.style.color = '#33ff33';
-    label.style.fontSize = '14px';
-    label.style.fontWeight = 'bold';
-    inputContainer.appendChild(label);
-    
-    // Create input field
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.style.width = '100%';
-    input.style.padding = '10px';
-    input.style.backgroundColor = '#1a1a1a';
-    input.style.color = '#33ff33';
-    input.style.border = '1px solid #33ff33';
-    input.style.borderRadius = '4px';
-    input.style.fontSize = '16px'; // Larger font size for better mobile typing
-    input.placeholder = 'Type your command here...';
-    input.autocapitalize = 'none'; // Prevent auto-capitalization
-    input.autocomplete = 'off'; // Disable autocomplete
-    // Set autocorrect attribute using setAttribute since it's not in the HTMLInputElement type
-    input.setAttribute('autocorrect', 'off');
-    input.spellcheck = false; // Disable spellcheck
-    inputContainer.appendChild(input);
-    
-    // Create button container
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.justifyContent = 'space-between';
-    buttonContainer.style.marginTop = '5px';
-    
-    // Create submit button
-    const submitButton = document.createElement('button');
-    submitButton.textContent = 'Execute';
-    submitButton.style.padding = '8px 16px';
-    submitButton.style.backgroundColor = '#33ff33';
-    submitButton.style.color = '#0a0a0a';
-    submitButton.style.border = 'none';
-    submitButton.style.borderRadius = '4px';
-    submitButton.style.fontWeight = 'bold';
-    submitButton.style.flex = '1';
-    submitButton.style.marginRight = '5px';
-    buttonContainer.appendChild(submitButton);
-    
-    // Create close button
-    const closeButton = document.createElement('button');
-    closeButton.textContent = 'Close';
-    closeButton.style.padding = '8px 16px';
-    closeButton.style.backgroundColor = '#ff3333';
-    closeButton.style.color = 'white';
-    closeButton.style.border = 'none';
-    closeButton.style.borderRadius = '4px';
-    closeButton.style.fontWeight = 'bold';
-    buttonContainer.appendChild(closeButton);
-    
-    inputContainer.appendChild(buttonContainer);
-    
-    // Add common commands for quick access
-    const quickCommands = ['help', 'about', 'projects', 'skills', 'clear'];
-    const quickCommandsContainer = document.createElement('div');
-    quickCommandsContainer.style.display = 'flex';
-    quickCommandsContainer.style.flexWrap = 'wrap';
-    quickCommandsContainer.style.gap = '5px';
-    quickCommandsContainer.style.marginTop = '10px';
-    
-    quickCommands.forEach(cmd => {
-      const cmdButton = document.createElement('button');
-      cmdButton.textContent = cmd;
-      cmdButton.style.padding = '5px 10px';
-      cmdButton.style.backgroundColor = '#1a1a1a';
-      cmdButton.style.color = '#33ff33';
-      cmdButton.style.border = '1px solid #33ff33';
-      cmdButton.style.borderRadius = '4px';
-      cmdButton.style.fontSize = '14px';
+    // Make the xterm-helper-textarea visible and position it better for mobile
+    const xtermTextarea = terminalRef.current.querySelector('.xterm-helper-textarea');
+    if (xtermTextarea) {
+      const textarea = xtermTextarea as HTMLTextAreaElement;
       
-      cmdButton.addEventListener('click', () => {
-        input.value = cmd;
-      });
+      // Make it visible but transparent (so we can type directly in terminal)
+      textarea.style.opacity = '1';
+      textarea.style.left = '0';
+      textarea.style.top = 'auto';
+      textarea.style.bottom = '80px'; // Position it higher to avoid keyboard overlap
+      textarea.style.width = '100%';
+      textarea.style.height = '40px';
+      textarea.style.zIndex = '100';
+      textarea.style.backgroundColor = 'transparent';
+      textarea.style.color = 'transparent';
+      textarea.style.caretColor = 'transparent';
       
-      quickCommandsContainer.appendChild(cmdButton);
-    });
-    
-    inputContainer.appendChild(quickCommandsContainer);
-    
-    // Add to DOM
-    document.body.appendChild(inputContainer);
-    
-    // Focus the input to show keyboard
-    setTimeout(() => {
-      input.focus();
-    }, 100);
-    
-    // Handle submit
-    const handleSubmit = () => {
-      if (!xtermRef.current) return;
+      // Focus it to bring up the keyboard
+      textarea.focus();
       
-      const command = input.value.trim();
-      if (command) {
-        // Clear the input
-        input.value = '';
-        
-        // Write command to terminal
-        xtermRef.current.writeln('');
-        xtermRef.current.write(`${command}`);
-        xtermRef.current.writeln('');
-        
-        // Process command
-        processCommand(command);
-        setCommandHistory(prev => [...prev, command]);
-        setHistoryIndex(commandHistory.length + 1);
-        
-        // On mobile, reopen the keyboard after a short delay
-        if (typeof window !== 'undefined' && window.innerWidth < 768) {
-          // Close the current input container
-          document.body.removeChild(inputContainer);
-          
-          // Reopen keyboard after a short delay to allow command to process
-          setTimeout(() => {
-            handleMobileKeyboardClick();
-          }, 500);
-        } else {
-          // On desktop, just close the input container
-          document.body.removeChild(inputContainer);
+      // Scroll terminal to bottom to ensure input area is visible
+      if (terminalRef.current) {
+        const viewport = terminalRef.current.querySelector('.xterm-viewport');
+        if (viewport) {
+          viewport.scrollTop = viewport.scrollHeight;
         }
       }
-    };
-    
-    // Event listeners
-    submitButton.addEventListener('click', handleSubmit);
-    closeButton.addEventListener('click', () => {
-      document.body.removeChild(inputContainer);
-    });
-    
-    input.addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') {
-        handleSubmit();
-      }
-    });
+    }
   };
   
   return (
@@ -569,16 +477,17 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       </div>
       <div 
         ref={terminalRef} 
-        className="flex-1 bg-black focus:outline-none"
+        className="flex-1 bg-black focus:outline-none overflow-auto"
         tabIndex={0} // Make the terminal div focusable
         onClick={focusTerminal}
         onFocus={focusTerminal}
+        style={{ maxHeight: '100%', overflowY: 'auto' }}
       />
       
-      {/* Improved mobile keyboard button - only visible on small screens */}
+      {/* Mobile keyboard button - positioned at the bottom right */}
       <button
         id="mobile-keyboard-button"
-        className="md:hidden absolute bottom-4 right-4 bg-green-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+        className="md:hidden fixed bottom-4 right-4 bg-green-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
         onClick={handleMobileKeyboardClick}
         aria-label="Open keyboard"
         style={{

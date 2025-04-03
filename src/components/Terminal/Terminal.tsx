@@ -355,6 +355,196 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     }
   };
   
+  // Helper function to detect URLs in text
+  const detectUrls = (text: string): { url: string, startIndex: number, endIndex: number }[] => {
+    // Improved regex to better match URLs in terminal output
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([\w-]+\.(com|org|net|io|dev|co|me|np)(\/([\w-]+)?)?)/g;
+    const urls: { url: string, startIndex: number, endIndex: number }[] = [];
+    
+    // Remove ANSI color codes for better URL detection
+    const cleanText = text.replace(/\x1b\[[0-9;]*m/g, '');
+    
+    // Find all URLs in the clean text
+    let match;
+    while ((match = urlRegex.exec(cleanText)) !== null) {
+      const url = match[0];
+      const startIndex = match.index;
+      const endIndex = startIndex + url.length;
+      
+      // Ensure the URL has a protocol
+      const formattedUrl = url.startsWith('http') ? url : 
+                          url.startsWith('www.') ? `https://${url}` : 
+                          `https://${url}`;
+      
+      // Find the actual position in the original text with ANSI codes
+      let realStartIndex = 0;
+      let cleanIndex = 0;
+      
+      for (let i = 0; i < text.length; i++) {
+        if (text[i] === '\x1b') {
+          // Skip ANSI escape sequence
+          while (i < text.length && !/[a-zA-Z]/.test(text[i])) {
+            i++;
+          }
+        } else {
+          if (cleanIndex === startIndex) {
+            realStartIndex = i;
+            break;
+          }
+          cleanIndex++;
+        }
+      }
+      
+      // Calculate real end index by adding the length of the URL
+      const realEndIndex = realStartIndex + url.length;
+      
+      urls.push({
+        url: formattedUrl,
+        startIndex: realStartIndex,
+        endIndex: realEndIndex
+      });
+    }
+    
+    return urls;
+  };
+  
+  // Create a container for clickable links
+  const createClickableLinks = () => {
+    // Remove any existing link overlays
+    const existingLinks = document.querySelectorAll('.terminal-link-overlay');
+    existingLinks.forEach(link => link.remove());
+    
+    // Get the terminal element and its dimensions
+    const terminalElement = terminalRef.current;
+    if (!terminalElement) return;
+    
+    // Get the viewport and its scroll position
+    const viewport = terminalElement.querySelector('.xterm-viewport');
+    const scrollTop = viewport ? viewport.scrollTop : 0;
+    
+    // Get the container for links
+    let linkContainer = document.getElementById('terminal-link-container');
+    if (!linkContainer) {
+      linkContainer = document.createElement('div');
+      linkContainer.id = 'terminal-link-container';
+      linkContainer.style.position = 'absolute';
+      linkContainer.style.top = '0';
+      linkContainer.style.left = '0';
+      linkContainer.style.width = '100%';
+      linkContainer.style.height = '100%';
+      linkContainer.style.pointerEvents = 'none';
+      linkContainer.style.zIndex = '100';
+      terminalElement.appendChild(linkContainer);
+    } else {
+      // Clear existing links
+      linkContainer.innerHTML = '';
+    }
+    
+    // Get all lines of text in the terminal
+    const rows = terminalElement.querySelector('.xterm-rows');
+    if (!rows) return;
+    
+    const lines = rows.querySelectorAll('div');
+    
+    // Process each line
+    lines.forEach((line, lineIndex) => {
+      const lineText = line.textContent || '';
+      const urls = detectUrls(lineText);
+      
+      if (urls.length > 0) {
+        console.log(`Found URLs on line ${lineIndex}:`, urls.map(u => u.url));
+      }
+      
+      // Create clickable overlays for each URL
+      urls.forEach(({ url, startIndex, endIndex }) => {
+        // Calculate position based on character indices
+        const charWidth = 7.2; // Approximate character width in pixels
+        const charHeight = 17; // Approximate line height in pixels
+        
+        // Create link overlay
+        const linkOverlay = document.createElement('a');
+        linkOverlay.href = url;
+        linkOverlay.target = '_blank';
+        linkOverlay.rel = 'noopener noreferrer';
+        linkOverlay.className = 'terminal-link-overlay';
+        linkOverlay.style.position = 'absolute';
+        linkOverlay.style.left = `${startIndex * charWidth}px`;
+        linkOverlay.style.top = `${(lineIndex * charHeight) - scrollTop}px`;
+        linkOverlay.style.width = `${(endIndex - startIndex) * charWidth}px`;
+        linkOverlay.style.height = `${charHeight}px`;
+        linkOverlay.style.pointerEvents = 'auto';
+        linkOverlay.style.cursor = 'pointer';
+        
+        // Make the link more visible and clickable
+        linkOverlay.style.backgroundColor = 'rgba(51, 255, 51, 0.2)';
+        linkOverlay.style.borderBottom = '2px solid rgba(51, 255, 51, 0.7)';
+        linkOverlay.style.borderRadius = '2px';
+        linkOverlay.style.zIndex = '200';
+        
+        // Add hover effect
+        linkOverlay.onmouseover = () => {
+          linkOverlay.style.textDecoration = 'underline';
+          linkOverlay.style.backgroundColor = 'rgba(51, 255, 51, 0.3)';
+          linkOverlay.style.boxShadow = '0 0 5px rgba(51, 255, 51, 0.5)';
+        };
+        
+        linkOverlay.onmouseout = () => {
+          linkOverlay.style.textDecoration = 'none';
+          linkOverlay.style.backgroundColor = 'rgba(51, 255, 51, 0.2)';
+          linkOverlay.style.boxShadow = 'none';
+        };
+        
+        // Add click handler
+        linkOverlay.onclick = (e) => {
+          e.preventDefault();
+          console.log('Link clicked:', url);
+          window.open(url, '_blank');
+        };
+        
+        // Add a text label to make it more obvious it's a link
+        const linkText = document.createElement('span');
+        linkText.textContent = url.substring(0, Math.min(url.length, 30)) + (url.length > 30 ? '...' : '');
+        linkText.style.position = 'absolute';
+        linkText.style.top = '0';
+        linkText.style.left = '0';
+        linkText.style.width = '100%';
+        linkText.style.height = '100%';
+        linkText.style.display = 'flex';
+        linkText.style.alignItems = 'center';
+        linkText.style.justifyContent = 'center';
+        linkText.style.color = 'transparent';
+        linkText.style.fontSize = '0px';
+        
+        linkOverlay.appendChild(linkText);
+        
+        // Append to link container
+        linkContainer.appendChild(linkOverlay);
+      });
+    });
+  };
+  
+  // Handle terminal scrolling to update link positions
+  useEffect(() => {
+    if (!terminalRef.current) return;
+    
+    // Get the viewport element
+    const viewport = terminalRef.current.querySelector('.xterm-viewport');
+    if (!viewport) return;
+    
+    // Add scroll event listener
+    const handleScroll = () => {
+      // Recreate links on scroll
+      createClickableLinks();
+    };
+    
+    viewport.addEventListener('scroll', handleScroll);
+    
+    // Clean up
+    return () => {
+      viewport.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+  
   // Write command result to terminal
   const writeCommandResult = (result: string) => {
     if (!xtermRef.current || !terminalRef.current) return;
@@ -424,6 +614,9 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       
       // Scroll to bottom to ensure output is visible
       scrollToBottom();
+      
+      // Create clickable links after a short delay to ensure terminal has rendered
+      setTimeout(createClickableLinks, 100);
     }
   };
   
@@ -638,7 +831,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         <span className="font-bold text-lg">KEYBOARD</span>
       </button>
       
-      {/* Add some CSS for the pulse animation */}
+      {/* Add some CSS for the pulse animation and terminal links */}
       <style jsx>{`
         @keyframes pulse {
           0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(51, 255, 51, 0.7); }
@@ -647,6 +840,19 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         }
         .pulse-animation {
           animation: pulse 1s infinite;
+        }
+        
+        :global(.terminal-link-overlay) {
+          position: absolute;
+          z-index: 10;
+          cursor: pointer;
+          text-decoration: none;
+          border-bottom: 1px dotted #33ff33;
+        }
+        
+        :global(.terminal-link-overlay:hover) {
+          background-color: rgba(51, 255, 51, 0.1);
+          text-decoration: underline;
         }
       `}</style>
     </motion.div>

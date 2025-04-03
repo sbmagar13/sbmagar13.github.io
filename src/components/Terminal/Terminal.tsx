@@ -58,8 +58,8 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       cursorBlink: true,
       cursorStyle: 'block',
       fontFamily: 'var(--font-geist-mono), monospace',
-      fontSize: window.innerWidth < 768 ? 10 : 14, // Even smaller font on mobile
-      lineHeight: window.innerWidth < 768 ? 1.1 : 1.2, // Tighter line height on mobile
+      fontSize: window.innerWidth < 768 ? 12 : 14, // Slightly larger font on mobile for better readability
+      lineHeight: window.innerWidth < 768 ? 1.2 : 1.2, // Consistent line height for readability
       theme: {
         background: '#0a0a0a',
         foreground: '#33ff33',
@@ -241,6 +241,31 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
+  // Cleanup mobile input elements when component unmounts
+  useEffect(() => {
+    return () => {
+      // Remove any mobile input elements when component unmounts
+      const mobileInput = document.getElementById('mobile-terminal-input');
+      const keyboardIndicator = document.getElementById('keyboard-active-indicator');
+      
+      if (mobileInput) {
+        try {
+          document.body.removeChild(mobileInput);
+        } catch (e) {
+          console.error('Error removing mobile input:', e);
+        }
+      }
+      
+      if (keyboardIndicator) {
+        try {
+          document.body.removeChild(keyboardIndicator);
+        } catch (e) {
+          console.error('Error removing keyboard indicator:', e);
+        }
+      }
+    };
+  }, []);
+  
   // Handle window resize and terminal dimension changes
   useEffect(() => {
     // Skip if terminal or fit addon is not initialized
@@ -417,41 +442,133 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     };
   }, [isLoading, loadingMessage]);
   
-  // Direct terminal input handling for mobile
+  // Direct terminal input handling for mobile - fixed to work with direct terminal input
   const handleMobileKeyboardClick = () => {
     if (!terminalRef.current || !xtermRef.current) return;
     
-    // Focus the terminal to ensure it receives input
-    focusTerminal();
+    // Create a hidden textarea for capturing keyboard input
+    const textArea = document.createElement('textarea');
+    textArea.id = 'mobile-terminal-input';
+    textArea.style.position = 'fixed';
+    textArea.style.left = '0';
+    textArea.style.top = '0';
+    textArea.style.opacity = '0';
+    textArea.style.height = '1px';
+    textArea.style.width = '1px';
+    textArea.style.zIndex = '-1000';
+    textArea.style.pointerEvents = 'none';
     
-    // Make the xterm-helper-textarea visible and position it better for mobile
-    const xtermTextarea = terminalRef.current.querySelector('.xterm-helper-textarea');
-    if (xtermTextarea) {
-      const textarea = xtermTextarea as HTMLTextAreaElement;
+    // Set input attributes to prevent auto-correction and zooming
+    textArea.setAttribute('autocomplete', 'off');
+    textArea.setAttribute('autocorrect', 'off');
+    textArea.setAttribute('autocapitalize', 'none');
+    textArea.setAttribute('spellcheck', 'false');
+    
+    // Current line being typed
+    let currentLine = '';
+    
+    // Function to update the terminal display
+    const updateTerminalDisplay = () => {
+      if (!xtermRef.current) return;
       
-      // Make it visible but transparent (so we can type directly in terminal)
-      textarea.style.opacity = '1';
-      textarea.style.left = '0';
-      textarea.style.top = 'auto';
-      textarea.style.bottom = '80px'; // Position it higher to avoid keyboard overlap
-      textarea.style.width = '100%';
-      textarea.style.height = '40px';
-      textarea.style.zIndex = '100';
-      textarea.style.backgroundColor = 'transparent';
-      textarea.style.color = 'transparent';
-      textarea.style.caretColor = 'transparent';
+      // Clear the current line
+      xtermRef.current.write('\r\x1b[K');
       
-      // Focus it to bring up the keyboard
-      textarea.focus();
+      // Write the prompt
+      writePrompt(xtermRef.current);
       
-      // Scroll terminal to bottom to ensure input area is visible
-      if (terminalRef.current) {
-        const viewport = terminalRef.current.querySelector('.xterm-viewport');
-        if (viewport) {
-          viewport.scrollTop = viewport.scrollHeight;
+      // Write the current line
+      xtermRef.current.write(currentLine);
+    };
+    
+    // Handle input
+    textArea.addEventListener('input', (e) => {
+      const target = e.target as HTMLTextAreaElement;
+      
+      // Update the current line with the textarea's value
+      currentLine = target.value;
+      
+      // Update the terminal display
+      updateTerminalDisplay();
+    });
+    
+    // Handle special keys
+    textArea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        
+        if (currentLine.trim() && xtermRef.current) {
+          // Add a new line
+          xtermRef.current.writeln('');
+          
+          // Store the command
+          const commandToExecute = currentLine.trim();
+          
+          // Clear current line and textarea
+          currentLine = '';
+          textArea.value = '';
+          
+          // Process the command
+          processCommand(commandToExecute);
+          
+          // Add to history
+          setCommandHistory(prev => [...prev, commandToExecute]);
+          setHistoryIndex(commandHistory.length + 1);
+        } else if (xtermRef.current) {
+          // Just write a new prompt if the command is empty
+          xtermRef.current.writeln('');
+          writePrompt(xtermRef.current);
+        }
+      } else if (e.key === 'Backspace') {
+        if (currentLine.length > 0) {
+          // Handle backspace manually to ensure correct behavior
+          e.preventDefault();
+          
+          // Remove the last character
+          currentLine = currentLine.substring(0, currentLine.length - 1);
+          textArea.value = currentLine;
+          
+          // Update the terminal display
+          updateTerminalDisplay();
         }
       }
+    });
+    
+    // Add to DOM and focus
+    document.body.appendChild(textArea);
+    
+    // Focus the textarea to bring up the keyboard
+    setTimeout(() => {
+      textArea.focus();
+    }, 100);
+    
+    // Show a notification to the user
+    if (xtermRef.current) {
+      xtermRef.current.writeln('\r\n\x1b[1;33mMobile keyboard activated. Type directly in the terminal.\x1b[0m\r\n');
+      writePrompt(xtermRef.current);
     }
+    
+    // Create a small indicator that keyboard is active
+    const indicator = document.createElement('div');
+    indicator.id = 'keyboard-active-indicator';
+    indicator.textContent = 'Keyboard Active';
+    indicator.style.position = 'fixed';
+    indicator.style.bottom = '10px';
+    indicator.style.right = '10px';
+    indicator.style.backgroundColor = 'rgba(51, 255, 51, 0.2)';
+    indicator.style.color = '#33ff33';
+    indicator.style.padding = '5px 10px';
+    indicator.style.borderRadius = '5px';
+    indicator.style.fontSize = '12px';
+    indicator.style.zIndex = '1000';
+    
+    // Close keyboard when indicator is tapped
+    indicator.addEventListener('click', () => {
+      document.body.removeChild(textArea);
+      document.body.removeChild(indicator);
+    });
+    
+    document.body.appendChild(indicator);
   };
   
   return (
@@ -484,22 +601,24 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         style={{ maxHeight: '100%', overflowY: 'auto' }}
       />
       
-      {/* Mobile keyboard button - positioned at the bottom right */}
+      {/* Mobile keyboard button - positioned at the bottom center for better visibility */}
       <button
         id="mobile-keyboard-button"
-        className="md:hidden fixed bottom-4 right-4 bg-green-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+        className="md:hidden fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center"
         onClick={handleMobileKeyboardClick}
         aria-label="Open keyboard"
         style={{
           animation: 'none',
           zIndex: 50,
-          boxShadow: '0 0 10px rgba(51, 255, 51, 0.5)'
+          boxShadow: '0 0 15px rgba(51, 255, 51, 0.7)',
+          width: '160px',
+          height: '50px'
         }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h18M3 6h18M3 18h18" />
         </svg>
-        <span className="ml-1 font-bold">Type</span>
+        <span className="font-bold text-lg">KEYBOARD</span>
       </button>
       
       {/* Add some CSS for the pulse animation */}

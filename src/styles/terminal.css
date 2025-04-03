@@ -12,16 +12,23 @@
 /* Mobile-specific styles */
 @media (max-width: 768px) {
   .xterm {
-    font-size: 10px !important; /* Force smaller font on mobile */
-    line-height: 1.1 !important; /* Tighter line height */
+    font-size: 12px !important; /* Slightly larger font for better readability */
+    line-height: 1.2 !important; /* Better line height for readability */
   }
   
   .xterm-viewport {
     overflow-x: hidden !important; /* Prevent horizontal scrolling on mobile */
+    -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
   }
   
   .xterm-screen canvas {
     max-width: 100% !important; /* Ensure canvas doesn't overflow */
+    height: auto !important; /* Maintain aspect ratio */
+  }
+  
+  /* Improve touch target sizes */
+  .xterm-helper-textarea {
+    font-size: 16px !important; /* Prevent zoom on iOS when focusing input */
   }
 }
 

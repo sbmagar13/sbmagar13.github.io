@@ -137,12 +137,53 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     
     window.addEventListener('resize', handleResize);
     
-    // Write welcome message
-    // term.writeln('\x1b[1;32m' + asciiArt.portrait + '\x1b[0m');
+    // Write welcome message with custom SAGAR ASCII art banner (centered)
     term.writeln('');
-    term.writeln('\x1b[1;32mWelcome to DevOps Brain Terminal v2.0.0\x1b[0m');
-    term.writeln('\x1b[1;37mYour Brain on the Web - DevOps\x1b[0m');
-    term.writeln('\x1b[90mType "help" to see available commands\x1b[0m');
+    
+    // Get terminal width for centering
+    const termWidth = term.cols || 80;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    
+    if (isMobile) {
+      // Smaller ASCII art for mobile - simplified version
+      const mobileAsciiWidth = 24; // Width of the simplified SAGAR ASCII art
+      const mobilePadding = Math.max(0, Math.floor((termWidth - mobileAsciiWidth) / 2));
+      const mobileSpaces = ' '.repeat(mobilePadding);
+      
+      // Write centered mobile-friendly ASCII art - simplified version
+      term.writeln(mobileSpaces + '\x1b[1;32m  ____    _    ____    _    ____  \x1b[0m');
+      term.writeln(mobileSpaces + '\x1b[1;32m / ___|  / \\  / ___|  / \\  |  _ \\ \x1b[0m');
+      term.writeln(mobileSpaces + '\x1b[1;32m \\___ \\ / _ \\| |  _  / _ \\ | |_) |\x1b[0m');
+      term.writeln(mobileSpaces + '\x1b[1;32m  ___) / ___ \\ |_| |/ ___ \\|  _ < \x1b[0m');
+      term.writeln(mobileSpaces + '\x1b[1;32m |____/_/   \\_\\____/_/   \\_\\_| \\_\\\x1b[0m');
+    } else {
+      // Desktop ASCII art
+      const sagarAsciiWidth = 48; // Width of the SAGAR ASCII art
+      const padding = Math.max(0, Math.floor((termWidth - sagarAsciiWidth) / 2));
+      const spaces = ' '.repeat(padding);
+      
+      // Write centered ASCII art
+      term.writeln(spaces + '\x1b[1;32m███████╗ █████╗  ██████╗  █████╗ ██████╗ \x1b[0m');
+      term.writeln(spaces + '\x1b[1;32m██╔════╝██╔══██╗██╔════╝ ██╔══██╗██╔══██╗\x1b[0m');
+      term.writeln(spaces + '\x1b[1;32m███████╗███████║██║  ███╗███████║██████╔╝\x1b[0m');
+      term.writeln(spaces + '\x1b[1;32m╚════██║██╔══██║██║   ██║██╔══██║██╔══██╗\x1b[0m');
+      term.writeln(spaces + '\x1b[1;32m███████║██║  ██║╚██████╔╝██║  ██║██║  ██║\x1b[0m');
+      term.writeln(spaces + '\x1b[1;32m╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝\x1b[0m');
+    }
+    
+    term.writeln('');
+    
+    // Center the subtitle text
+    const subtitle = 'DevOps Brain Terminal v2.0.0';
+    const subtitlePadding = Math.max(0, Math.floor((termWidth - subtitle.length) / 2));
+    const subtitleSpaces = ' '.repeat(subtitlePadding);
+    
+    const helpText = 'Type "help" to see available commands';
+    const helpPadding = Math.max(0, Math.floor((termWidth - helpText.length) / 2));
+    const helpSpaces = ' '.repeat(helpPadding);
+    
+    term.writeln(subtitleSpaces + '\x1b[1;37m' + subtitle + '\x1b[0m');
+    term.writeln(helpSpaces + '\x1b[90m' + helpText + '\x1b[0m');
     term.writeln('');
     
     // Set up prompt
@@ -381,6 +422,26 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         viewport.scrollTop = viewport.scrollHeight;
       }
     };
+
+    // Function to apply syntax highlighting to command output
+    const highlightSyntax = (line: string): string => {
+      // Highlight command names (words followed by a space or [])
+      line = line.replace(/^(\s*)([a-zA-Z0-9_-]+)(\s|\[)/g, '$1\x1b[1;36m$2\x1b[0m$3');
+      
+      // Highlight options and flags (words starting with -)
+      line = line.replace(/(\s)(-{1,2}[a-zA-Z0-9_-]+)/g, '$1\x1b[1;33m$2\x1b[0m');
+      
+      // Highlight URLs
+      line = line.replace(/(https?:\/\/[^\s]+)/g, '\x1b[1;34m$1\x1b[0m');
+      
+      // Highlight paths and filenames
+      line = line.replace(/(\s|\()([\/~][^\s:;,)]+)/g, '$1\x1b[1;32m$2\x1b[0m');
+      
+      // Highlight numbers
+      line = line.replace(/(\s)(\d+)(\s|$)/g, '$1\x1b[1;35m$2\x1b[0m$3');
+      
+      return line;
+    };
     
     // Check if this is a sequential output (like coffee command)
     if (result.includes('<<SEQUENTIAL_START>>') && result.includes('<<SEQUENTIAL_END>>')) {
@@ -397,7 +458,9 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       
       // Write the content before sequential part
       beforeSequential.split('\n').forEach(line => {
-        term.writeln(line);
+        // Apply syntax highlighting if the line doesn't already have color codes
+        const highlightedLine = !line.includes('\x1b[') ? highlightSyntax(line) : line;
+        term.writeln(highlightedLine);
       });
       
       // Get the sequential lines
@@ -408,13 +471,19 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       
       const writeSequentialLine = () => {
         if (lineIndex < sequentialLines.length) {
-          term.writeln(sequentialLines[lineIndex]);
+          // Apply syntax highlighting if the line doesn't already have color codes
+          const highlightedLine = !sequentialLines[lineIndex].includes('\x1b[') 
+            ? highlightSyntax(sequentialLines[lineIndex]) 
+            : sequentialLines[lineIndex];
+          term.writeln(highlightedLine);
           lineIndex++;
           setTimeout(writeSequentialLine, 800); // Reduced delay for faster display
         } else {
           // After all sequential lines, write the rest and the prompt
           afterSequential.split('\n').forEach(line => {
-            term.writeln(line);
+            // Apply syntax highlighting if the line doesn't already have color codes
+            const highlightedLine = !line.includes('\x1b[') ? highlightSyntax(line) : line;
+            term.writeln(highlightedLine);
           });
           writePrompt(term);
         }
@@ -427,16 +496,46 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       // Split result by newlines
       const lines = result.split('\n');
       
-      // Write each line
-      lines.forEach(line => {
-        term.writeln(line);
-      });
+      // Function to simulate typing effect
+      const simulateTyping = (lineIndex: number) => {
+        if (lineIndex >= lines.length) {
+          // All lines have been written, show prompt
+          writePrompt(term);
+          
+          // Scroll to bottom to ensure output is visible
+          scrollToBottom();
+          return;
+        }
+        
+        // Get the current line
+        const line = lines[lineIndex];
+        
+        // Skip typing effect for empty lines or lines with color codes (pre-formatted)
+        if (line.trim() === '' || line.includes('\x1b[')) {
+          term.writeln(line);
+          // Process next line with a small delay
+          setTimeout(() => simulateTyping(lineIndex + 1), 10);
+          return;
+        }
+        
+        // Apply syntax highlighting
+        const highlightedLine = highlightSyntax(line);
+        
+        // Write the line with a typing effect
+        term.writeln(highlightedLine);
+        
+        // Determine delay for next line based on line length
+        // Shorter lines = faster typing, longer lines = slower typing
+        const baseDelay = 20; // Base delay in milliseconds
+        const lineLength = line.length;
+        const delay = Math.min(baseDelay + lineLength / 5, 100); // Cap at 100ms
+        
+        // Process next line with calculated delay
+        setTimeout(() => simulateTyping(lineIndex + 1), delay);
+      };
       
-      // Write prompt
-      writePrompt(term);
-      
-      // Scroll to bottom to ensure output is visible
-      scrollToBottom();
+      // Start the typing effect with the first line
+      simulateTyping(0);
       
       // Clickable links functionality is disabled to fix the "Maximum call stack size exceeded" error
       // setTimeout(createClickableLinks, 300);
@@ -606,7 +705,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   
   return (
     <motion.div 
-      className="w-full h-full rounded-md overflow-hidden border border-green-500 shadow-lg shadow-green-500/20 flex flex-col relative"
+      className="w-full h-full rounded-md overflow-hidden border border-green-500 shadow-lg shadow-green-500/20 flex flex-col relative terminal-container"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -653,15 +752,27 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         <span className="font-bold text-lg">KEYBOARD</span>
       </button>
       
-      {/* Add some CSS for the pulse animation and terminal links */}
+      {/* Add some CSS for the pulse animation, terminal links, and glowing effect */}
       <style jsx>{`
         @keyframes pulse {
           0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(51, 255, 51, 0.7); }
           70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(51, 255, 51, 0); }
           100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(51, 255, 51, 0); }
         }
+        
+        @keyframes glow {
+          0% { box-shadow: 0 0 5px rgba(51, 255, 51, 0.5), 0 0 10px rgba(51, 255, 51, 0.3); }
+          50% { box-shadow: 0 0 10px rgba(51, 255, 51, 0.8), 0 0 20px rgba(51, 255, 51, 0.5); }
+          100% { box-shadow: 0 0 5px rgba(51, 255, 51, 0.5), 0 0 10px rgba(51, 255, 51, 0.3); }
+        }
+        
         .pulse-animation {
           animation: pulse 1s infinite;
+        }
+        
+        :global(.terminal-container) {
+          animation: glow 3s infinite ease-in-out;
+          border: 1px solid #33ff33 !important;
         }
         
         :global(.terminal-link-overlay) {

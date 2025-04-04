@@ -219,7 +219,7 @@ export default function Home() {
             {activeSection === 'terminal' && (
               <div className="h-[calc(100vh-200px)] sm:h-[calc(100vh-200px)]">
                 <Terminal 
-                  initialCommand={typeof window !== 'undefined' && window.innerWidth >= 768 ? "help" : ""} 
+                  initialCommand="" 
                   onCommandExecuted={handleTerminalCommand}
                 />
               </div>

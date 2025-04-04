@@ -2,7 +2,7 @@
 
 // This component uses browser-only features and should not be server-rendered
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from 'xterm-addon-fit';
@@ -355,61 +355,59 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     }
   };
   
-  // Helper function to detect URLs in text
-  const detectUrls = (text: string): { url: string, startIndex: number, endIndex: number }[] => {
-    // Improved regex to better match URLs in terminal output
-    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([\w-]+\.(com|org|net|io|dev|co|me|np)(\/([\w-]+)?)?)/g;
-    const urls: { url: string, startIndex: number, endIndex: number }[] = [];
-    
-    // Remove ANSI color codes for better URL detection
-    const cleanText = text.replace(/\x1b\[[0-9;]*m/g, '');
-    
-    // Find all URLs in the clean text
-    let match;
-    while ((match = urlRegex.exec(cleanText)) !== null) {
-      const url = match[0];
-      const startIndex = match.index;
-      const endIndex = startIndex + url.length;
+  // Create a container for clickable links
+  const createClickableLinks = useCallback(() => {
+    // Helper function to detect URLs in text
+    const detectUrls = (text: string): { url: string, startIndex: number, endIndex: number }[] => {
+      // Improved regex to better match URLs in terminal output
+      const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([\w-]+\.(com|org|net|io|dev|co|me|np)(\/([\w-]+)?)?)/g;
+      const urls: { url: string, startIndex: number, endIndex: number }[] = [];
       
-      // Ensure the URL has a protocol
-      const formattedUrl = url.startsWith('http') ? url : 
-                          url.startsWith('www.') ? `https://${url}` : 
-                          `https://${url}`;
+      // Remove ANSI color codes for better URL detection
+      const cleanText = text.replace(/\x1b\[[0-9;]*m/g, '');
       
-      // Find the actual position in the original text with ANSI codes
-      let realStartIndex = 0;
-      let cleanIndex = 0;
-      
-      for (let i = 0; i < text.length; i++) {
-        if (text[i] === '\x1b') {
-          // Skip ANSI escape sequence
-          while (i < text.length && !/[a-zA-Z]/.test(text[i])) {
-            i++;
+      // Find all URLs in the clean text
+      let match;
+      while ((match = urlRegex.exec(cleanText)) !== null) {
+        const url = match[0];
+        const startIndex = match.index;
+        
+        // Ensure the URL has a protocol
+        const formattedUrl = url.startsWith('http') ? url : 
+                            url.startsWith('www.') ? `https://${url}` : 
+                            `https://${url}`;
+        
+        // Find the actual position in the original text with ANSI codes
+        let realStartIndex = 0;
+        let cleanIndex = 0;
+        
+        for (let i = 0; i < text.length; i++) {
+          if (text[i] === '\x1b') {
+            // Skip ANSI escape sequence
+            while (i < text.length && !/[a-zA-Z]/.test(text[i])) {
+              i++;
+            }
+          } else {
+            if (cleanIndex === startIndex) {
+              realStartIndex = i;
+              break;
+            }
+            cleanIndex++;
           }
-        } else {
-          if (cleanIndex === startIndex) {
-            realStartIndex = i;
-            break;
-          }
-          cleanIndex++;
         }
+        
+        // Calculate real end index by adding the length of the URL
+        const realEndIndex = realStartIndex + url.length;
+        
+        urls.push({
+          url: formattedUrl,
+          startIndex: realStartIndex,
+          endIndex: realEndIndex
+        });
       }
       
-      // Calculate real end index by adding the length of the URL
-      const realEndIndex = realStartIndex + url.length;
-      
-      urls.push({
-        url: formattedUrl,
-        startIndex: realStartIndex,
-        endIndex: realEndIndex
-      });
-    }
-    
-    return urls;
-  };
-  
-  // Create a container for clickable links
-  const createClickableLinks = () => {
+      return urls;
+    };
     // Remove any existing link overlays
     const existingLinks = document.querySelectorAll('.terminal-link-overlay');
     existingLinks.forEach(link => link.remove());
@@ -521,7 +519,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         linkContainer.appendChild(linkOverlay);
       });
     });
-  };
+  }, [terminalRef]);
   
   // Handle terminal scrolling to update link positions
   useEffect(() => {
@@ -543,7 +541,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     return () => {
       viewport.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [createClickableLinks]);
   
   // Write command result to terminal
   const writeCommandResult = (result: string) => {

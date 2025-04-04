@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'export', // Enable static exports
-  basePath: process.env.NODE_ENV === 'production' ? '/brain-portfolio' : '',
+  basePath: '',
   images: {
     unoptimized: true, // Required for static export
   },

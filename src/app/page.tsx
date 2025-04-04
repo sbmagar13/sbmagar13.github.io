@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import About from '@/components/About/About';
 import Projects from '@/components/Projects/Projects';
@@ -27,6 +27,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [bootMessages, setBootMessages] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState<Section>('terminal');
+  const [visitedSections, setVisitedSections] = useState<Record<Section, boolean>>({
+    terminal: true,
+    about: false,
+    projects: false,
+    techstack: false
+  });
 
   // Simulate boot sequence
   useEffect(() => {
@@ -62,18 +68,30 @@ export default function Home() {
     switch (command) {
       case 'about':
         setActiveSection('about');
+        updateVisitedSections('about');
         break;
       case 'projects':
         setActiveSection('projects');
+        updateVisitedSections('projects');
         break;
       case 'skills':
         setActiveSection('techstack');
+        updateVisitedSections('techstack');
         break;
       default:
         // Keep current section
         break;
     }
   };
+
+  // Update visited sections
+  const updateVisitedSections = (section: Section) => {
+    setVisitedSections(prev => ({
+      ...prev,
+      [section]: true
+    }));
+  };
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-2 sm:p-4">
@@ -123,25 +141,70 @@ export default function Home() {
                 <FaTerminal size={20} />
               </button>
               <button 
-                onClick={() => setActiveSection('about')}
-                className={`p-2 rounded hover:bg-gray-800 ${activeSection === 'about' ? 'text-green-500' : ''}`}
+                onClick={() => {
+                  setActiveSection('about');
+                  updateVisitedSections('about');
+                }}
+                className={`p-2 rounded hover:bg-gray-800 relative ${activeSection === 'about' ? 'text-green-500' : ''}`}
                 title="About"
               >
                 <FaUser size={20} />
+                {!visitedSections.about && (
+                  <motion.div 
+                    className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
+                    initial={{ scale: 0.8, opacity: 0.7 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ 
+                      duration: 0.6,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  />
+                )}
               </button>
               <button 
-                onClick={() => setActiveSection('projects')}
-                className={`p-2 rounded hover:bg-gray-800 ${activeSection === 'projects' ? 'text-green-500' : ''}`}
+                onClick={() => {
+                  setActiveSection('projects');
+                  updateVisitedSections('projects');
+                }}
+                className={`p-2 rounded hover:bg-gray-800 relative ${activeSection === 'projects' ? 'text-green-500' : ''}`}
                 title="Projects"
               >
                 <FaProjectDiagram size={20} />
+                {!visitedSections.projects && (
+                  <motion.div 
+                    className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
+                    initial={{ scale: 0.8, opacity: 0.7 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ 
+                      duration: 0.6,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  />
+                )}
               </button>
               <button 
-                onClick={() => setActiveSection('techstack')}
-                className={`p-2 rounded hover:bg-gray-800 ${activeSection === 'techstack' ? 'text-green-500' : ''}`}
+                onClick={() => {
+                  setActiveSection('techstack');
+                  updateVisitedSections('techstack');
+                }}
+                className={`p-2 rounded hover:bg-gray-800 relative ${activeSection === 'techstack' ? 'text-green-500' : ''}`}
                 title="Tech Stack"
               >
                 <FaTools size={20} />
+                {!visitedSections.techstack && (
+                  <motion.div 
+                    className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
+                    initial={{ scale: 0.8, opacity: 0.7 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ 
+                      duration: 0.6,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  />
+                )}
               </button>
             </div>
           </motion.header>

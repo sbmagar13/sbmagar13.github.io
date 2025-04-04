@@ -13,7 +13,8 @@ interface SkillMetric {
 }
 
 const About = () => {
-  const [activeTab, setActiveTab] = useState('connections');
+  const [activeTab, setActiveTab] = useState('metrics');
+  const [showConnectionsHint, setShowConnectionsHint] = useState(true);
   
   const skillMetrics: SkillMetric[] = [
     { name: 'Infrastructure', value: 92, icon: <FaServer />, color: 'bg-blue-500' },
@@ -113,12 +114,27 @@ const About = () => {
             Architecture
           </button>
           <button 
-            className={`py-2 px-4 font-medium ${activeTab === 'connections' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
-            onClick={() => setActiveTab('connections')}
+            className={`py-2 px-4 font-medium relative ${activeTab === 'connections' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
+            onClick={() => {
+              setActiveTab('connections');
+              setShowConnectionsHint(false);
+            }}
           >
             <div className="flex items-center">
               <FaUserFriends className="mr-1" />
               <span>Connections</span>
+              {showConnectionsHint && (
+                <motion.div 
+                  className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
+                  initial={{ scale: 0.8, opacity: 0.7 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ 
+                    duration: 0.6,
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                />
+              )}
             </div>
           </button>
         </div>

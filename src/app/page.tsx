@@ -37,14 +37,14 @@ export default function Home() {
   // Simulate boot sequence
   useEffect(() => {
     const messages = [
-      'Initializing system...',
-      'Loading kernel modules...',
-      'Starting system services...',
-      'Mounting filesystems...',
-      'Establishing network connections...',
-      'Starting security services...',
-      'Loading DevOps Brain...',
-      'System ready!'
+      'Initializing DevOps Brain...',
+      'Configuring cloud infrastructure...',
+      'Optimizing CI/CD pipelines...',
+      'Synchronizing with tech stack...',
+      'Compiling codebase...',
+      'Loading Sagar\'s innovations...',
+      'Integrating system components...',
+      'System ready! Let\'s deploy!'
     ];
 
     let index = 0;

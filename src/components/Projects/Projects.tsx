@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaDocker, FaGithub, FaExternalLinkAlt, FaServer, FaChartLine, FaBook } from 'react-icons/fa';
+import CiCdPipeline from './CiCdPipeline';
 
 interface Project {
   id: number;
@@ -333,6 +334,9 @@ const Projects = () => {
           Projects displayed as containers in a Kubernetes-style cluster view.
         </p>
       </div>
+      
+      {/* CI/CD Pipeline Visualization */}
+      <CiCdPipeline />
       
       {/* Cluster View */}
       {!selectedProject && (

@@ -1,8 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+// Extend the Window interface to include our custom property
+declare global {
+  interface Window {
+    startPipelineDeployment?: () => void;
+  }
+}
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FaGithub, FaDocker, FaServer, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaGithub, FaDocker, FaServer, FaCheckCircle, FaExclamationTriangle, FaExpand, FaCompress } from 'react-icons/fa';
 
 interface PipelineStage {
   id: string;
@@ -12,7 +19,24 @@ interface PipelineStage {
   duration?: string;
 }
 
-const CiCdPipeline = () => {
+interface CiCdPipelineProps {
+  initialActiveStage?: number;
+}
+
+// Create a global function to trigger deployment
+export const triggerDeployment = () => {
+  // Check if the global function exists and call it
+  if (typeof window !== 'undefined' && window.startPipelineDeployment) {
+    console.log('Calling global startPipelineDeployment function');
+    window.startPipelineDeployment();
+  } else {
+    console.log('Global startPipelineDeployment function not found');
+  }
+};
+
+const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [stages, setStages] = useState<PipelineStage[]>([
     { 
       id: 'code', 
@@ -41,7 +65,7 @@ const CiCdPipeline = () => {
     }
   ]);
 
-  const [activeStage, setActiveStage] = useState(0);
+  const [activeStage, setActiveStage] = useState(initialActiveStage);
   const [codeBlocks] = useState<{ [key: string]: string[] }>({
     code: [
       'git commit -m "Update user interface"',
@@ -161,6 +185,68 @@ const CiCdPipeline = () => {
       return () => clearTimeout(timer);
     }
   }, [activeStage, stages]);
+  
+  // Function to start deployment animation
+  const startDeployment = useCallback(() => {
+    console.log('Starting deployment animation in CiCdPipeline');
+    // Reset the pipeline to initial state
+    setStages(prev => 
+      prev.map((stage, i) => ({
+        ...stage,
+        status: i === 0 ? 'success' : 'pending',
+        duration: i === 0 ? '2m 15s' : undefined
+      }))
+    );
+    setActiveStage(1); // Start from the build stage
+    setCodePackets([]); // Clear any existing code packets
+    console.log('Pipeline reset and animation started');
+  }, []);
+  
+  // Fullscreen change detection
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+  
+  // Toggle fullscreen mode
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      if (containerRef.current?.requestFullscreen) {
+        containerRef.current.requestFullscreen().catch(err => {
+          console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => {
+          console.error(`Error attempting to exit fullscreen: ${err.message}`);
+        });
+      }
+    }
+  };
+  
+  // Expose the startDeployment function to the global window object
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('Exposing startPipelineDeployment function to window');
+      window.startPipelineDeployment = startDeployment;
+    }
+    
+    // Clean up
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.startPipelineDeployment;
+      }
+    };
+  }, [startDeployment]);
 
   return (
     <div className="bg-gray-900 text-gray-100 p-6 rounded-lg border border-green-500 shadow-lg shadow-green-500/20 mb-8">
@@ -172,17 +258,32 @@ const CiCdPipeline = () => {
       </div>
       
       {/* Pipeline Visualization */}
-      <div className="relative p-6 bg-gray-800 rounded-lg border border-gray-700">
+      <div 
+        ref={containerRef}
+        className={`relative ${isFullscreen ? 'fixed inset-0 z-50 p-6' : 'p-6'} bg-gray-800 rounded-lg border border-gray-700 ${isFullscreen ? 'rounded-none' : ''}`}
+      >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
           <h3 className="text-lg font-semibold text-green-400">Pipeline Status</h3>
-          <div className="flex items-center mt-2 sm:mt-0">
-            <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
-            <span className="text-sm text-green-400">Active Pipeline</span>
+          <div className="flex items-center mt-2 sm:mt-0 space-x-4">
+            <div>
+              <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+              <span className="text-sm text-green-400">Active Pipeline</span>
+            </div>
+            <button 
+              onClick={toggleFullscreen}
+              className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              {isFullscreen ? 
+                <FaCompress className="text-green-400" /> : 
+                <FaExpand className="text-green-400" />
+              }
+            </button>
           </div>
         </div>
         
         {/* Pipeline Stages */}
-        <div className="relative mb-8">
+        <div className={`relative mb-8 ${isFullscreen ? 'py-4' : ''}`}>
           {/* Pipeline Line */}
           <div className="absolute top-7 sm:top-9 left-0 right-0 h-1 bg-gray-700 z-0"></div>
           
@@ -231,7 +332,7 @@ const CiCdPipeline = () => {
         </div>
         
         {/* Current Stage Details */}
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+        <div className={`bg-gray-900 border border-gray-700 rounded-lg p-4 ${isFullscreen ? 'h-[calc(30vh)]' : ''}`}>
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-md font-semibold text-blue-400">
               {activeStage < stages.length ? `${stages[activeStage].name} Stage` : 'Pipeline Complete'}
@@ -249,7 +350,7 @@ const CiCdPipeline = () => {
           </div>
           
           {/* Code execution */}
-          <div className="bg-black rounded-md p-2 sm:p-3 font-mono text-xs sm:text-sm h-28 sm:h-32 overflow-y-auto">
+          <div className={`bg-black rounded-md p-2 sm:p-3 font-mono text-xs sm:text-sm ${isFullscreen ? 'h-[calc(20vh)]' : 'h-28 sm:h-32'} overflow-y-auto`}>
             {activeStage < stages.length && codeBlocks[stages[activeStage].id]?.map((line, i) => (
               <motion.div 
                 key={i} 

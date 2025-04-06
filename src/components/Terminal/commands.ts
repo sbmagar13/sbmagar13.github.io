@@ -3,6 +3,28 @@ import { asciiArt } from './ascii';
 // Command history for persistence
 const commandHistory: string[] = [];
 
+// Function to trigger deployment animation
+const triggerDeployAnimation = () => {
+  // Call the global function exposed by CiCdPipeline component
+  if (typeof window !== 'undefined' && window.startPipelineDeployment) {
+    console.log('Calling global startPipelineDeployment function from commands.ts');
+    window.startPipelineDeployment();
+  } else {
+    console.log('Global startPipelineDeployment function not found');
+  }
+};
+
+// Function to trigger Docker container animation
+const triggerDockerAnimation = () => {
+  // Call the global function exposed by DockerContainers component
+  if (typeof window !== 'undefined' && window.startDockerAnimation) {
+    console.log('Calling global startDockerAnimation function from commands.ts');
+    window.startDockerAnimation();
+  } else {
+    console.log('Global startDockerAnimation function not found');
+  }
+};
+
 // Helper functions for visualizations
 function generateBar(percentage: number): string {
   // Use a smaller width on mobile devices
@@ -87,6 +109,7 @@ const commands: Record<string, (args: string[]) => string> = {
 
 \x1b[1;33mDevOps Commands:\x1b[0m
   \x1b[1;36mdeploy [project]\x1b[0m     Deploy a project (simulation)
+  \x1b[1;36mdocker [command]\x1b[0m     Docker container operations
   \x1b[1;36mmonitor [service]\x1b[0m    Monitor a service (simulation)
   \x1b[1;36mincident [id]\x1b[0m        View incident reports
   \x1b[1;36mchaos [target]\x1b[0m       Trigger chaos monkey (simulation)
@@ -389,6 +412,10 @@ Example: deploy 1
 `;
     }
     
+    // Trigger the deployment animation in the CI/CD Pipeline component
+    console.log('Executing deploy command with project:', projectNumber);
+    triggerDeployAnimation();
+    
     return `
 \x1b[1;32m=== DEPLOYMENT PIPELINE ===\x1b[0m
 
@@ -410,6 +437,7 @@ Example: deploy 1
 \x1b[1;36mStatus:\x1b[0m \x1b[1;32mHEALTHY\x1b[0m
 
 \x1b[1;33mMonitoring deployment for the next 15 minutes...\x1b[0m
+\x1b[1;33mVisual pipeline animation triggered in the Projects section!\x1b[0m
 `;
   },
   
@@ -723,6 +751,35 @@ ${isKubernetes ?
   • Increase connection pool size
   • Add index to improve query performance
   • Implement caching for frequent queries
+`;
+  },
+  
+  docker: (args: string[]) => {
+    const command = args[0] || 'run';
+    
+    // Trigger the Docker container animation
+    console.log('Executing docker command:', command);
+    triggerDockerAnimation();
+    
+    return `
+\x1b[1;32m=== DOCKER CONTAINERIZATION ===\x1b[0m
+
+\x1b[1;33mInitiating Docker ${command} operation...\x1b[0m
+
+<<SEQUENTIAL_START>>
+\x1b[1;36m[1/5]\x1b[0m Creating application network... \x1b[1;32m✓ Created\x1b[0m
+\x1b[1;36m[2/5]\x1b[0m Pulling container images... \x1b[1;32m✓ Downloaded\x1b[0m
+\x1b[1;36m[3/5]\x1b[0m Starting database container... \x1b[1;32m✓ Running\x1b[0m
+\x1b[1;36m[4/5]\x1b[0m Starting application containers... \x1b[1;32m✓ Running\x1b[0m
+\x1b[1;36m[5/5]\x1b[0m Configuring network connections... \x1b[1;32m✓ Connected\x1b[0m
+<<SEQUENTIAL_END>>
+
+\x1b[1;32mDocker containers running successfully!\x1b[0m
+\x1b[1;36mContainer Network:\x1b[0m app-network
+\x1b[1;36mRunning Containers:\x1b[0m 4
+\x1b[1;36mStatus:\x1b[0m \x1b[1;32mHEALTHY\x1b[0m
+
+\x1b[1;33mContainer orchestration visualization triggered in the Projects section!\x1b[0m
 `;
   },
   

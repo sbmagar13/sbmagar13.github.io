@@ -1,6 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+// Extend the Window interface to include our custom property
+declare global {
+  interface Window {
+    startPipelineDeployment?: () => void;
+  }
+}
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub, FaDocker, FaServer, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
@@ -12,7 +19,22 @@ interface PipelineStage {
   duration?: string;
 }
 
-const CiCdPipeline = () => {
+interface CiCdPipelineProps {
+  initialActiveStage?: number;
+}
+
+// Create a global function to trigger deployment
+export const triggerDeployment = () => {
+  // Check if the global function exists and call it
+  if (typeof window !== 'undefined' && window.startPipelineDeployment) {
+    console.log('Calling global startPipelineDeployment function');
+    window.startPipelineDeployment();
+  } else {
+    console.log('Global startPipelineDeployment function not found');
+  }
+};
+
+const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) => {
   const [stages, setStages] = useState<PipelineStage[]>([
     { 
       id: 'code', 
@@ -41,7 +63,7 @@ const CiCdPipeline = () => {
     }
   ]);
 
-  const [activeStage, setActiveStage] = useState(0);
+  const [activeStage, setActiveStage] = useState(initialActiveStage);
   const [codeBlocks] = useState<{ [key: string]: string[] }>({
     code: [
       'git commit -m "Update user interface"',
@@ -161,6 +183,37 @@ const CiCdPipeline = () => {
       return () => clearTimeout(timer);
     }
   }, [activeStage, stages]);
+  
+  // Function to start deployment animation
+  const startDeployment = useCallback(() => {
+    console.log('Starting deployment animation in CiCdPipeline');
+    // Reset the pipeline to initial state
+    setStages(prev => 
+      prev.map((stage, i) => ({
+        ...stage,
+        status: i === 0 ? 'success' : 'pending',
+        duration: i === 0 ? '2m 15s' : undefined
+      }))
+    );
+    setActiveStage(1); // Start from the build stage
+    setCodePackets([]); // Clear any existing code packets
+    console.log('Pipeline reset and animation started');
+  }, []);
+  
+  // Expose the startDeployment function to the global window object
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('Exposing startPipelineDeployment function to window');
+      window.startPipelineDeployment = startDeployment;
+    }
+    
+    // Clean up
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.startPipelineDeployment;
+      }
+    };
+  }, [startDeployment]);
 
   return (
     <div className="bg-gray-900 text-gray-100 p-6 rounded-lg border border-green-500 shadow-lg shadow-green-500/20 mb-8">

@@ -3,6 +3,17 @@ import { asciiArt } from './ascii';
 // Command history for persistence
 const commandHistory: string[] = [];
 
+// Function to trigger deployment animation
+const triggerDeployAnimation = () => {
+  // Call the global function exposed by CiCdPipeline component
+  if (typeof window !== 'undefined' && window.startPipelineDeployment) {
+    console.log('Calling global startPipelineDeployment function from commands.ts');
+    window.startPipelineDeployment();
+  } else {
+    console.log('Global startPipelineDeployment function not found');
+  }
+};
+
 // Helper functions for visualizations
 function generateBar(percentage: number): string {
   // Use a smaller width on mobile devices
@@ -389,6 +400,10 @@ Example: deploy 1
 `;
     }
     
+    // Trigger the deployment animation in the CI/CD Pipeline component
+    console.log('Executing deploy command with project:', projectNumber);
+    triggerDeployAnimation();
+    
     return `
 \x1b[1;32m=== DEPLOYMENT PIPELINE ===\x1b[0m
 
@@ -410,6 +425,7 @@ Example: deploy 1
 \x1b[1;36mStatus:\x1b[0m \x1b[1;32mHEALTHY\x1b[0m
 
 \x1b[1;33mMonitoring deployment for the next 15 minutes...\x1b[0m
+\x1b[1;33mVisual pipeline animation triggered in the Projects section!\x1b[0m
 `;
   },
   

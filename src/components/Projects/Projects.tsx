@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaDocker, FaGithub, FaExternalLinkAlt, FaServer, FaChartLine, FaBook } from 'react-icons/fa';
 import CiCdPipeline from './CiCdPipeline';
+import DockerContainers from './DockerContainers';
 
 interface Project {
   id: number;
@@ -337,6 +338,9 @@ const Projects = () => {
       
       {/* CI/CD Pipeline Visualization */}
       <CiCdPipeline />
+      
+      {/* Docker Containers Visualization */}
+      <DockerContainers />
       
       {/* Cluster View */}
       {!selectedProject && (

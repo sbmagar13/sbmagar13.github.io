@@ -285,13 +285,13 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
         {/* Pipeline Stages */}
         <div className={`relative mb-8 ${isFullscreen ? 'py-4' : ''}`}>
           {/* Pipeline Line */}
-          <div className="absolute top-7 sm:top-9 left-0 right-0 h-1 bg-gray-700 z-0"></div>
+          <div className={`absolute ${isFullscreen ? 'top-[38px] sm:top-[50px]' : 'top-7 sm:top-9'} left-0 right-0 h-1 bg-gray-700 z-0`}></div>
           
           {/* Code Packets Animation */}
           {codePackets.map((position, i) => (
             <motion.div
               key={i}
-              className="absolute top-[26px] sm:top-[34px] h-2 w-2 bg-green-500 rounded-full z-10 shadow-lg shadow-green-500/50"
+              className={`absolute ${isFullscreen ? 'top-[37px] sm:top-[49px]' : 'top-[28px] sm:top-[36px]'} h-2 w-2 bg-green-500 rounded-full z-10 shadow-lg shadow-green-500/50`}
               style={{ 
                 left: `${position}%`,
                 opacity: position > 95 ? (100 - position) / 5 : 1 // Fade out at the end
@@ -311,7 +311,7 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
                     'border-gray-600 bg-gray-800'
                   }`}
                 >
-                  {stage.status === 'running' ? (
+                  {stage.status === 'running' && !isFullscreen ? (
                     <div className="absolute inset-0 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
                   ) : null}
                   <div className="text-lg sm:text-2xl">

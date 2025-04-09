@@ -37,6 +37,20 @@ const DockerContainers: React.FC = () => {
   const [runCount, setRunCount] = useState(0);
   const MAX_RUNS = 1; // Maximum number of times to run the animation
   const [hasBeenVisible, setHasBeenVisible] = useState(false);
+  const [isTabVisible, setIsTabVisible] = useState(true);
+  
+  // Handle tab visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden);
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
   const [commandLogs, setCommandLogs] = useState<string[]>([]);
   const [activeCommand, setActiveCommand] = useState<string | null>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -154,7 +168,7 @@ const DockerContainers: React.FC = () => {
   };
   
   // Function to connect containers
-  const connectContainers = (fromId: string, toId: string) => {
+  const connectContainers = useCallback((fromId: string, toId: string) => {
     setContainers(prev => 
       prev.map(c => {
         if (c.id === fromId && !c.connections.includes(toId)) {
@@ -171,6 +185,9 @@ const DockerContainers: React.FC = () => {
       ...prev, 
       { from: fromId, to: toId, progress: 0, id: newPacketId }
     ]);
+    
+    // Don't animate packets when tab is not visible
+    if (!isTabVisible) return;
     
     // Animate packet
     const interval = setInterval(() => {
@@ -192,13 +209,18 @@ const DockerContainers: React.FC = () => {
     setTimeout(() => {
       clearInterval(interval);
     }, 2000);
-  };
+  }, [isTabVisible]);
   
   // Function to orchestrate containers
   const orchestrateContainers = useCallback(() => {
-    // Check if we've reached the maximum number of runs
+    // Reset run count if we've reached the maximum
     if (runCount >= MAX_RUNS) {
-      console.log('Maximum number of runs reached');
+      setRunCount(0);
+    }
+    
+    // Check if tab is visible
+    if (!isTabVisible) {
+      console.log('Tab is not visible, delaying orchestration');
       return;
     }
     
@@ -327,7 +349,7 @@ const DockerContainers: React.FC = () => {
     
     // Start executing commands
     executeNextCommand();
-  }, [containers, dockerCommands, isMobile, runCount]);
+  }, [containers, dockerCommands, isMobile, runCount, isTabVisible, connectContainers]);
   
   // Expose the startDockerAnimation function to the global window object
   useEffect(() => {
@@ -561,16 +583,15 @@ const DockerContainers: React.FC = () => {
         <div className="mt-4 flex justify-center">
           <button 
             onClick={orchestrateContainers}
-            disabled={isOrchestrating || runCount >= MAX_RUNS}
+            disabled={isOrchestrating}
             className={`px-4 py-2 rounded flex items-center text-sm sm:text-base ${
-              isOrchestrating || runCount >= MAX_RUNS
+              isOrchestrating
                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
                 : 'bg-blue-700 text-blue-100 hover:bg-blue-600 transition-colors'
             }`}
           >
             <FaDocker className="mr-2" />
-            {isOrchestrating ? 'Orchestrating...' : 
-             runCount >= MAX_RUNS ? 'Animation Completed' : 'Restart Orchestration'}
+            {isOrchestrating ? 'Orchestrating...' : 'Re-run Orchestration'}
           </button>
         </div>
       </div>

@@ -90,6 +90,7 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
 
   // Animation for code moving through pipeline
   const [codePackets, setCodePackets] = useState<number[]>([]);
+  const [isTabVisible, setIsTabVisible] = useState(true);
   
   // Simulate pipeline execution
   useEffect(() => {
@@ -131,6 +132,9 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
   
   // Generate code packets for animation
   useEffect(() => {
+    // Don't run animation when tab is not visible
+    if (!isTabVisible) return;
+    
     const interval = setInterval(() => {
       if (activeStage < stages.length) {
         setCodePackets(prev => {
@@ -146,15 +150,17 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
       }
     }, 800);
     
-    // Clear all packets when component unmounts
+    // Clear interval when component unmounts or tab becomes invisible
     return () => {
       clearInterval(interval);
-      setCodePackets([]);
     };
-  }, [activeStage, stages.length]);
+  }, [activeStage, stages.length, isTabVisible]);
   
   // Move existing packets along the pipeline
   useEffect(() => {
+    // Don't run animation when tab is not visible
+    if (!isTabVisible) return;
+    
     const interval = setInterval(() => {
       setCodePackets(prev => 
         prev.map(packet => {
@@ -171,15 +177,26 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
     
     return () => {
       clearInterval(interval);
-      // Also clear packets when unmounting
-      setCodePackets([]);
     };
-  }, [activeStage, stages.length]);
+  }, [activeStage, stages.length, isTabVisible]);
   
   // Track number of pipeline runs and visibility
   const [runCount, setRunCount] = useState(0);
   const MAX_RUNS = 2; // Maximum number of times to run the pipeline
   const [hasBeenVisible, setHasBeenVisible] = useState(false);
+  
+  // Handle tab visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden);
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // Set up intersection observer to detect when component is visible
   useEffect(() => {
@@ -215,23 +232,28 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
       (activeStage === stages.length - 1 && stages[activeStage].status === 'success') ||
       stages.some(stage => stage.status === 'failed')
     ) {
-      // Check if we've reached the maximum number of runs
-      if (runCount < MAX_RUNS) {
-        const timer = setTimeout(() => {
-          setStages(prev => 
-            prev.map((stage, i) => ({
-              ...stage,
-              status: i === 0 ? 'success' : 'pending',
-              duration: i === 0 ? '2m 15s' : undefined
-            }))
-          );
-          setActiveStage(1);
-          setCodePackets([]);
-          setRunCount(prev => prev + 1); // Increment run count
-        }, 5000);
+      // Reset the pipeline after a delay
+      const timer = setTimeout(() => {
+        setStages(prev => 
+          prev.map((stage, i) => ({
+            ...stage,
+            status: i === 0 ? 'success' : 'pending',
+            duration: i === 0 ? '2m 15s' : undefined
+          }))
+        );
+        setActiveStage(1);
+        setCodePackets([]);
         
-        return () => clearTimeout(timer);
-      }
+        // Only increment run count if we haven't reached the maximum
+        if (runCount < MAX_RUNS) {
+          setRunCount(prev => prev + 1);
+        } else {
+          // Reset run count to allow re-running
+          setRunCount(0);
+        }
+      }, 5000);
+      
+      return () => clearTimeout(timer);
     }
   }, [activeStage, stages, runCount]);
   

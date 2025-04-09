@@ -134,7 +134,11 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
     const interval = setInterval(() => {
       if (activeStage < stages.length) {
         setCodePackets(prev => {
-          // Add new packet at the start
+          // Add new packet at the start, but limit the total number of packets
+          if (prev.length >= 15) {
+            // If we already have 15 or more packets, just move the existing ones
+            return prev.filter(p => p < 100);
+          }
           const newPackets = [...prev, 0];
           // Remove packets that have completed the journey
           return newPackets.filter(p => p < 100);
@@ -142,7 +146,11 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
       }
     }, 800);
     
-    return () => clearInterval(interval);
+    // Clear all packets when component unmounts
+    return () => {
+      clearInterval(interval);
+      setCodePackets([]);
+    };
   }, [activeStage, stages.length]);
   
   // Move existing packets along the pipeline
@@ -161,8 +169,45 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
       );
     }, 50);
     
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Also clear packets when unmounting
+      setCodePackets([]);
+    };
   }, [activeStage, stages.length]);
+  
+  // Track number of pipeline runs and visibility
+  const [runCount, setRunCount] = useState(0);
+  const MAX_RUNS = 2; // Maximum number of times to run the pipeline
+  const [hasBeenVisible, setHasBeenVisible] = useState(false);
+
+  // Set up intersection observer to detect when component is visible
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Store the ref value in a variable to use in cleanup
+    const currentRef = containerRef.current;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !hasBeenVisible) {
+          // Component is visible for the first time
+          setHasBeenVisible(true);
+          
+          // Start the pipeline from the build stage
+          setActiveStage(1);
+        }
+      },
+      { threshold: 0.2 } // Trigger when at least 20% of the component is visible
+    );
+    
+    observer.observe(currentRef);
+    
+    return () => {
+      observer.unobserve(currentRef);
+    };
+  }, [hasBeenVisible]);
   
   // Reset the pipeline after completion or failure
   useEffect(() => {
@@ -170,26 +215,30 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
       (activeStage === stages.length - 1 && stages[activeStage].status === 'success') ||
       stages.some(stage => stage.status === 'failed')
     ) {
-      const timer = setTimeout(() => {
-        setStages(prev => 
-          prev.map((stage, i) => ({
-            ...stage,
-            status: i === 0 ? 'success' : 'pending',
-            duration: i === 0 ? '2m 15s' : undefined
-          }))
-        );
-        setActiveStage(1);
-        setCodePackets([]);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
+      // Check if we've reached the maximum number of runs
+      if (runCount < MAX_RUNS) {
+        const timer = setTimeout(() => {
+          setStages(prev => 
+            prev.map((stage, i) => ({
+              ...stage,
+              status: i === 0 ? 'success' : 'pending',
+              duration: i === 0 ? '2m 15s' : undefined
+            }))
+          );
+          setActiveStage(1);
+          setCodePackets([]);
+          setRunCount(prev => prev + 1); // Increment run count
+        }, 5000);
+        
+        return () => clearTimeout(timer);
+      }
     }
-  }, [activeStage, stages]);
+  }, [activeStage, stages, runCount]);
   
   // Function to start deployment animation
   const startDeployment = useCallback(() => {
     console.log('Starting deployment animation in CiCdPipeline');
-    // Reset the pipeline to initial state
+    // Reset the pipeline to initial state and reset run count
     setStages(prev => 
       prev.map((stage, i) => ({
         ...stage,
@@ -199,6 +248,7 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
     );
     setActiveStage(1); // Start from the build stage
     setCodePackets([]); // Clear any existing code packets
+    setRunCount(0); // Reset run count when manually starting
     console.log('Pipeline reset and animation started');
   }, []);
   

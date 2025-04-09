@@ -34,6 +34,9 @@ const DockerContainers: React.FC = () => {
   const [containers, setContainers] = useState<Container[]>([]);
   const [networkPackets, setNetworkPackets] = useState<{from: string; to: string; progress: number; id: string}[]>([]);
   const [isOrchestrating, setIsOrchestrating] = useState(false);
+  const [runCount, setRunCount] = useState(0);
+  const MAX_RUNS = 1; // Maximum number of times to run the animation
+  const [hasBeenVisible, setHasBeenVisible] = useState(false);
   const [commandLogs, setCommandLogs] = useState<string[]>([]);
   const [activeCommand, setActiveCommand] = useState<string | null>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -193,10 +196,17 @@ const DockerContainers: React.FC = () => {
   
   // Function to orchestrate containers
   const orchestrateContainers = useCallback(() => {
+    // Check if we've reached the maximum number of runs
+    if (runCount >= MAX_RUNS) {
+      console.log('Maximum number of runs reached');
+      return;
+    }
+    
     setIsOrchestrating(true);
     setContainers([]);
     setNetworkPackets([]);
     setCommandLogs([]);
+    setRunCount(prev => prev + 1); // Increment run count
     
     // Execute commands with delays
     let commandIndex = 0;
@@ -317,7 +327,7 @@ const DockerContainers: React.FC = () => {
     
     // Start executing commands
     executeNextCommand();
-  }, [containers, dockerCommands, isMobile]);
+  }, [containers, dockerCommands, isMobile, runCount]);
   
   // Expose the startDockerAnimation function to the global window object
   useEffect(() => {
@@ -334,15 +344,39 @@ const DockerContainers: React.FC = () => {
     };
   }, [orchestrateContainers]);
   
-  // Start animation on component mount
+  // Set up intersection observer to detect when component is visible
   useEffect(() => {
-    // Start with a slight delay to ensure component is fully mounted
-    const timer = setTimeout(() => {
-      orchestrateContainers();
-    }, 500);
+    if (!containerRef.current) return;
     
-    return () => clearTimeout(timer);
-  }, [orchestrateContainers]);
+    // Store the ref value in a variable to use in cleanup
+    const currentRef = containerRef.current;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !hasBeenVisible) {
+          // Component is visible for the first time
+          setHasBeenVisible(true);
+          
+          // Start animation with a slight delay
+          if (runCount < MAX_RUNS) {
+            const timer = setTimeout(() => {
+              orchestrateContainers();
+            }, 500);
+            
+            return () => clearTimeout(timer);
+          }
+        }
+      },
+      { threshold: 0.2 } // Trigger when at least 20% of the component is visible
+    );
+    
+    observer.observe(currentRef);
+    
+    return () => {
+      observer.unobserve(currentRef);
+    };
+  }, [orchestrateContainers, runCount, hasBeenVisible]);
   
   // Calculate connection paths between containers
   const getConnectionPath = (fromId: string, toId: string) => {
@@ -527,15 +561,16 @@ const DockerContainers: React.FC = () => {
         <div className="mt-4 flex justify-center">
           <button 
             onClick={orchestrateContainers}
-            disabled={isOrchestrating}
+            disabled={isOrchestrating || runCount >= MAX_RUNS}
             className={`px-4 py-2 rounded flex items-center text-sm sm:text-base ${
-              isOrchestrating 
+              isOrchestrating || runCount >= MAX_RUNS
                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
                 : 'bg-blue-700 text-blue-100 hover:bg-blue-600 transition-colors'
             }`}
           >
             <FaDocker className="mr-2" />
-            {isOrchestrating ? 'Orchestrating...' : 'Restart Orchestration'}
+            {isOrchestrating ? 'Orchestrating...' : 
+             runCount >= MAX_RUNS ? 'Animation Completed' : 'Restart Orchestration'}
           </button>
         </div>
       </div>

@@ -6,8 +6,8 @@ import dynamic from 'next/dynamic';
 import About from '@/components/About/About';
 import Projects from '@/components/Projects/Projects';
 import TechStack from '@/components/Tools/TechStack';
-import Blog from '@/components/Blog/Blog';
-import { FaTerminal, FaUser, FaProjectDiagram, FaTools, FaBrain, FaNetworkWired, FaRocket, FaCode, FaSun, FaMoon, FaGlobe, FaBlog } from 'react-icons/fa';
+import BlogPostsWrapper from './BlogPostsWrapper';
+import { FaTerminal, FaUser, FaProjectDiagram, FaTools, FaBrain, FaCode, FaSun, FaMoon, FaBlog } from 'react-icons/fa';
 
 // Dynamically import the Terminal component with no SSR
 const Terminal = dynamic(() => import('@/components/Terminal/Terminal'), {
@@ -40,7 +40,6 @@ export default function Home() {
   });
   
   const [theme, setTheme] = useState<Theme>('dark');
-  const [isScrolled, setIsScrolled] = useState(false);
   
   // Mouse position for parallax effect
   const mouseX = useMotionValue(0);
@@ -179,7 +178,8 @@ export default function Home() {
   // Handle scroll detection for header effects
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      // Header effect based on scroll position
+      // Apply any scroll-based effects here if needed
     };
     
     window.addEventListener('scroll', handleScroll);
@@ -545,17 +545,17 @@ export default function Home() {
                   <TechStack />
                 </motion.div>
               )}
-              {activeSection === 'blog' && (
-                <motion.div
-                  key="blog"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Blog />
-                </motion.div>
-              )}
+          {activeSection === 'blog' && (
+            <motion.div
+              key="blog"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <BlogPostsWrapper />
+            </motion.div>
+          )}
             </AnimatePresence>
           </motion.main>
           

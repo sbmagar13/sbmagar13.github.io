@@ -1,99 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaCalendarAlt, FaClock, FaTags, FaChevronRight, FaSearch, FaFilter, FaCode, FaServer, FaCloud, FaDocker, FaRocket } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
+import { BlogPost } from '@/utils/blog';
 
-interface BlogPost {
-  id: number;
-  title: string;
-  excerpt: string;
-  date: string;
-  readTime: string;
-  tags: string[];
-  featured: boolean;
-  image?: string;
+interface BlogProps {
+  initialPosts?: BlogPost[];
 }
 
-const Blog = () => {
+const Blog = ({ initialPosts = [] }: BlogProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(initialPosts);
+  const [loading, setLoading] = useState(initialPosts.length === 0);
+  const [error, setError] = useState<string | null>(null);
   
-  const blogPosts: BlogPost[] = [
-    {
-      id: 1,
-      title: 'Kubernetes Troubleshooting Patterns',
-      excerpt: 'A comprehensive guide to diagnosing and resolving common Kubernetes issues in production environments.',
-      date: '2025-03-15',
-      readTime: '8 min',
-      tags: ['kubernetes', 'devops', 'troubleshooting'],
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'The Art of Blameless Postmortems',
-      excerpt: 'How to conduct effective postmortems that focus on learning rather than blame, improving team culture and system reliability.',
-      date: '2025-02-28',
-      readTime: '12 min',
-      tags: ['culture', 'incidents', 'learning'],
-      featured: true
-    },
-    {
-      id: 3,
-      title: 'Terraform at Scale: Lessons Learned',
-      excerpt: 'Scaling infrastructure as code across large organizations: patterns, pitfalls, and practical solutions.',
-      date: '2025-01-10',
-      readTime: '15 min',
-      tags: ['terraform', 'iac', 'scaling'],
-      featured: false
-    },
-    {
-      id: 4,
-      title: 'Automating Everything: My DevOps Philosophy',
-      excerpt: 'Why automation should be at the core of your DevOps practice, and how to implement it effectively.',
-      date: '2024-12-05',
-      readTime: '10 min',
-      tags: ['automation', 'culture', 'devops'],
-      featured: false
-    },
-    {
-      id: 5,
-      title: 'Building Scalable APIs with Python Frameworks',
-      excerpt: 'Comparing Django, FastAPI, and Flask for building high-performance, scalable APIs.',
-      date: '2025-03-01',
-      readTime: '14 min',
-      tags: ['python', 'api', 'django', 'fastapi'],
-      featured: true
-    },
-    {
-      id: 6,
-      title: 'Implementing GitOps with ArgoCD',
-      excerpt: 'A step-by-step guide to implementing GitOps workflows using ArgoCD and Kubernetes.',
-      date: '2025-02-15',
-      readTime: '11 min',
-      tags: ['gitops', 'argocd', 'kubernetes', 'ci-cd'],
-      featured: false
-    },
-    {
-      id: 7,
-      title: 'Monitoring as Code: The Next Frontier',
-      excerpt: 'How to define, version, and deploy your monitoring infrastructure using code.',
-      date: '2025-01-22',
-      readTime: '9 min',
-      tags: ['monitoring', 'iac', 'observability'],
-      featured: false
-    },
-    {
-      id: 8,
-      title: 'AI Agents in DevOps: Current State and Future',
-      excerpt: 'Exploring how AI agents are transforming DevOps practices and what the future holds.',
-      date: '2025-03-20',
-      readTime: '13 min',
-      tags: ['ai', 'agents', 'automation', 'future'],
-      featured: true
+  // Initialize blog posts from props
+  useEffect(() => {
+    if (initialPosts.length > 0) {
+      setBlogPosts(initialPosts);
+      setLoading(false);
     }
-  ];
+  }, [initialPosts]);
   
   // Get all unique tags
   const allTags = Array.from(new Set(blogPosts.flatMap(post => post.tags)));
@@ -216,46 +147,46 @@ const Blog = () => {
             </div>
             
             <div className="prose prose-invert prose-green max-w-none">
-              <p className="text-gray-300 mb-4">
-                {selectedPost.excerpt}
-              </p>
-              
-              <p className="text-gray-300 mb-4">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, 
-                nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl. Nullam auctor, nisl eget ultricies tincidunt,
-                nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl.
-              </p>
-              
-              <h2 className="text-xl font-bold text-green-400 mt-6 mb-3">Key Concepts</h2>
-              
-              <p className="text-gray-300 mb-4">
-                Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl.
-                Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl.
-              </p>
-              
-              <div className="bg-gray-900 p-4 rounded-md my-6 font-mono text-sm">
-                <pre><code>{`# Example code
-def example_function():
-    """This is a sample function to demonstrate code blocks."""
-    return "Hello, DevOps World!"
-
-# Usage
-result = example_function()
-print(f"Result: {result}")
-`}</code></pre>
-              </div>
-              
-              <p className="text-gray-300 mb-4">
-                Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl.
-                Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl.
-              </p>
-              
-              <h2 className="text-xl font-bold text-green-400 mt-6 mb-3">Conclusion</h2>
-              
-              <p className="text-gray-300 mb-4">
-                Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl.
-                Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl.
-              </p>
+              <ReactMarkdown
+                components={{
+                  // Style code blocks
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  code: ({ className, children, ...props }: any) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    const isInline = !match && typeof children === 'string';
+                    
+                    if (isInline) {
+                      return <code className="bg-gray-800 px-1 rounded text-green-400" {...props}>{children}</code>;
+                    }
+                    
+                    return (
+                      <div className="bg-gray-900 p-4 rounded-md my-6 font-mono text-sm overflow-auto">
+                        <pre><code className={className} {...props}>{children}</code></pre>
+                      </div>
+                    );
+                  },
+                  // Style headings
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  h1: ({ children }: any) => <h1 className="text-2xl font-bold text-green-400 mt-6 mb-3">{children}</h1>,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  h2: ({ children }: any) => <h2 className="text-xl font-bold text-green-400 mt-6 mb-3">{children}</h2>,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  h3: ({ children }: any) => <h3 className="text-lg font-bold text-green-400 mt-5 mb-2">{children}</h3>,
+                  // Style paragraphs
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  p: ({ children }: any) => <p className="text-gray-300 mb-4">{children}</p>,
+                  // Style lists
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  ul: ({ children }: any) => <ul className="list-disc pl-6 mb-4 text-gray-300">{children}</ul>,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  ol: ({ children }: any) => <ol className="list-decimal pl-6 mb-4 text-gray-300">{children}</ol>,
+                  // Style links
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  a: ({ href, children }: any) => <a href={href} className="text-green-400 hover:underline">{children}</a>,
+                }}
+              >
+                {selectedPost.content}
+              </ReactMarkdown>
             </div>
           </div>
         </motion.div>
@@ -351,7 +282,22 @@ print(f"Result: {result}")
             </div>
           </div>
           
-          {filteredPosts.length === 0 && (
+          {loading ? (
+            <div className="text-center py-10">
+              <div className="inline-block w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <div className="text-gray-400">Loading blog posts...</div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-10">
+              <div className="text-red-400 mb-4">Error: {error}</div>
+              <button 
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                onClick={() => window.location.reload()}
+              >
+                Try Again
+              </button>
+            </div>
+          ) : filteredPosts.length === 0 && (
             <div className="text-center py-10">
               <div className="text-gray-400 mb-2">No articles found matching your criteria.</div>
               <button 

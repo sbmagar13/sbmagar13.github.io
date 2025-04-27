@@ -3,7 +3,7 @@ id: 1
 title: "Kubernetes Troubleshooting Patterns"
 excerpt: "A comprehensive guide to diagnosing and resolving common Kubernetes issues in production environments."
 date: "2025-03-15"
-readTime: "8 min"
+readTime: "3 min"
 tags: ["kubernetes", "devops", "troubleshooting"]
 featured: true
 ---

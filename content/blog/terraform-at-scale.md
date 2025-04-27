@@ -3,7 +3,7 @@ id: 3
 title: "Terraform at Scale: Lessons Learned"
 excerpt: "Scaling infrastructure as code across large organizations: patterns, pitfalls, and practical solutions."
 date: "2025-01-10"
-readTime: "15 min"
+readTime: "4 min"
 tags: ["terraform", "iac", "scaling"]
 featured: false
 ---

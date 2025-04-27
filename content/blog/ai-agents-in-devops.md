@@ -1,5 +1,5 @@
 ---
-id: 8
+id: 5
 title: "AI Agents in DevOps: Current State and Future"
 excerpt: "Exploring how AI agents are transforming DevOps practices and what the future holds."
 date: "2025-03-20"

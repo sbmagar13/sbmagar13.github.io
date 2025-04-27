@@ -3,7 +3,7 @@ id: 2
 title: "The Art of Blameless Postmortems"
 excerpt: "How to conduct effective postmortems that focus on learning rather than blame, improving team culture and system reliability."
 date: "2025-02-28"
-readTime: "12 min"
+readTime: "3 min"
 tags: ["culture", "incidents", "learning"]
 featured: true
 ---

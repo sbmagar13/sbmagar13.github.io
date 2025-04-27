@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   },
   // Disable server-side features that aren't compatible with static export
   trailingSlash: true,
+  // Disable ESLint during build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;

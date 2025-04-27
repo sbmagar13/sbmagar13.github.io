@@ -16,7 +16,7 @@ const Blog = ({ initialPosts = [] }: BlogProps) => {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>(initialPosts);
   const [loading, setLoading] = useState(initialPosts.length === 0);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   
   // Initialize blog posts from props
   useEffect(() => {

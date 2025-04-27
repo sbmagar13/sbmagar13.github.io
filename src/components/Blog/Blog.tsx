@@ -80,37 +80,50 @@ const Blog = ({ initialPosts = [] }: BlogProps) => {
       </div>
       
       {/* Search and Filter */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="mb-6 space-y-4">
+        {/* Search Bar */}
+        <div className="relative">
           <input
             type="text"
             placeholder="Search articles..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-4 pl-10 text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full bg-gray-800 border border-gray-700 rounded-md py-3 px-4 pl-10 text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <div className="absolute left-3 top-2.5 text-gray-400">
+          <div className="absolute left-3 top-3.5 text-gray-400">
             <FaSearch />
           </div>
+          {searchQuery && (
+            <button 
+              className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-300"
+              onClick={() => setSearchQuery('')}
+            >
+              ×
+            </button>
+          )}
         </div>
         
-        <div className="flex items-center space-x-2 overflow-x-auto pb-2 sm:pb-0">
-          <span className="text-gray-400 flex items-center whitespace-nowrap">
-            <FaFilter className="mr-1" /> Filter:
-          </span>
-          {allTags.map(tag => (
-            <button
-              key={tag}
-              className={`px-3 py-1 rounded-full text-xs whitespace-nowrap ${
-                selectedTag === tag 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-              onClick={() => handleTagClick(tag)}
-            >
-              {getTagIcon(tag)}{tag}
-            </button>
-          ))}
+        {/* Filter Tags */}
+        <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
+          <div className="flex items-center mb-2">
+            <FaFilter className="mr-2 text-green-500" />
+            <span className="text-gray-300 font-medium">Filter by tag:</span>
+          </div>
+          <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto pr-1">
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center ${
+                  selectedTag === tag 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+                onClick={() => handleTagClick(tag)}
+              >
+                {getTagIcon(tag)}{tag}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       

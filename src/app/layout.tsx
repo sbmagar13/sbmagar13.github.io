@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "DevOps Brain | by Sagar Budhathoki",
   description: "Your Brain on the Web - DevOps. A portfolio showcasing DevOps expertise and projects.",
   icons: {
-    icon: '/favicon.ico', // Using personal_favicon.svg as the favicon
+    icon: '/favicon_logo.ico', // Using personal_favicon.svg as the favicon
     apple: '/file.svg',
   },
 };

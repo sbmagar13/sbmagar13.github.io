@@ -367,30 +367,32 @@ export default function Home() {
             
             <div className="flex items-center gap-3">
               {/* Main Navigation */}
-              <div className="flex space-x-1 sm:space-x-2 text-gray-400 bg-gray-800/50 p-1 rounded-full backdrop-blur-sm">
-                <motion.button 
+              <nav className="flex space-x-4">
+                <motion.a 
                   onClick={() => setActiveSection('terminal')}
-                  className={`p-2 rounded-full hover:bg-gray-700 transition-all ${activeSection === 'terminal' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  className={`nav-link ${activeSection === 'terminal' ? 'active text-green-500' : 'text-gray-300'} hover:text-white transition-colors relative text-xs`}
                   title="Terminal (Press 1)"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FaTerminal size={18} />
-                </motion.button>
-                <motion.button 
+                  <FaTerminal className="inline-block mr-1" size={12} />
+                  <span>Terminal</span>
+                </motion.a>
+                <motion.a 
                   onClick={() => {
                     setActiveSection('about');
                     updateVisitedSections('about');
                   }}
-                  className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'about' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  className={`nav-link ${activeSection === 'about' ? 'active text-green-500' : 'text-gray-300'} hover:text-white transition-colors relative text-xs`}
                   title="About (Press 2)"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FaUser size={18} />
+                  <FaUser className="inline-block mr-1" size={12} />
+                  <span>About</span>
                   {!visitedSections.about && (
                     <motion.div 
-                      className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
+                      className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-green-500 rounded-full"
                       initial={{ scale: 0.8, opacity: 0.7 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ 
@@ -400,21 +402,22 @@ export default function Home() {
                       }}
                     />
                   )}
-                </motion.button>
-                <motion.button 
+                </motion.a>
+                <motion.a 
                   onClick={() => {
                     setActiveSection('projects');
                     updateVisitedSections('projects');
                   }}
-                  className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'projects' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  className={`nav-link ${activeSection === 'projects' ? 'active text-green-500' : 'text-gray-300'} hover:text-white transition-colors relative text-xs`}
                   title="Projects (Press 3)"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FaProjectDiagram size={18} />
+                  <FaProjectDiagram className="inline-block mr-1" size={12} />
+                  <span>Projects</span>
                   {!visitedSections.projects && (
                     <motion.div 
-                      className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
+                      className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-green-500 rounded-full"
                       initial={{ scale: 0.8, opacity: 0.7 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ 
@@ -424,21 +427,22 @@ export default function Home() {
                       }}
                     />
                   )}
-                </motion.button>
-                <motion.button 
+                </motion.a>
+                <motion.a 
                   onClick={() => {
                     setActiveSection('techstack');
                     updateVisitedSections('techstack');
                   }}
-                  className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'techstack' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  className={`nav-link ${activeSection === 'techstack' ? 'active text-green-500' : 'text-gray-300'} hover:text-white transition-colors relative text-xs`}
                   title="Tech Stack (Press 4)"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FaTools size={18} />
+                  <FaTools className="inline-block mr-1" size={12} />
+                  <span>Tech Stack</span>
                   {!visitedSections.techstack && (
                     <motion.div 
-                      className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
+                      className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-green-500 rounded-full"
                       initial={{ scale: 0.8, opacity: 0.7 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ 
@@ -448,21 +452,22 @@ export default function Home() {
                       }}
                     />
                   )}
-                </motion.button>
-                <motion.button 
+                </motion.a>
+                <motion.a 
                   onClick={() => {
                     setActiveSection('blog');
                     updateVisitedSections('blog');
                   }}
-                  className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'blog' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  className={`nav-link ${activeSection === 'blog' ? 'active text-green-500' : 'text-gray-300'} hover:text-white transition-colors relative text-xs`}
                   title="Blog (Press 5)"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FaBlog size={18} />
+                  <FaBlog className="inline-block mr-1" size={12} />
+                  <span>Blog</span>
                   {!visitedSections.blog && (
                     <motion.div 
-                      className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
+                      className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-green-500 rounded-full"
                       initial={{ scale: 0.8, opacity: 0.7 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ 
@@ -472,8 +477,8 @@ export default function Home() {
                       }}
                     />
                   )}
-                </motion.button>
-              </div>
+                </motion.a>
+              </nav>
               
               {/* Theme Toggle Button */}
               <motion.button 
@@ -559,9 +564,10 @@ export default function Home() {
             </AnimatePresence>
           </motion.main>
           
+          {/* Footer with system info - hidden on mobile, visible on desktop */}
           <motion.div 
             key="footer"
-            className="relative z-10 w-full max-w-4xl flex flex-col sm:flex-row justify-between text-xs text-gray-500 font-mono gap-2 sm:gap-0"
+            className="relative z-10 w-full max-w-4xl hidden md:flex flex-col md:flex-row justify-between text-xs text-gray-500 font-mono gap-2 md:gap-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
@@ -574,13 +580,13 @@ export default function Home() {
               <span>Uptime: {Math.floor(Math.random() * 100) + 1}d {Math.floor(Math.random() * 24)}h {Math.floor(Math.random() * 60)}m</span>
             </div>
             <div className="text-center sm:text-right">
-              <span>© {new Date().getFullYear()} DevOps Brain | <span className="text-green-500 hover:underline cursor-pointer">v4.0.0</span></span>
+              <span>© {new Date().getFullYear()} DevOps Brain | <span className="text-green-500 hover:underline cursor-pointer">v1.2.3</span></span>
             </div>
           </motion.div>
           
-          {/* Keyboard shortcuts help */}
+          {/* Keyboard shortcuts help - hidden on mobile, visible on desktop */}
           <motion.div
-            className="fixed bottom-4 right-4 bg-gray-800/80 backdrop-blur-sm text-xs text-gray-400 p-2 rounded-lg border border-gray-700 z-20"
+            className="fixed bottom-4 right-4 bg-gray-800/80 backdrop-blur-sm text-xs text-gray-400 p-2 rounded-lg border border-gray-700 z-20 hidden md:block"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2, duration: 0.5 }}
@@ -599,9 +605,9 @@ export default function Home() {
             </div>
           </motion.div>
           
-          {/* Version badge */}
+          {/* Version badge - hidden on mobile, visible on desktop */}
           <motion.div
-            className="fixed top-4 right-4 bg-green-600/80 text-white text-xs py-1 px-3 rounded-full font-mono z-20 flex items-center"
+            className="fixed top-4 right-4 bg-green-600/80 text-white text-xs py-1 px-3 rounded-full font-mono z-20 flex items-center hidden md:flex"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 1, duration: 0.5 }}

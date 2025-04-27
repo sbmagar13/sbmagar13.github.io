@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { FaDocker, FaGithub, FaExternalLinkAlt, FaServer, FaChartLine, FaBook } from 'react-icons/fa';
 import CiCdPipeline from './CiCdPipeline';
 import DockerContainers from './DockerContainers';
+import DevOpsAssistant from './DevOpsAssistant';
 
 interface Project {
   id: number;
@@ -341,6 +342,12 @@ const Projects = () => {
       
       {/* Docker Containers Visualization */}
       <DockerContainers />
+      
+      {/* DevOps AI Assistant */}
+      <div className="mt-6 mb-6">
+        <h3 className="text-lg font-semibold text-green-400 mb-4">DevOps AI Assistant</h3>
+        <DevOpsAssistant />
+      </div>
       
       {/* Cluster View */}
       {!selectedProject && (

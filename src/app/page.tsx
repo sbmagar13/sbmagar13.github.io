@@ -6,7 +6,8 @@ import dynamic from 'next/dynamic';
 import About from '@/components/About/About';
 import Projects from '@/components/Projects/Projects';
 import TechStack from '@/components/Tools/TechStack';
-import { FaTerminal, FaUser, FaProjectDiagram, FaTools } from 'react-icons/fa';
+import DevOpsAssistant from '@/components/Projects/DevOpsAssistant';
+import { FaTerminal, FaUser, FaProjectDiagram, FaTools, FaRobot } from 'react-icons/fa';
 
 // Dynamically import the Terminal component with no SSR
 const Terminal = dynamic(() => import('@/components/Terminal/Terminal'), {
@@ -21,7 +22,7 @@ const Terminal = dynamic(() => import('@/components/Terminal/Terminal'), {
   ),
 });
 
-type Section = 'terminal' | 'about' | 'projects' | 'techstack';
+type Section = 'terminal' | 'about' | 'projects' | 'techstack' | 'assistant';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,8 @@ export default function Home() {
     terminal: true,
     about: false,
     projects: false,
-    techstack: false
+    techstack: false,
+    assistant: false
   });
 
   // Simulate boot sequence
@@ -77,6 +79,10 @@ export default function Home() {
       case 'skills':
         setActiveSection('techstack');
         updateVisitedSections('techstack');
+        break;
+      case 'devops':
+        setActiveSection('assistant');
+        updateVisitedSections('assistant');
         break;
       default:
         // Keep current section
@@ -206,6 +212,28 @@ export default function Home() {
                   />
                 )}
               </button>
+              <button 
+                onClick={() => {
+                  setActiveSection('assistant');
+                  updateVisitedSections('assistant');
+                }}
+                className={`p-2 rounded hover:bg-gray-800 relative ${activeSection === 'assistant' ? 'text-green-500' : ''}`}
+                title="DevOps AI Assistant"
+              >
+                <FaRobot size={20} />
+                {!visitedSections.assistant && (
+                  <motion.div 
+                    className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
+                    initial={{ scale: 0.8, opacity: 0.7 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ 
+                      duration: 0.6,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  />
+                )}
+              </button>
             </div>
           </motion.header>
           
@@ -227,6 +255,12 @@ export default function Home() {
             {activeSection === 'about' && <About />}
             {activeSection === 'projects' && <Projects />}
             {activeSection === 'techstack' && <TechStack />}
+            {activeSection === 'assistant' && (
+              <div className="bg-gray-900 rounded-lg shadow-xl overflow-hidden">
+                <h3 className="text-lg font-semibold text-green-400 mb-4">DevOps AI Assistant</h3>
+                <DevOpsAssistant />
+              </div>
+            )}
           </motion.main>
           
           <motion.div 

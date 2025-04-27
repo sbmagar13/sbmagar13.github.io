@@ -61,6 +61,55 @@ function generateSparkline(): string {
 
 // Available commands
 const commands: Record<string, (args: string[]) => string> = {
+  devops: (args: string[]) => {
+    const query = args.join(' ');
+    
+    if (!query) {
+      return `
+\x1b[1;32m=== DEVOPS AI ASSISTANT ===\x1b[0m
+
+\x1b[1;33mWelcome to the DevOps AI Assistant!\x1b[0m
+
+This assistant can help you with:
+- Answering technical questions about DevOps practices
+- Explaining concepts with examples
+- Generating configuration files
+- Providing troubleshooting steps
+
+\x1b[1;36mUsage:\x1b[0m
+  devops [your question or request]
+
+\x1b[1;36mExamples:\x1b[0m
+  devops explain kubernetes pod lifecycle
+  devops how to set up a CI/CD pipeline
+  devops generate docker-compose for MERN stack
+  devops difference between docker and kubernetes
+  devops how to implement blue-green deployment
+
+\x1b[90mTip: For a more interactive experience, visit the DevOps AI Assistant in the Projects section.\x1b[0m
+`;
+    }
+    
+    return `
+\x1b[1;32m=== DEVOPS AI ASSISTANT ===\x1b[0m
+
+\x1b[1;33mQuery:\x1b[0m ${query}
+
+\x1b[1;33mProcessing your request...\x1b[0m
+
+<<SEQUENTIAL_START>>
+\x1b[1;36m[1/3]\x1b[0m Analyzing query... \x1b[1;32m✓ Done\x1b[0m
+\x1b[1;36m[2/3]\x1b[0m Retrieving information... \x1b[1;32m✓ Done\x1b[0m
+\x1b[1;36m[3/3]\x1b[0m Generating response... \x1b[1;32m✓ Done\x1b[0m
+<<SEQUENTIAL_END>>
+
+\x1b[1;33mResponse:\x1b[0m
+
+${getDevOpsResponse(query)}
+
+\x1b[90mFor a more interactive experience, visit the DevOps AI Assistant in the Projects section.\x1b[0m
+`;
+  },
   '404': () => {
     return `
 \x1b[1;31m   _____ _    _  _____   _   _  ____ _______   ______ ____  _    _ _   _ _____  \x1b[0m
@@ -108,6 +157,7 @@ const commands: Record<string, (args: string[]) => string> = {
   \x1b[1;36mprojects\x1b[0m             List my projects
 
 \x1b[1;33mDevOps Commands:\x1b[0m
+  \x1b[1;36mdevops [query]\x1b[0m       Ask the DevOps AI Assistant
   \x1b[1;36mdeploy [project]\x1b[0m     Deploy a project (simulation)
   \x1b[1;36mdocker [command]\x1b[0m     Docker container operations
   \x1b[1;36mmonitor [service]\x1b[0m    Monitor a service (simulation)
@@ -1162,6 +1212,299 @@ export function executeCommand(input: string): string {
 \x1b[1;31mCommand not found: ${command}\x1b[0m
 Type 'help' to see available commands.
 `;
+}
+
+// Function to generate DevOps Assistant responses
+export function getDevOpsResponse(query: string): string {
+  try {
+    // Determine which MCP tool to use based on the query
+    const lowerQuery = query.toLowerCase();
+    
+    // For configuration generation
+    if (lowerQuery.includes('generate') || lowerQuery.includes('create')) {
+      if (lowerQuery.includes('docker') && lowerQuery.includes('compose')) {
+        // Generate Docker Compose configuration
+        const options: any = {};
+        
+        if (lowerQuery.includes('mern')) {
+          options.services = ['web', 'api', 'db'];
+          options.webImage = 'node:18-alpine';
+          options.dbImage = 'mongo:latest';
+        }
+        
+        return callMcpGenerateConfig('docker-compose', options);
+      } else if (lowerQuery.includes('kubernetes') && lowerQuery.includes('deployment')) {
+        // Generate Kubernetes Deployment configuration
+        const options: any = {
+          name: 'app',
+          replicas: 3,
+          image: 'nginx:latest'
+        };
+        
+        return callMcpGenerateConfig('kubernetes-deployment', options);
+      } else if (lowerQuery.includes('kubernetes') && lowerQuery.includes('service')) {
+        // Generate Kubernetes Service configuration
+        const options: any = {
+          name: 'app',
+          port: 80,
+          type: 'ClusterIP'
+        };
+        
+        return callMcpGenerateConfig('kubernetes-service', options);
+      } else if (lowerQuery.includes('dockerfile')) {
+        // Generate Dockerfile
+        const options: any = {};
+        
+        if (lowerQuery.includes('node') || lowerQuery.includes('javascript')) {
+          options.baseImage = 'node:18-alpine';
+        } else if (lowerQuery.includes('python')) {
+          options.baseImage = 'python:3.11-slim';
+        }
+        
+        return callMcpGenerateConfig('dockerfile', options);
+      } else if (lowerQuery.includes('github') && lowerQuery.includes('action')) {
+        // Generate GitHub Actions workflow
+        return callMcpGenerateConfig('github-actions-workflow', {});
+      } else if (lowerQuery.includes('terraform') || lowerQuery.includes('aws')) {
+        // Generate Terraform AWS configuration
+        return callMcpGenerateConfig('terraform-aws', {});
+      }
+    }
+    
+    // For troubleshooting
+    if (lowerQuery.includes('troubleshoot') || lowerQuery.includes('fix') || lowerQuery.includes('solve') || lowerQuery.includes('debug')) {
+      let system = 'kubernetes';
+      
+      if (lowerQuery.includes('docker')) {
+        system = 'docker';
+      } else if (lowerQuery.includes('ci') || lowerQuery.includes('cd') || lowerQuery.includes('pipeline')) {
+        system = 'ci-pipeline';
+      } else if (lowerQuery.includes('terraform')) {
+        system = 'terraform';
+      }
+      
+      return callMcpTroubleshoot(system, query);
+    }
+    
+    // For specific DevOps information
+    if (lowerQuery.includes('kubernetes') || lowerQuery.includes('k8s')) {
+      let concept = '';
+      
+      if (lowerQuery.includes('pod') && lowerQuery.includes('lifecycle')) {
+        concept = 'pod-lifecycle';
+      } else if (lowerQuery.includes('deployment')) {
+        concept = 'deployment';
+      } else if (lowerQuery.includes('service')) {
+        concept = 'service';
+      } else if (lowerQuery.includes('ingress')) {
+        concept = 'ingress';
+      }
+      
+      return callMcpGetDevOpsInfo('kubernetes', concept);
+    } else if (lowerQuery.includes('docker')) {
+      let concept = '';
+      
+      if (lowerQuery.includes('compose')) {
+        concept = 'docker-compose';
+      } else if (lowerQuery.includes('container')) {
+        concept = 'container';
+      } else if (lowerQuery.includes('image')) {
+        concept = 'image';
+      }
+      
+      return callMcpGetDevOpsInfo('docker', concept);
+    } else if (lowerQuery.includes('ci') || lowerQuery.includes('cd') || lowerQuery.includes('pipeline')) {
+      return callMcpGetDevOpsInfo('cicd', '');
+    } else if (lowerQuery.includes('terraform') || lowerQuery.includes('iac') || lowerQuery.includes('infrastructure as code')) {
+      return callMcpGetDevOpsInfo('iac', '');
+    } else if (lowerQuery.includes('monitor') || lowerQuery.includes('observability') || lowerQuery.includes('logging')) {
+      return callMcpGetDevOpsInfo('monitoring', '');
+    }
+    
+    // For general questions, use the answer_question tool
+    return callMcpAnswerQuestion(query);
+  } catch (error) {
+    console.error('Error calling MCP server:', error);
+    
+    // Fallback response if MCP call fails
+    return `I'm having trouble connecting to my knowledge base at the moment. 
+
+As a DevOps AI Assistant, I can normally provide information about:
+
+- Infrastructure as Code (Terraform, CloudFormation, Pulumi)
+- Container orchestration (Docker, Kubernetes)
+- CI/CD pipelines (Jenkins, GitHub Actions, GitLab CI)
+- Cloud platforms (AWS, Azure, GCP)
+- Monitoring and observability
+- Automation and scripting
+- Security best practices
+- Deployment strategies
+
+Please try again in a moment.`;
+  }
+}
+
+// Helper functions to call MCP tools
+function callMcpGenerateConfig(type: string, options: any): string {
+  try {
+    // This would normally use the use_mcp_tool function to call the MCP server
+    // For now, we'll simulate the response
+    console.log(`Calling MCP generate_config with type: ${type}, options:`, options);
+    
+    // In a real implementation, this would be:
+    /*
+    const result = use_mcp_tool({
+      server_name: "devops-assistant",
+      tool_name: "generate_config",
+      arguments: {
+        type: type,
+        options: options
+      }
+    });
+    return result.content[0].text;
+    */
+    
+    // For now, return a placeholder response
+    return `# ${type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Configuration
+
+I've generated a ${type} configuration based on your requirements. This would normally come from the MCP server.
+
+\`\`\`
+# This is a placeholder for the generated configuration
+# In a real implementation, this would be the actual configuration from the MCP server
+\`\`\`
+
+You can customize this configuration further based on your specific requirements.`;
+  } catch (error) {
+    console.error('Error calling MCP generate_config:', error);
+    return `I'm having trouble generating the ${type} configuration at the moment. Please try again later.`;
+  }
+}
+
+function callMcpTroubleshoot(system: string, problem: string): string {
+  try {
+    // This would normally use the use_mcp_tool function to call the MCP server
+    console.log(`Calling MCP troubleshoot with system: ${system}, problem: ${problem}`);
+    
+    // In a real implementation, this would be:
+    /*
+    const result = use_mcp_tool({
+      server_name: "devops-assistant",
+      tool_name: "troubleshoot",
+      arguments: {
+        system: system,
+        problem: problem
+      }
+    });
+    return result.content[0].text;
+    */
+    
+    // For now, return a placeholder response
+    return `# Troubleshooting ${system}: ${problem}
+
+I've analyzed your issue and here are some troubleshooting steps. This would normally come from the MCP server.
+
+## Possible Causes
+- Cause 1
+- Cause 2
+- Cause 3
+
+## Solutions
+- Solution 1
+- Solution 2
+- Solution 3
+
+Let me know if you need more specific guidance!`;
+  } catch (error) {
+    console.error('Error calling MCP troubleshoot:', error);
+    return `I'm having trouble generating troubleshooting steps for ${system} at the moment. Please try again later.`;
+  }
+}
+
+function callMcpGetDevOpsInfo(category: string, concept: string): string {
+  try {
+    // This would normally use the use_mcp_tool function to call the MCP server
+    console.log(`Calling MCP get_devops_info with category: ${category}, concept: ${concept}`);
+    
+    // In a real implementation, this would be:
+    /*
+    const result = use_mcp_tool({
+      server_name: "devops-assistant",
+      tool_name: "get_devops_info",
+      arguments: {
+        category: category,
+        concept: concept,
+        includeExamples: true
+      }
+    });
+    return result.content[0].text;
+    */
+    
+    // For now, return a placeholder response
+    return `# ${category.charAt(0).toUpperCase() + category.slice(1)} ${concept ? '- ' + concept : ''}
+
+I've retrieved information about ${concept || category}. This would normally come from the MCP server.
+
+## Overview
+This is a placeholder for the DevOps information that would be retrieved from the MCP server.
+
+## Best Practices
+- Best practice 1
+- Best practice 2
+- Best practice 3
+
+${concept ? '## Examples\n\n```\n# Example code would be here\n```' : ''}
+
+Let me know if you need more specific information!`;
+  } catch (error) {
+    console.error('Error calling MCP get_devops_info:', error);
+    return `I'm having trouble retrieving information about ${concept || category} at the moment. Please try again later.`;
+  }
+}
+
+function callMcpAnswerQuestion(question: string): string {
+  try {
+    // This would normally use the use_mcp_tool function to call the MCP server
+    console.log(`Calling MCP answer_question with question: ${question}`);
+    
+    // In a real implementation, this would be:
+    /*
+    const result = use_mcp_tool({
+      server_name: "devops-assistant",
+      tool_name: "answer_question",
+      arguments: {
+        question: question
+      }
+    });
+    return result.content[0].text;
+    */
+    
+    // For now, return a placeholder response
+    return `I've processed your question: "${question}"
+
+This is a placeholder for the answer that would be generated by the MCP server.
+
+As a DevOps AI Assistant, I can provide information about:
+
+- Infrastructure as Code (Terraform, CloudFormation, Pulumi)
+- Container orchestration (Docker, Kubernetes)
+- CI/CD pipelines (Jenkins, GitHub Actions, GitLab CI)
+- Cloud platforms (AWS, Azure, GCP)
+- Monitoring and observability
+- Automation and scripting
+- Security best practices
+- Deployment strategies
+
+Try asking specific questions like:
+- "explain kubernetes pod lifecycle"
+- "how to set up a CI/CD pipeline"
+- "generate docker-compose for MERN stack"
+- "difference between docker and kubernetes"
+- "how to implement blue-green deployment"`;
+  } catch (error) {
+    console.error('Error calling MCP answer_question:', error);
+    return `I'm having trouble answering your question at the moment. Please try again later.`;
+  }
 }
 
 // Helper function to adapt command outputs for mobile

@@ -64,6 +64,32 @@ body {
   color: #38a169;
 }
 
+/* Navigation Links */
+.nav-link {
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: #10B981; /* Green color for the underline */
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.nav-link.active::after {
+  width: 100%;
+}
+
 /* Particle effects */
 .glow-particle {
   box-shadow: 0 0 10px 2px rgba(59, 130, 246, 0.5);

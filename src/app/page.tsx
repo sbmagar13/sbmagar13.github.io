@@ -67,7 +67,7 @@ export default function Home() {
   // Simulate boot sequence with enhanced messages
   useEffect(() => {
     const messages = [
-      'Initializing DevOps Brain v4.0...',
+      'Initializing DevOps Brain v1.2...',
       'Configuring multi-cloud infrastructure...',
       'Optimizing CI/CD pipelines with AI integration...',
       'Synchronizing with cutting-edge tech stack...',
@@ -607,7 +607,7 @@ export default function Home() {
             transition={{ delay: 1, duration: 0.5 }}
           >
             <span className="inline-block w-2 h-2 bg-white rounded-full mr-1.5 animate-pulse"></span>
-            v4.0.0
+            v1.2.3
           </motion.div>
         </>
       )}

@@ -24,3 +24,59 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Light theme styles */
+.light-theme {
+  --background: #f8f9fa;
+  --foreground: #1a202c;
+}
+
+/* Enhanced light theme component styles */
+.light-theme .bg-gray-800 {
+  background-color: #e2e8f0;
+}
+
+.light-theme .bg-gray-900 {
+  background-color: #f1f5f9;
+}
+
+.light-theme .text-gray-400 {
+  color: #4a5568;
+}
+
+.light-theme .text-gray-300 {
+  color: #2d3748;
+}
+
+.light-theme .border-gray-700 {
+  border-color: #cbd5e0;
+}
+
+.light-theme .bg-green-500 {
+  background-color: #38a169;
+}
+
+.light-theme .text-green-500 {
+  color: #2f855a;
+}
+
+.light-theme .text-green-400 {
+  color: #38a169;
+}
+
+/* Particle effects */
+.glow-particle {
+  box-shadow: 0 0 10px 2px rgba(59, 130, 246, 0.5);
+  animation: pulse-glow 3s infinite alternate;
+}
+
+@keyframes pulse-glow {
+  0% {
+    opacity: 0.2;
+    box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.3);
+  }
+  100% {
+    opacity: 0.4;
+    box-shadow: 0 0 15px 4px rgba(59, 130, 246, 0.6);
+  }
+}

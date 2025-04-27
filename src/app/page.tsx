@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import About from '@/components/About/About';
 import Projects from '@/components/Projects/Projects';
 import TechStack from '@/components/Tools/TechStack';
-import { FaTerminal, FaUser, FaProjectDiagram, FaTools, FaBrain, FaNetworkWired, FaRocket, FaCode } from 'react-icons/fa';
+import Blog from '@/components/Blog/Blog';
+import { FaTerminal, FaUser, FaProjectDiagram, FaTools, FaBrain, FaNetworkWired, FaRocket, FaCode, FaSun, FaMoon, FaGlobe, FaBlog } from 'react-icons/fa';
 
 // Dynamically import the Terminal component with no SSR
 const Terminal = dynamic(() => import('@/components/Terminal/Terminal'), {
@@ -21,7 +22,10 @@ const Terminal = dynamic(() => import('@/components/Terminal/Terminal'), {
   ),
 });
 
-type Section = 'terminal' | 'about' | 'projects' | 'techstack';
+type Section = 'terminal' | 'about' | 'projects' | 'techstack' | 'blog';
+
+// Theme type
+type Theme = 'dark' | 'light' | 'system';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -31,17 +35,40 @@ export default function Home() {
     terminal: true,
     about: false,
     projects: false,
-    techstack: false
+    techstack: false,
+    blog: false
   });
+  
+  const [theme, setTheme] = useState<Theme>('dark');
+  const [isScrolled, setIsScrolled] = useState(false);
+  
+  // Mouse position for parallax effect
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
+  // Parallax effect for background elements
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    
+    // Update motion values based on mouse position
+    mouseX.set(clientX / innerWidth);
+    mouseY.set(clientY / innerHeight);
+  }, [mouseX, mouseY]);
+  
+  // Transform mouse position to parallax values
+  const backgroundX = useTransform(mouseX, [0, 1], [-10, 10]);
+  const backgroundY = useTransform(mouseY, [0, 1], [-10, 10]);
+  
   // Particle animation refs
   const particlesRef = useRef<HTMLDivElement>(null);
-  const particleCount = 50;
+  const particleCount = 80; // Increased particle count
+  const backgroundRef = useRef<HTMLDivElement>(null);
   
   // Simulate boot sequence with enhanced messages
   useEffect(() => {
     const messages = [
-      'Initializing DevOps Brain v3.0...',
+      'Initializing DevOps Brain v4.0...',
       'Configuring multi-cloud infrastructure...',
       'Optimizing CI/CD pipelines with AI integration...',
       'Synchronizing with cutting-edge tech stack...',
@@ -69,7 +96,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
   
-  // Create particle effect
+  // Create enhanced particle effect
   useEffect(() => {
     if (loading || !particlesRef.current) return;
     
@@ -79,10 +106,23 @@ export default function Home() {
     // Create particles
     for (let i = 0; i < particleCount; i++) {
       const particle = document.createElement('div');
-      particle.className = 'absolute rounded-full bg-green-500 opacity-20 pointer-events-none';
       
-      // Random size
-      const size = Math.random() * 6 + 2;
+      // Vary particle types for more visual interest
+      const particleType = Math.random();
+      
+      if (particleType > 0.9) {
+        // Special particles (glowing dots)
+        particle.className = 'absolute rounded-full bg-blue-400 opacity-40 pointer-events-none glow-particle';
+      } else if (particleType > 0.7) {
+        // Medium particles (green)
+        particle.className = 'absolute rounded-full bg-green-500 opacity-30 pointer-events-none';
+      } else {
+        // Regular particles (subtle)
+        particle.className = 'absolute rounded-full bg-green-500 opacity-20 pointer-events-none';
+      }
+      
+      // Random size with more variation
+      const size = Math.random() * 8 + 1;
       particle.style.width = `${size}px`;
       particle.style.height = `${size}px`;
       
@@ -96,17 +136,24 @@ export default function Home() {
       particles.push(particle);
       
       // Animate particle
-      animateParticle(particle);
+      animateParticle(particle, particleType > 0.8);
     }
     
-    function animateParticle(particle: HTMLDivElement) {
-      const duration = Math.random() * 15000 + 10000; // 10-25 seconds
+    function animateParticle(particle: HTMLDivElement, isSpecial: boolean) {
+      // Special particles move slower and have different animation
+      const duration = isSpecial 
+        ? Math.random() * 25000 + 20000 // 20-45 seconds for special particles
+        : Math.random() * 15000 + 10000; // 10-25 seconds for regular particles
+        
       const targetX = Math.random() * 100;
       const targetY = Math.random() * 100;
       
+      // Add slight rotation for some particles
+      const rotation = isSpecial ? Math.random() * 360 : 0;
+      
       const animation = particle.animate([
-        { transform: 'translate(0, 0)' },
-        { transform: `translate(${targetX - parseFloat(particle.style.left)}%, ${targetY - parseFloat(particle.style.top)}%)` }
+        { transform: 'translate(0, 0) rotate(0deg)' },
+        { transform: `translate(${targetX - parseFloat(particle.style.left)}%, ${targetY - parseFloat(particle.style.top)}%) rotate(${rotation}deg)` }
       ], {
         duration,
         easing: 'ease-in-out',
@@ -119,7 +166,7 @@ export default function Home() {
         particle.style.top = `${targetY}%`;
         
         // Animate again
-        animateParticle(particle);
+        animateParticle(particle, isSpecial);
       };
     }
     
@@ -128,6 +175,16 @@ export default function Home() {
       particles.forEach(p => p.remove());
     };
   }, [loading]);
+  
+  // Handle scroll detection for header effects
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Handle terminal commands that switch sections
   const handleTerminalCommand = (command: string) => {
@@ -144,6 +201,10 @@ export default function Home() {
         setActiveSection('techstack');
         updateVisitedSections('techstack');
         break;
+      case 'blog':
+        setActiveSection('blog');
+        updateVisitedSections('blog');
+        break;
       default:
         // Keep current section
         break;
@@ -158,6 +219,15 @@ export default function Home() {
     }));
   };
 
+
+  // Theme toggling function
+  const toggleTheme = () => {
+    setTheme(prevTheme => {
+      const newTheme = prevTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.classList.toggle('light-theme', newTheme === 'light');
+      return newTheme;
+    });
+  };
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -183,6 +253,20 @@ export default function Home() {
           setActiveSection('techstack');
           updateVisitedSections('techstack');
           break;
+        case '5':
+          setActiveSection('blog');
+          updateVisitedSections('blog');
+          break;
+        case 'Escape':
+          // Close any open overlays
+          break;
+        case 't':
+          // Toggle theme
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            toggleTheme();
+          }
+          break;
       }
     };
     
@@ -191,16 +275,27 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-gray-900 p-2 sm:p-4 overflow-hidden">
+    <div 
+      className={`relative flex flex-col items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} p-2 sm:p-4 overflow-hidden transition-colors duration-300`}
+      onMouseMove={handleMouseMove}
+    >
       {/* Particle background */}
       <div ref={particlesRef} className="absolute inset-0 z-0 overflow-hidden"></div>
       
-      {/* Animated background gradients */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-green-500 rounded-full filter blur-[150px] opacity-10 animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-1/3 h-1/3 bg-blue-500 rounded-full filter blur-[150px] opacity-10 animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 right-1/4 w-1/4 h-1/4 bg-purple-500 rounded-full filter blur-[150px] opacity-10 animate-pulse" style={{ animationDelay: '2s' }}></div>
-      </div>
+      {/* Animated background gradients with parallax effect */}
+      <motion.div 
+        ref={backgroundRef}
+        className="absolute inset-0 z-0 overflow-hidden"
+        style={{ 
+          x: backgroundX,
+          y: backgroundY
+        }}
+      >
+        <div className={`absolute top-0 left-0 w-1/3 h-1/3 ${theme === 'dark' ? 'bg-green-500' : 'bg-green-300'} rounded-full filter blur-[150px] opacity-10 animate-pulse`}></div>
+        <div className={`absolute bottom-0 right-0 w-1/3 h-1/3 ${theme === 'dark' ? 'bg-blue-500' : 'bg-blue-300'} rounded-full filter blur-[150px] opacity-10 animate-pulse`} style={{ animationDelay: '1s' }}></div>
+        <div className={`absolute top-1/2 right-1/4 w-1/4 h-1/4 ${theme === 'dark' ? 'bg-purple-500' : 'bg-purple-300'} rounded-full filter blur-[150px] opacity-10 animate-pulse`} style={{ animationDelay: '2s' }}></div>
+        <div className={`absolute bottom-1/4 left-1/3 w-1/5 h-1/5 ${theme === 'dark' ? 'bg-cyan-500' : 'bg-cyan-300'} rounded-full filter blur-[150px] opacity-10 animate-pulse`} style={{ animationDelay: '3s' }}></div>
+      </motion.div>
       
       <AnimatePresence mode="wait">
         {loading ? (
@@ -270,87 +365,125 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="flex space-x-1 sm:space-x-3 text-gray-400 bg-gray-800/50 p-1 rounded-full backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              {/* Main Navigation */}
+              <div className="flex space-x-1 sm:space-x-2 text-gray-400 bg-gray-800/50 p-1 rounded-full backdrop-blur-sm">
+                <motion.button 
+                  onClick={() => setActiveSection('terminal')}
+                  className={`p-2 rounded-full hover:bg-gray-700 transition-all ${activeSection === 'terminal' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  title="Terminal (Press 1)"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FaTerminal size={18} />
+                </motion.button>
+                <motion.button 
+                  onClick={() => {
+                    setActiveSection('about');
+                    updateVisitedSections('about');
+                  }}
+                  className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'about' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  title="About (Press 2)"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FaUser size={18} />
+                  {!visitedSections.about && (
+                    <motion.div 
+                      className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
+                      initial={{ scale: 0.8, opacity: 0.7 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ 
+                        duration: 0.6,
+                        repeat: Infinity,
+                        repeatType: "reverse"
+                      }}
+                    />
+                  )}
+                </motion.button>
+                <motion.button 
+                  onClick={() => {
+                    setActiveSection('projects');
+                    updateVisitedSections('projects');
+                  }}
+                  className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'projects' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  title="Projects (Press 3)"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FaProjectDiagram size={18} />
+                  {!visitedSections.projects && (
+                    <motion.div 
+                      className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
+                      initial={{ scale: 0.8, opacity: 0.7 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ 
+                        duration: 0.6,
+                        repeat: Infinity,
+                        repeatType: "reverse"
+                      }}
+                    />
+                  )}
+                </motion.button>
+                <motion.button 
+                  onClick={() => {
+                    setActiveSection('techstack');
+                    updateVisitedSections('techstack');
+                  }}
+                  className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'techstack' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  title="Tech Stack (Press 4)"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FaTools size={18} />
+                  {!visitedSections.techstack && (
+                    <motion.div 
+                      className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
+                      initial={{ scale: 0.8, opacity: 0.7 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ 
+                        duration: 0.6,
+                        repeat: Infinity,
+                        repeatType: "reverse"
+                      }}
+                    />
+                  )}
+                </motion.button>
+                <motion.button 
+                  onClick={() => {
+                    setActiveSection('blog');
+                    updateVisitedSections('blog');
+                  }}
+                  className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'blog' ? 'bg-green-500/20 text-green-500' : ''}`}
+                  title="Blog (Press 5)"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FaBlog size={18} />
+                  {!visitedSections.blog && (
+                    <motion.div 
+                      className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
+                      initial={{ scale: 0.8, opacity: 0.7 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ 
+                        duration: 0.6,
+                        repeat: Infinity,
+                        repeatType: "reverse"
+                      }}
+                    />
+                  )}
+                </motion.button>
+              </div>
+              
+              {/* Theme Toggle Button */}
               <motion.button 
-                onClick={() => setActiveSection('terminal')}
-                className={`p-2 rounded-full hover:bg-gray-700 transition-all ${activeSection === 'terminal' ? 'bg-green-500/20 text-green-500' : ''}`}
-                title="Terminal (Press 1)"
+                onClick={toggleTheme}
+                className="p-2 rounded-full bg-gray-800/50 hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-all"
+                title="Toggle Theme (Ctrl+T)"
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <FaTerminal size={20} />
-              </motion.button>
-              <motion.button 
-                onClick={() => {
-                  setActiveSection('about');
-                  updateVisitedSections('about');
-                }}
-                className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'about' ? 'bg-green-500/20 text-green-500' : ''}`}
-                title="About (Press 2)"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaUser size={20} />
-                {!visitedSections.about && (
-                  <motion.div 
-                    className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
-                    initial={{ scale: 0.8, opacity: 0.7 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ 
-                      duration: 0.6,
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
-                  />
-                )}
-              </motion.button>
-              <motion.button 
-                onClick={() => {
-                  setActiveSection('projects');
-                  updateVisitedSections('projects');
-                }}
-                className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'projects' ? 'bg-green-500/20 text-green-500' : ''}`}
-                title="Projects (Press 3)"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaProjectDiagram size={20} />
-                {!visitedSections.projects && (
-                  <motion.div 
-                    className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
-                    initial={{ scale: 0.8, opacity: 0.7 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ 
-                      duration: 0.6,
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
-                  />
-                )}
-              </motion.button>
-              <motion.button 
-                onClick={() => {
-                  setActiveSection('techstack');
-                  updateVisitedSections('techstack');
-                }}
-                className={`p-2 rounded-full hover:bg-gray-700 transition-all relative ${activeSection === 'techstack' ? 'bg-green-500/20 text-green-500' : ''}`}
-                title="Tech Stack (Press 4)"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaTools size={20} />
-                {!visitedSections.techstack && (
-                  <motion.div 
-                    className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
-                    initial={{ scale: 0.8, opacity: 0.7 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ 
-                      duration: 0.6,
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
-                  />
-                )}
+                {theme === 'dark' ? <FaSun size={18} /> : <FaMoon size={18} />}
               </motion.button>
             </div>
           </motion.header>
@@ -412,6 +545,17 @@ export default function Home() {
                   <TechStack />
                 </motion.div>
               )}
+              {activeSection === 'blog' && (
+                <motion.div
+                  key="blog"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Blog />
+                </motion.div>
+              )}
             </AnimatePresence>
           </motion.main>
           
@@ -430,7 +574,7 @@ export default function Home() {
               <span>Uptime: {Math.floor(Math.random() * 100) + 1}d {Math.floor(Math.random() * 24)}h {Math.floor(Math.random() * 60)}m</span>
             </div>
             <div className="text-center sm:text-right">
-              <span>© {new Date().getFullYear()} DevOps Brain | <span className="text-green-500 hover:underline cursor-pointer">v3.0.0</span></span>
+              <span>© {new Date().getFullYear()} DevOps Brain | <span className="text-green-500 hover:underline cursor-pointer">v4.0.0</span></span>
             </div>
           </motion.div>
           
@@ -445,11 +589,25 @@ export default function Home() {
               <FaCode className="mr-1" /> <span>Keyboard Shortcuts:</span>
             </div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-              <div><span className="text-green-500">1</span>: Terminal</div>
-              <div><span className="text-green-500">2</span>: About</div>
-              <div><span className="text-green-500">3</span>: Projects</div>
-              <div><span className="text-green-500">4</span>: Tech Stack</div>
+              <div><span className="text-green-500">Ctrl+1</span>: Terminal</div>
+              <div><span className="text-green-500">Ctrl+2</span>: About</div>
+              <div><span className="text-green-500">Ctrl+3</span>: Projects</div>
+              <div><span className="text-green-500">Ctrl+4</span>: Tech Stack</div>
+              <div><span className="text-green-500">Ctrl+5</span>: Blog</div>
+              <div><span className="text-green-500">Ctrl+T</span>: Theme</div>
+              <div><span className="text-green-500">Esc</span>: Close</div>
             </div>
+          </motion.div>
+          
+          {/* Version badge */}
+          <motion.div
+            className="fixed top-4 right-4 bg-green-600/80 text-white text-xs py-1 px-3 rounded-full font-mono z-20 flex items-center"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1, duration: 0.5 }}
+          >
+            <span className="inline-block w-2 h-2 bg-white rounded-full mr-1.5 animate-pulse"></span>
+            v4.0.0
           </motion.div>
         </>
       )}

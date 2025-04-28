@@ -124,7 +124,7 @@ const commands: Record<string, (args: string[]) => string> = {
 
 \x1b[1;33mFun Commands:\x1b[0m
   \x1b[1;36msudo [command]\x1b[0m       Try it and see what happens
-  \x1b[1;36mLemon Tea\x1b[0m               Get a virtual Lemon Tea
+  \x1b[1;36mcoffee\x1b[0m               Coffee??, but you'll get a virtual Lemon Tea
   \x1b[1;36mascii [name]\x1b[0m         Show ASCII art
   \x1b[1;36mfortune\x1b[0m              Get a random DevOps fortune
   \x1b[1;36m404\x1b[0m                  Show a not found page

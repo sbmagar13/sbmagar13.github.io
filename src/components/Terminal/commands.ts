@@ -949,33 +949,33 @@ Pro tip: Try 'sudo rm -rf /' if you're feeling adventurous (or destructive)
 `;
   },
   
-  Lemon Tea: () => {
-    // Calculate Lemon Tea brewing metrics
+  coffee: () => {
+    // Calculate coffee brewing metrics
     const brewTemp = 94;
     const brewPressure = 9 + (Math.random() * 0.5).toFixed(1);
     const extractionTime = 25 + Math.floor(Math.random() * 5);
     const caffeineLevel = 85 + Math.floor(Math.random() * 15);
-    const Lemon TeaVersion = '2.5.' + Math.floor(Math.random() * 10);
+    const coffeeVersion = '2.5.' + Math.floor(Math.random() * 10);
     
     // For sequential display, we'll use a special marker that the terminal component will recognize
     // The terminal will look for this marker and handle the sequential display
     return `
-\x1b[1;32m=== Lemon Tea DEPLOYMENT PIPELINE ===\x1b[0m
+\x1b[1;32m=== coffee DEPLOYMENT PIPELINE ===\x1b[0m
 
-\x1b[1;33mInitiating Lemon Tea microservice deployment...\x1b[0m
+\x1b[1;33mInitiating coffee microservice deployment...\x1b[0m
 
 <<SEQUENTIAL_START>>
 \x1b[1;36m[1/6]\x1b[0m Provisioning water resources to ${brewTemp}°C... \x1b[1;32m✓ Done\x1b[0m
-\x1b[1;36m[2/6]\x1b[0m Containerizing Lemon Tea beans (Alpine grind)... \x1b[1;32m✓ Done\x1b[0m
+\x1b[1;36m[2/6]\x1b[0m Containerizing coffee beans (Alpine grind)... \x1b[1;32m✓ Done\x1b[0m
 \x1b[1;36m[3/6]\x1b[0m Establishing bean-to-water handshake... \x1b[1;32m✓ Connected\x1b[0m
 \x1b[1;36m[4/6]\x1b[0m Extracting caffeine payload (${extractionTime}s)... \x1b[1;32m✓ Extracted\x1b[0m
 \x1b[1;36m[5/6]\x1b[0m Load balancing to your mug... \x1b[1;32m✓ Distributed\x1b[0m
 \x1b[1;36m[6/6]\x1b[0m Running health checks... \x1b[1;32m✓ Aromatic\x1b[0m
 <<SEQUENTIAL_END>>
 
-\x1b[1;32mLemon Tea v${Lemon TeaVersion} successfully deployed!\x1b[0m
+\x1b[1;32mcoffee v${coffeeVersion} successfully deployed!\x1b[0m
 
-${asciiArt.Lemon Tea}
+${asciiArt.coffee}
 
 \x1b[1;33mService Status:\x1b[0m
   \x1b[1;36mBrew Pressure:   \x1b[0m [${generateBar(parseInt(brewPressure) * 10)}] ${brewPressure} bars
@@ -985,7 +985,7 @@ ${asciiArt.Lemon Tea}
 
 \x1b[1;33mEnjoy your virtual Lemon Tea!\x1b[0m
 \x1b[90mRemember: The best error message is the one that never needs to be displayed (because you had Lemon Tea first).\x1b[0m
-\x1b[90mPro tip: For a stronger brew, try 'Lemon Tea | Lemon Tea > mug.big'\x1b[0m
+\x1b[90mPro tip: For a stronger brew, try 'coffee | Lemon Tea > mug.big'\x1b[0m
 `;
   },
   

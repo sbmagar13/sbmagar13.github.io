@@ -443,7 +443,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       return line;
     };
     
-    // Check if this is a sequential output (like coffee command)
+    // Check if this is a sequential output (like Lemon Tea command)
     if (result.includes('<<SEQUENTIAL_START>>') && result.includes('<<SEQUENTIAL_END>>')) {
       // Extract the sequential part
       const startMarker = '<<SEQUENTIAL_START>>';

@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="mt-2">
                         <div class="text-yellow-500 font-bold">Fun Commands:</div>
                         <div class="ml-2">
-                            <span class="text-cyan-500">coffee</span> - Get a virtual coffee<br>
+                            <span class="text-cyan-500">Lemon Tea</span> - Get a virtual Lemon Tea<br>
                             <span class="text-cyan-500">fortune</span> - Get a random DevOps fortune<br>
                             <span class="text-cyan-500">matrix</span> - Enter the Matrix
                         </div>
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div><span class="text-cyan-500">Uptime:</span> 99.99% (4+ years in production)</div>
                         <div><span class="text-cyan-500">Kernel:</span> Human v3.7.2</div>
                         <div><span class="text-cyan-500">Memory:</span> 128TB of technical knowledge</div>
-                        <div><span class="text-cyan-500">Swap:</span> Coffee-powered memory extension</div>
+                        <div><span class="text-cyan-500">Swap:</span> Lemon Tea-powered memory extension</div>
                     </div>
                 `;
                 // Also switch to about tab
@@ -288,19 +288,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Switch to about tab
                 setTimeout(() => switchTab('about'), 1000);
                 break;
-            case 'coffee':
+            case 'Lemon Tea':
                 responseDiv.innerHTML = `
-                    <div class="text-green-500 font-bold">=== COFFEE DEPLOYMENT PIPELINE ===</div>
-                    <div class="text-yellow-500 mt-2">Initiating coffee microservice deployment...</div>
+                    <div class="text-green-500 font-bold">=== Lemon Tea DEPLOYMENT PIPELINE ===</div>
+                    <div class="text-yellow-500 mt-2">Initiating Lemon Tea microservice deployment...</div>
                     <div class="mt-2">
                         <div class="text-cyan-500">[1/6]</div> Provisioning water resources to 94°C... <span class="text-green-500">✓ Done</span><br>
-                        <div class="text-cyan-500">[2/6]</div> Containerizing coffee beans (Alpine grind)... <span class="text-green-500">✓ Done</span><br>
+                        <div class="text-cyan-500">[2/6]</div> Containerizing Lemon Tea beans (Alpine grind)... <span class="text-green-500">✓ Done</span><br>
                         <div class="text-cyan-500">[3/6]</div> Establishing bean-to-water handshake... <span class="text-green-500">✓ Connected</span><br>
                         <div class="text-cyan-500">[4/6]</div> Extracting caffeine payload (27s)... <span class="text-green-500">✓ Extracted</span><br>
                         <div class="text-cyan-500">[5/6]</div> Load balancing to your mug... <span class="text-green-500">✓ Distributed</span><br>
                         <div class="text-cyan-500">[6/6]</div> Running health checks... <span class="text-green-500">✓ Aromatic</span>
                     </div>
-                    <div class="text-green-500 font-bold mt-2">Coffee v2.5.7 successfully deployed!</div>
+                    <div class="text-green-500 font-bold mt-2">Lemon Tea v2.5.7 successfully deployed!</div>
                     <pre class="text-cyan-500 mt-2">
          {
       {   }
@@ -318,14 +318,14 @@ document.addEventListener('DOMContentLoaded', function() {
    -.           .-
      '-._____.-'
                     </pre>
-                    <div class="text-yellow-500 mt-2">Enjoy your virtual coffee!</div>
+                    <div class="text-yellow-500 mt-2">Enjoy your virtual Lemon Tea!</div>
                 `;
                 break;
             case 'fortune':
                 const fortunes = [
                     "The best way to predict the future is to implement it.",
                     "A good SRE knows how to break things. A great SRE knows what will break without intervention.",
-                    "Given enough eyeballs, all bugs are shallow. Given enough coffee, all PRs get reviewed.",
+                    "Given enough eyeballs, all bugs are shallow. Given enough Lemon Tea, all PRs get reviewed.",
                     "The cloud is just someone else's computer, but with better uptime than yours.",
                     "Weeks of coding can save you hours of planning.",
                     "In DevOps, we trust the process because we automated and tested it thoroughly.",

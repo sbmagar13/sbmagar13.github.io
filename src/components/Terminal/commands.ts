@@ -124,7 +124,7 @@ const commands: Record<string, (args: string[]) => string> = {
 
 \x1b[1;33mFun Commands:\x1b[0m
   \x1b[1;36msudo [command]\x1b[0m       Try it and see what happens
-  \x1b[1;36mcoffee\x1b[0m               Get a virtual coffee
+  \x1b[1;36mLemon Tea\x1b[0m               Get a virtual Lemon Tea
   \x1b[1;36mascii [name]\x1b[0m         Show ASCII art
   \x1b[1;36mfortune\x1b[0m              Get a random DevOps fortune
   \x1b[1;36m404\x1b[0m                  Show a not found page
@@ -149,7 +149,7 @@ const commands: Record<string, (args: string[]) => string> = {
 \x1b[1;36mPackages:\x1b[0m 150+ technologies integrated
 \x1b[1;36mProcesses:\x1b[0m Multithreaded problem-solving
 \x1b[1;36mMemory:\x1b[0m 128TB of technical knowledge
-\x1b[1;36mSwap:\x1b[0m Coffee-powered memory extension
+\x1b[1;36mSwap:\x1b[0m Lemon Tea-powered memory extension
 
 Type 'skills' to see my technical stack.
 Type 'projects' to see my work.
@@ -393,7 +393,7 @@ Whois Server Response:
 \x1b[1;36mMean Time Between Failures:\x1b[0m Very high
 \x1b[1;36mMean Time To Recovery:\x1b[0m Very low
 \x1b[1;36mIncidents Resolved:\x1b[0m Countless
-\x1b[1;36mCoffee Consumed:\x1b[0m ${Math.floor(uptimeDays * 2.5)} cups
+\x1b[1;36mLemon Tea Consumed:\x1b[0m ${Math.floor(uptimeDays * 2.5)} cups
 
 \x1b[1;33mStatus:\x1b[0m \x1b[1;32mOPERATIONAL\x1b[0m
 \x1b[1;33mLoad Average:\x1b[0m [||||||||||||||||||||] 85%
@@ -701,7 +701,7 @@ ${(Math.max(...pingTimes.map(Number)) - Math.min(...pingTimes.map(Number)) / 4).
 ${packetLoss > 0 ? 
   `\x1b[1;33mPacket loss detected! Possible causes:\x1b[0m
   • The network is having an identity crisis
-  • Packets decided to take a coffee break
+  • Packets decided to take a Lemon Tea break
   • Your firewall is being overprotective
   • DNS (it's always DNS)` : 
   `\x1b[1;32mConnection stable!\x1b[0m`}
@@ -949,33 +949,33 @@ Pro tip: Try 'sudo rm -rf /' if you're feeling adventurous (or destructive)
 `;
   },
   
-  coffee: () => {
-    // Calculate coffee brewing metrics
+  Lemon Tea: () => {
+    // Calculate Lemon Tea brewing metrics
     const brewTemp = 94;
     const brewPressure = 9 + (Math.random() * 0.5).toFixed(1);
     const extractionTime = 25 + Math.floor(Math.random() * 5);
     const caffeineLevel = 85 + Math.floor(Math.random() * 15);
-    const coffeeVersion = '2.5.' + Math.floor(Math.random() * 10);
+    const Lemon TeaVersion = '2.5.' + Math.floor(Math.random() * 10);
     
     // For sequential display, we'll use a special marker that the terminal component will recognize
     // The terminal will look for this marker and handle the sequential display
     return `
-\x1b[1;32m=== COFFEE DEPLOYMENT PIPELINE ===\x1b[0m
+\x1b[1;32m=== Lemon Tea DEPLOYMENT PIPELINE ===\x1b[0m
 
-\x1b[1;33mInitiating coffee microservice deployment...\x1b[0m
+\x1b[1;33mInitiating Lemon Tea microservice deployment...\x1b[0m
 
 <<SEQUENTIAL_START>>
 \x1b[1;36m[1/6]\x1b[0m Provisioning water resources to ${brewTemp}°C... \x1b[1;32m✓ Done\x1b[0m
-\x1b[1;36m[2/6]\x1b[0m Containerizing coffee beans (Alpine grind)... \x1b[1;32m✓ Done\x1b[0m
+\x1b[1;36m[2/6]\x1b[0m Containerizing Lemon Tea beans (Alpine grind)... \x1b[1;32m✓ Done\x1b[0m
 \x1b[1;36m[3/6]\x1b[0m Establishing bean-to-water handshake... \x1b[1;32m✓ Connected\x1b[0m
 \x1b[1;36m[4/6]\x1b[0m Extracting caffeine payload (${extractionTime}s)... \x1b[1;32m✓ Extracted\x1b[0m
 \x1b[1;36m[5/6]\x1b[0m Load balancing to your mug... \x1b[1;32m✓ Distributed\x1b[0m
 \x1b[1;36m[6/6]\x1b[0m Running health checks... \x1b[1;32m✓ Aromatic\x1b[0m
 <<SEQUENTIAL_END>>
 
-\x1b[1;32mCoffee v${coffeeVersion} successfully deployed!\x1b[0m
+\x1b[1;32mLemon Tea v${Lemon TeaVersion} successfully deployed!\x1b[0m
 
-${asciiArt.coffee}
+${asciiArt.Lemon Tea}
 
 \x1b[1;33mService Status:\x1b[0m
   \x1b[1;36mBrew Pressure:   \x1b[0m [${generateBar(parseInt(brewPressure) * 10)}] ${brewPressure} bars
@@ -983,9 +983,9 @@ ${asciiArt.coffee}
   \x1b[1;36mFlavor Profile:  \x1b[0m [${generateBar(90)}] Excellent
   \x1b[1;36mUptime Impact:   \x1b[0m [${generateBar(95)}] Productivity +95%
 
-\x1b[1;33mEnjoy your virtual coffee!\x1b[0m
-\x1b[90mRemember: The best error message is the one that never needs to be displayed (because you had coffee first).\x1b[0m
-\x1b[90mPro tip: For a stronger brew, try 'coffee | coffee > mug.big'\x1b[0m
+\x1b[1;33mEnjoy your virtual Lemon Tea!\x1b[0m
+\x1b[90mRemember: The best error message is the one that never needs to be displayed (because you had Lemon Tea first).\x1b[0m
+\x1b[90mPro tip: For a stronger brew, try 'Lemon Tea | Lemon Tea > mug.big'\x1b[0m
 `;
   },
   
@@ -1092,7 +1092,7 @@ ${bottom}
     const fortunes = [
       "The best way to predict the future is to implement it.",
       "A good SRE knows how to break things. A great SRE knows what will break without intervention.",
-      "Given enough eyeballs, all bugs are shallow. Given enough coffee, all PRs get reviewed.",
+      "Given enough eyeballs, all bugs are shallow. Given enough Lemon Tea, all PRs get reviewed.",
       "The cloud is just someone else's computer, but with better uptime than yours.",
       "Weeks of coding can save you hours of planning.",
       "In DevOps, we trust the process because we automated and tested it thoroughly.",

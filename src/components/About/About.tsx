@@ -86,7 +86,7 @@ const About = () => {
             <div className="text-xl font-mono">150+</div>
           </div>
           <div className="bg-gray-700 p-3 rounded">
-            <div className="text-xs text-gray-400">Coffee Consumed</div>
+            <div className="text-xs text-gray-400">Lemon Tea Consumed</div>
             <div className="text-xl font-mono">∞</div>
           </div>
         </div>
@@ -244,7 +244,7 @@ const About = () => {
   
   high_availability     = true
   continuous_learning   = true
-  coffee_powered        = true
+  Lemon Tea_powered        = true
   
   tags = {
     specialization = "DevOps & AI"

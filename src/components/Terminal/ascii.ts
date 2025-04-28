@@ -64,7 +64,7 @@ export const asciiArt: Record<string, string> = {
                    │  └──┘    └──┘    │
                    └──────────────────┘`,
 
-  coffee: 
+  Lemon Tea: 
 `                       (
                         )     (
                  ___...(-------)-....___

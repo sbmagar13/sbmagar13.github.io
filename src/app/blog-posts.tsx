@@ -140,7 +140,7 @@ Blameless postmortems transform incidents from sources of fear and finger-pointi
     date: "2025-01-10",
     readTime: "4 min",
     tags: ["terraform", "iac", "scaling"],
-    featured: true,
+    featured: false,
     slug: "terraform-at-scale",
     content: `# Terraform at Scale: Lessons Learned
 

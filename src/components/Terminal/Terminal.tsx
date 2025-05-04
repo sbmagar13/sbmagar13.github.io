@@ -254,19 +254,18 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       }
     });
     
-    // Execute initial command only on desktop (not mobile)
-    if (initialCommand && typeof window !== 'undefined' && window.innerWidth >= 768) {
-      setTimeout(() => {
-        currentLine = initialCommand;
-        term.writeln('');
-        term.write(`${initialCommand}`);
-        term.writeln('');
-        processCommand(initialCommand);
-        setCommandHistory(prev => [...prev, initialCommand]);
-        setHistoryIndex(1);
-        currentLine = '';
-      }, 300); // Reduced delay for faster startup
-    }
+    // Execute initial command on all devices
+    setTimeout(() => {
+      const commandToExecute = initialCommand || 'help';
+      currentLine = commandToExecute;
+      term.writeln('');
+      term.write(`${commandToExecute}`);
+      term.writeln('');
+      processCommand(commandToExecute);
+      setCommandHistory(prev => [...prev, commandToExecute]);
+      setHistoryIndex(1);
+      currentLine = '';
+    }, 300); // Reduced delay for faster startup
     
     // Automatically focus the terminal on desktop devices
     setTimeout(() => {

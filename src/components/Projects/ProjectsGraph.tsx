@@ -17,7 +17,7 @@ export default function ProjectsGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
 
-  const projects = useMemo(() => [
+  const projects = useMemo((): ProjectNode[] => [
     {
       id: 'kubernetes-cluster',
       name: 'K8s Cluster',

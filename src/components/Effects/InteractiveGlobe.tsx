@@ -15,7 +15,7 @@ export default function InteractiveGlobe() {
   const rotationRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
 
-  const locations = useMemo(() => [
+  const locations = useMemo((): Location[] => [
     { lat: 37.7749, lng: -122.4194, name: 'San Francisco', type: 'deployment' },
     { lat: 40.7128, lng: -74.0060, name: 'New York', type: 'client' },
     { lat: 51.5074, lng: -0.1278, name: 'London', type: 'datacenter' },

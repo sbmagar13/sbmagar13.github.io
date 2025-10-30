@@ -17,7 +17,7 @@ interface SkillMetric {
 const About = () => {
   const [activeTab, setActiveTab] = useState('live-metrics');
   const [showConnectionsHint, setShowConnectionsHint] = useState(true);
-  
+
   const skillMetrics: SkillMetric[] = [
     { name: 'Infrastructure', value: 92, icon: <FaServer />, color: 'bg-blue-500' },
     { name: 'Containers', value: 88, icon: <FaDocker />, color: 'bg-blue-400' },

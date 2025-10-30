@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaServer, FaDatabase, FaNetworkWired, FaDocker, FaCloud, FaLock, FaUserFriends } from 'react-icons/fa';
+import { FaServer, FaDatabase, FaNetworkWired, FaDocker, FaCloud, FaLock, FaUserFriends, FaChartArea, FaRocket } from 'react-icons/fa';
 import SocialConnections from './SocialConnections';
+import SkillRadar from './SkillRadar';
+import LiveMetrics from './LiveMetrics';
 
 interface SkillMetric {
   name: string;
@@ -13,7 +15,7 @@ interface SkillMetric {
 }
 
 const About = () => {
-  const [activeTab, setActiveTab] = useState('metrics');
+  const [activeTab, setActiveTab] = useState('live-metrics');
   const [showConnectionsHint, setShowConnectionsHint] = useState(true);
   
   const skillMetrics: SkillMetric[] = [
@@ -21,10 +23,19 @@ const About = () => {
     { name: 'Containers', value: 88, icon: <FaDocker />, color: 'bg-blue-400' },
     { name: 'Cloud', value: 90, icon: <FaCloud />, color: 'bg-blue-600' },
     { name: 'Python', value: 85, icon: <FaServer />, color: 'bg-purple-500' },
-    { name: 'AI & Agents', value: 25, icon: <FaServer />, color: 'bg-purple-600' },
+    { name: 'AI & Agents', value: 75, icon: <FaRocket />, color: 'bg-purple-600' },
     { name: 'Networking', value: 80, icon: <FaNetworkWired />, color: 'bg-blue-300' },
     { name: 'Databases', value: 82, icon: <FaDatabase />, color: 'bg-blue-700' },
     { name: 'Security', value: 84, icon: <FaLock />, color: 'bg-blue-800' },
+  ];
+
+  const radarSkills = [
+    { name: 'DevOps', value: 92, color: '#10b981' },
+    { name: 'Cloud', value: 90, color: '#3b82f6' },
+    { name: 'Python', value: 85, color: '#8b5cf6' },
+    { name: 'AI/ML', value: 75, color: '#f59e0b' },
+    { name: 'Security', value: 84, color: '#ef4444' },
+    { name: 'Monitoring', value: 88, color: '#06b6d4' }
   ];
   
   const incidents = [
@@ -94,27 +105,39 @@ const About = () => {
       
       {/* Tabs */}
       <div className="mb-4 border-b border-gray-700">
-        <div className="flex flex-wrap gap-2 sm:space-x-4">
-          <button 
-            className={`py-2 px-4 font-medium ${activeTab === 'metrics' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
+        <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
+          <button
+            className={`py-2 px-3 font-medium ${activeTab === 'live-metrics' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
+            onClick={() => setActiveTab('live-metrics')}
+          >
+            Live Metrics
+          </button>
+          <button
+            className={`py-2 px-3 font-medium ${activeTab === 'skill-radar' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
+            onClick={() => setActiveTab('skill-radar')}
+          >
+            <FaChartArea className="inline mr-1" />Skill Radar
+          </button>
+          <button
+            className={`py-2 px-3 font-medium ${activeTab === 'metrics' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
             onClick={() => setActiveTab('metrics')}
           >
             System Metrics
           </button>
-          <button 
-            className={`py-2 px-4 font-medium ${activeTab === 'incidents' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
+          <button
+            className={`py-2 px-3 font-medium ${activeTab === 'incidents' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
             onClick={() => setActiveTab('incidents')}
           >
             Incident History
           </button>
-          <button 
-            className={`py-2 px-4 font-medium ${activeTab === 'architecture' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
+          <button
+            className={`py-2 px-3 font-medium ${activeTab === 'architecture' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
             onClick={() => setActiveTab('architecture')}
           >
             Architecture
           </button>
-          <button 
-            className={`py-2 px-4 font-medium relative ${activeTab === 'connections' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
+          <button
+            className={`py-2 px-3 font-medium relative ${activeTab === 'connections' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
             onClick={() => {
               setActiveTab('connections');
               setShowConnectionsHint(false);
@@ -124,11 +147,11 @@ const About = () => {
               <FaUserFriends className="mr-1" />
               <span>Connections</span>
               {showConnectionsHint && (
-                <motion.div 
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
+                <motion.div
+                  className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
                   initial={{ scale: 0.8, opacity: 0.7 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.6,
                     repeat: Infinity,
                     repeatType: "reverse"
@@ -142,6 +165,34 @@ const About = () => {
       
       {/* Tab Content */}
       <div className="min-h-[300px]">
+        {activeTab === 'live-metrics' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <LiveMetrics />
+          </motion.div>
+        )}
+
+        {activeTab === 'skill-radar' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center"
+          >
+            <SkillRadar skills={radarSkills} />
+            <div className="mt-6 text-center">
+              <h4 className="text-lg font-semibold text-green-400 mb-2">Core Competencies</h4>
+              <p className="text-sm text-gray-400 max-w-lg">
+                This radar chart visualizes my expertise across key domains. Each axis represents
+                a different skill area, with distance from center indicating proficiency level.
+              </p>
+            </div>
+          </motion.div>
+        )}
+
         {activeTab === 'metrics' && (
           <motion.div 
             initial={{ opacity: 0 }}

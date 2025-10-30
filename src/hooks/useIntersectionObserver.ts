@@ -32,7 +32,7 @@ export const useIntersectionObserver = ({
     observer.observe(node);
 
     return () => observer.disconnect();
-  }, [node, JSON.stringify(threshold), root, rootMargin, frozen]);
+  }, [node, threshold, root, rootMargin, frozen]);
 
   const ref = useRef<Element | null>(null);
   useEffect(() => {
@@ -40,7 +40,7 @@ export const useIntersectionObserver = ({
     if (currentRef) {
       setNode(currentRef);
     }
-  }, [ref.current]);
+  }, []);
 
   return { ref, entry, isVisible: !!entry?.isIntersecting };
 };

@@ -8,7 +8,7 @@ interface SimpleTerminalProps {
   onCommandExecuted?: (command: string) => void;
 }
 
-export default function SimpleTerminal({ initialCommand, onCommandExecuted }: SimpleTerminalProps) {
+export default function SimpleTerminal({ onCommandExecuted }: SimpleTerminalProps) {
   const [output, setOutput] = useState<Array<{ type: 'command' | 'output' | 'error'; text: string }>>([
     { type: 'output', text: 'Welcome to DevOps Brain Terminal v2.0' },
     { type: 'output', text: 'Type "help" for available commands' },

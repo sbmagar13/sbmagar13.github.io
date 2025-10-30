@@ -2,7 +2,6 @@
 
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import SimpleTerminal from './SimpleTerminal';
 
 // Try to load the advanced terminal, fall back to simple terminal if it fails
 const Terminal = dynamic(

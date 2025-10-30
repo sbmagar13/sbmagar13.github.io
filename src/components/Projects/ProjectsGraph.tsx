@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface ProjectNode {
@@ -17,7 +17,7 @@ export default function ProjectsGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
 
-  const projects: ProjectNode[] = [
+  const projects = useMemo(() => [
     {
       id: 'kubernetes-cluster',
       name: 'K8s Cluster',
@@ -81,7 +81,7 @@ export default function ProjectsGraph() {
       y: 300,
       connections: ['ai-assistant', 'web-platform']
     }
-  ];
+  ], []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -199,7 +199,7 @@ export default function ProjectsGraph() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [projects]);
 
   return (
     <motion.div

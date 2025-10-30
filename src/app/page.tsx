@@ -45,6 +45,11 @@ export default function Home() {
   const [theme, setTheme] = useState<Theme>('dark');
   const [visualEffect, setVisualEffect] = useState<VisualEffect>('neural');
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [uptime, setUptime] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0
+  });
   
   // Mouse position for parallax effect
   const mouseX = useMotionValue(0);
@@ -91,11 +96,12 @@ export default function Home() {
         index++;
       } else {
         clearInterval(interval);
+        // Longer pause after the last message so users can read "System ready!"
         setTimeout(() => {
           setLoading(false);
-        }, 500);
+        }, 2000); // Increased from 500ms to 2000ms
       }
-    }, 250); // Slightly faster for better UX
+    }, 800); // Increased from 250ms to 800ms for better readability
 
     return () => clearInterval(interval);
   }, []);
@@ -286,6 +292,30 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Calculate dynamic uptime from DevOps career start date
+  useEffect(() => {
+    const startDate = new Date('2020-12-01T00:00:00Z'); // Career start date
+
+    const calculateUptime = () => {
+      const now = new Date();
+      const diffMs = now.getTime() - startDate.getTime();
+
+      const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+      const hours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      const minutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000));
+
+      setUptime({ days, hours, minutes });
+    };
+
+    // Calculate initial uptime
+    calculateUptime();
+
+    // Update every minute (60000ms) to avoid too frequent updates
+    const interval = setInterval(calculateUptime, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div 
       className={`relative flex flex-col items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} p-2 sm:p-4 overflow-hidden transition-colors duration-300`}
@@ -341,15 +371,32 @@ export default function Home() {
               transition={{ duration: 0.5 }}
             >
               {bootMessages.map((message, i) => (
-                <motion.div 
-                  key={i} 
-                  className="mb-1"
-                  initial={{ opacity: 0, x: -10 }}
+                <motion.div
+                  key={i}
+                  className="mb-2"
+                  initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: i * 0.1 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
                 >
-                  <span className="text-green-300">[{(i * 0.25).toFixed(1)}s] </span>
-                  <span>{message}</span>
+                  <span className="text-green-300">[{(i * 0.8).toFixed(1)}s] </span>
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    className={i === bootMessages.length - 1 ? "text-green-400 font-bold" : ""}
+                  >
+                    {message}
+                  </motion.span>
+                  {i === bootMessages.length - 1 && (
+                    <motion.span
+                      className="ml-2 text-green-400"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: 0.5 }}
+                    >
+                      ✓
+                    </motion.span>
+                  )}
                 </motion.div>
               ))}
               {bootMessages.length < 10 && (
@@ -357,6 +404,22 @@ export default function Home() {
                   <span className="inline-block w-2 h-4 bg-green-500 animate-pulse"></span>
                 </div>
               )}
+
+              {/* Progress Bar */}
+              <div className="mt-6">
+                <div className="flex justify-between text-xs text-gray-400 mb-2">
+                  <span>Boot Progress</span>
+                  <span>{Math.round((bootMessages.length / 10) * 100)}%</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <motion.div
+                    className="h-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(bootMessages.length / 10) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         ) : (
@@ -597,7 +660,7 @@ export default function Home() {
               <span>System operational</span>
             </div>
             <div className="text-center sm:text-left">
-              <span>Uptime: {Math.floor(Math.random() * 100) + 1}d {Math.floor(Math.random() * 24)}h {Math.floor(Math.random() * 60)}m</span>
+              <span>Uptime: {uptime.days}d {uptime.hours}h {uptime.minutes}m</span>
             </div>
             <div className="text-center sm:text-right">
               <span>© {new Date().getFullYear()} DevOps Brain | <span className="text-green-500 hover:underline cursor-pointer">v1.2.3</span></span>

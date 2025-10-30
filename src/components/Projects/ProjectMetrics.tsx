@@ -22,7 +22,7 @@ export default function ProjectMetrics() {
     aiProjects: 6,
     infrastructureProjects: 4,
     averageUptime: 98.7,
-    linesOfCode: 47832,
+    linesOfCode: 947000,
     deploymentsThisMonth: 23,
     currentLoad: 0
   });

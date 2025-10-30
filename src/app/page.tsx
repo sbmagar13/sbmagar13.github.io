@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import About from '@/components/About/About';
@@ -44,7 +44,6 @@ export default function Home() {
 
   const [theme, setTheme] = useState<Theme>('dark');
   const [visualEffect, setVisualEffect] = useState<VisualEffect>('neural');
-  const [showPerformance, setShowPerformance] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   
   // Mouse position for parallax effect

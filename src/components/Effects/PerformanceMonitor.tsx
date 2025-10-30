@@ -36,7 +36,7 @@ export default function PerformanceMonitor() {
     // Measure memory usage (if available)
     const measureMemory = () => {
       if ('memory' in performance) {
-        const memoryInfo = (performance as any).memory;
+        const memoryInfo = (performance as { memory: { usedJSHeapSize: number } }).memory;
         const usedMemory = Math.round(memoryInfo.usedJSHeapSize / 1048576);
         setMetrics(prev => ({ ...prev, memory: usedMemory }));
       }
@@ -57,7 +57,7 @@ export default function PerformanceMonitor() {
         await fetch('/api/blog', { method: 'HEAD' });
         const latency = Math.round(performance.now() - start);
         setMetrics(prev => ({ ...prev, networkLatency: latency }));
-      } catch (e) {
+      } catch {
         // Ignore errors
       }
     };

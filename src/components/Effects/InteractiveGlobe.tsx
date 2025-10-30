@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface Location {
@@ -15,7 +15,7 @@ export default function InteractiveGlobe() {
   const rotationRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
 
-  const locations: Location[] = [
+  const locations = useMemo(() => [
     { lat: 37.7749, lng: -122.4194, name: 'San Francisco', type: 'deployment' },
     { lat: 40.7128, lng: -74.0060, name: 'New York', type: 'client' },
     { lat: 51.5074, lng: -0.1278, name: 'London', type: 'datacenter' },
@@ -24,7 +24,7 @@ export default function InteractiveGlobe() {
     { lat: 1.3521, lng: 103.8198, name: 'Singapore', type: 'datacenter' },
     { lat: 19.4326, lng: -99.1332, name: 'Mexico City', type: 'deployment' },
     { lat: 28.6139, lng: 77.2090, name: 'New Delhi', type: 'client' },
-  ];
+  ], []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,8 +40,6 @@ export default function InteractiveGlobe() {
     const centerY = canvas.height / 2;
     const radius = 150;
 
-    let mouseX = 0;
-    let mouseY = 0;
     let prevMouseX = 0;
     let prevMouseY = 0;
 
@@ -60,7 +58,7 @@ export default function InteractiveGlobe() {
     // Rotate 3D point
     const rotate3D = (point: { x: number; y: number; z: number }, rotX: number, rotY: number) => {
       // Rotate around Y axis
-      let x = point.x * Math.cos(rotY) - point.z * Math.sin(rotY);
+      const x = point.x * Math.cos(rotY) - point.z * Math.sin(rotY);
       let z = point.x * Math.sin(rotY) + point.z * Math.cos(rotY);
 
       // Rotate around X axis
@@ -236,7 +234,7 @@ export default function InteractiveGlobe() {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, []);
+  }, [locations]);
 
   return (
     <motion.div

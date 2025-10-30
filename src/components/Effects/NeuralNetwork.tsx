@@ -8,9 +8,25 @@ interface NeuralNetworkProps {
   className?: string;
 }
 
+interface Node {
+  x: number;
+  y: number;
+  z: number;
+  vx: number;
+  vy: number;
+  vz: number;
+  radius: number;
+  connections: Node[];
+  pulsePhase: number;
+  color: string;
+  update(mouseX: number, mouseY: number, canvasWidth: number, canvasHeight: number): void;
+  draw(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number): void;
+  drawConnections(ctx: CanvasRenderingContext2D, nodes: Node[], canvasWidth: number, canvasHeight: number): void;
+}
+
 export default function NeuralNetwork({ nodeCount = 50, className = '' }: NeuralNetworkProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const nodesRef = useRef<any[]>([]);
+  const nodesRef = useRef<Node[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -183,13 +199,13 @@ export default function NeuralNetwork({ nodeCount = 50, className = '' }: Neural
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Update and draw connections
-      nodesRef.current.forEach(node => {
+      nodesRef.current.forEach((node: Node) => {
         node.update(mouseRef.current.x, mouseRef.current.y, canvas.width, canvas.height);
         node.drawConnections(ctx, nodesRef.current, canvas.width, canvas.height);
       });
 
       // Draw nodes
-      nodesRef.current.forEach(node => {
+      nodesRef.current.forEach((node: Node) => {
         node.draw(ctx, canvas.width, canvas.height);
       });
 

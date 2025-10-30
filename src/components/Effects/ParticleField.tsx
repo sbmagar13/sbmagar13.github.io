@@ -8,10 +8,23 @@ interface ParticleFieldProps {
   className?: string;
 }
 
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  color: string;
+  life: number;
+  maxLife: number;
+  update(canvasWidth: number, canvasHeight: number): void;
+  draw(ctx: CanvasRenderingContext2D): void;
+}
+
 export default function ParticleField({ particleCount = 100, className = '' }: ParticleFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
-  const particlesRef = useRef<any[]>([]);
+  const particlesRef = useRef<Particle[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -91,7 +104,7 @@ export default function ParticleField({ particleCount = 100, className = '' }: P
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      particlesRef.current.forEach(particle => {
+      particlesRef.current.forEach((particle: Particle) => {
         particle.update(canvas.width, canvas.height);
         particle.draw(ctx);
       });

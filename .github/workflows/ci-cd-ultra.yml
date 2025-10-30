@@ -1,8 +1,8 @@
 name: Ultra CI/CD Pipeline
 
 on:
-  push:
-    branches: [ not-sure ]
+  # Disabled - using nextjs.yml instead
+  # push:
   #   branches: [ main, develop, fix/* ]
   # pull_request:
   #   branches: [ main ]

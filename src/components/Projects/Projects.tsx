@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { FaDocker, FaGithub, FaExternalLinkAlt, FaServer, FaChartLine, FaBook } from 'react-icons/fa';
 import CiCdPipeline from './CiCdPipeline';
 import DockerContainers from './DockerContainers';
+import ProjectsGraph from './ProjectsGraph';
+import ProjectMetrics from './ProjectMetrics';
 
 interface Project {
   id: number;
@@ -332,13 +334,19 @@ const Projects = () => {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-green-500 mb-2">The Production Environment</h2>
         <p className="text-gray-400">
-          Projects displayed as containers in a Kubernetes-style cluster view.
+          Interactive project ecosystem with real-time metrics and cluster visualization.
         </p>
       </div>
-      
+
+      {/* Project Metrics Dashboard */}
+      <ProjectMetrics />
+
+      {/* Project Ecosystem Graph */}
+      <ProjectsGraph />
+
       {/* CI/CD Pipeline Visualization */}
       <CiCdPipeline />
-      
+
       {/* Docker Containers Visualization */}
       <DockerContainers />
       

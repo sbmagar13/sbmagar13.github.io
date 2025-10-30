@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import About from '@/components/About/About';
@@ -9,23 +9,26 @@ import TechStack from '@/components/Tools/TechStack';
 import BlogPostsWrapper from './BlogPostsWrapper';
 import { FaTerminal, FaUser, FaProjectDiagram, FaTools, FaBrain, FaCode, FaSun, FaMoon, FaBlog } from 'react-icons/fa';
 
-// Dynamically import the Terminal component with no SSR
-const Terminal = dynamic(() => import('@/components/Terminal/Terminal'), {
+// Import visual effects
+import NeuralNetwork from '@/components/Effects/NeuralNetwork';
+import ParticleField from '@/components/Effects/ParticleField';
+import MatrixRain from '@/components/Effects/MatrixRain';
+import PerformanceMonitor from '@/components/Effects/PerformanceMonitor';
+import GlitchText from '@/components/Effects/GlitchText';
+import CommandPalette from '@/components/CommandPalette/CommandPalette';
+
+// Import the Terminal wrapper component
+const TerminalWrapper = dynamic(() => import('@/components/Terminal/TerminalWrapper'), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-black text-green-500 border border-green-500 rounded-md">
-      <div className="text-center">
-        <div className="mb-4">Loading terminal...</div>
-        <div className="inline-block w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    </div>
-  ),
 });
 
 type Section = 'terminal' | 'about' | 'projects' | 'techstack' | 'blog';
 
 // Theme type
 type Theme = 'dark' | 'light' | 'system';
+
+// Visual effect type
+type VisualEffect = 'neural' | 'particles' | 'matrix' | 'none';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -38,8 +41,11 @@ export default function Home() {
     techstack: false,
     blog: false
   });
-  
+
   const [theme, setTheme] = useState<Theme>('dark');
+  const [visualEffect, setVisualEffect] = useState<VisualEffect>('neural');
+  const [showPerformance, setShowPerformance] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   
   // Mouse position for parallax effect
   const mouseX = useMotionValue(0);
@@ -67,16 +73,16 @@ export default function Home() {
   // Simulate boot sequence with enhanced messages
   useEffect(() => {
     const messages = [
-      'Initializing DevOps Brain v1.2...',
-      'Configuring multi-cloud infrastructure...',
-      'Optimizing CI/CD pipelines with AI integration...',
-      'Synchronizing with cutting-edge tech stack...',
-      'Compiling quantum-resistant codebase...',
-      'Loading Sagar\'s innovations and expertise...',
-      'Integrating system components with zero downtime...',
-      'Deploying chaos monkeys for resilience testing...',
-      'Establishing secure network connections...',
-      'System ready! Let\'s revolutionize DevOps!'
+      'Initializing DevOps Brain v2.0 ULTRA...',
+      'Bootstrapping Kubernetes clusters...',
+      'Activating AI-powered infrastructure optimization...',
+      'Loading neural network visualization...',
+      'Establishing quantum entanglement protocols...',
+      'Deploying serverless edge functions globally...',
+      'Initializing chaos engineering framework...',
+      'Syncing with 150+ DevOps tools...',
+      'Optimizing performance metrics...',
+      'System ready! Welcome to the future of DevOps!'
     ];
 
     let index = 0;
@@ -267,6 +273,13 @@ export default function Home() {
             toggleTheme();
           }
           break;
+        case 'k':
+          // Open command palette
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            setCommandPaletteOpen(true);
+          }
+          break;
       }
     };
     
@@ -279,8 +292,13 @@ export default function Home() {
       className={`relative flex flex-col items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} p-2 sm:p-4 overflow-hidden transition-colors duration-300`}
       onMouseMove={handleMouseMove}
     >
-      {/* Particle background */}
-      <div ref={particlesRef} className="absolute inset-0 z-0 overflow-hidden"></div>
+      {/* Advanced visual effects background */}
+      {visualEffect === 'neural' && <NeuralNetwork className="z-0" />}
+      {visualEffect === 'particles' && <ParticleField className="z-0" />}
+      {visualEffect === 'matrix' && <MatrixRain className="z-0" />}
+
+      {/* Old particle background for fallback */}
+      {visualEffect === 'none' && <div ref={particlesRef} className="absolute inset-0 z-0 overflow-hidden"></div>}
       
       {/* Animated background gradients with parallax effect */}
       <motion.div 
@@ -360,8 +378,11 @@ export default function Home() {
                 <FaBrain size={24} className="text-white" />
               </motion.div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">DevOps Brain</h1>
-                <p className="text-gray-400 text-xs sm:text-sm">Your Brain on the Web - DevOps | by <span className="text-green-400">Sagar Budhathoki</span></p>
+                <GlitchText
+                  text="DevOps Brain 2.0"
+                  className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-cyan-500 to-blue-600"
+                />
+                <p className="text-gray-400 text-xs sm:text-sm mt-1">Elite DevOps Engineering | by <span className="text-green-400 font-bold">Sagar Budhathoki</span></p>
               </div>
             </div>
             
@@ -511,8 +532,8 @@ export default function Home() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Terminal 
-                    initialCommand="" 
+                  <TerminalWrapper
+                    initialCommand=""
                     onCommandExecuted={handleTerminalCommand}
                   />
                 </motion.div>
@@ -601,20 +622,39 @@ export default function Home() {
               <div><span className="text-green-500">Ctrl+4</span>: Tech Stack</div>
               <div><span className="text-green-500">Ctrl+5</span>: Blog</div>
               <div><span className="text-green-500">Ctrl+T</span>: Theme</div>
+              <div><span className="text-green-500">Ctrl+K</span>: Command</div>
               <div><span className="text-green-500">Esc</span>: Close</div>
             </div>
           </motion.div>
           
-          {/* Version badge - hidden on mobile, visible on desktop */}
+          {/* Version badge with effect selector */}
           <motion.div
-            className="fixed top-4 right-4 bg-green-600/80 text-white text-xs py-1 px-3 rounded-full font-mono z-20 flex items-center hidden md:flex"
+            className="fixed top-4 right-4 flex flex-col gap-2 z-20"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 1, duration: 0.5 }}
           >
-            <span className="inline-block w-2 h-2 bg-white rounded-full mr-1.5 animate-pulse"></span>
-            v1.2.3
+            <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white text-xs py-1 px-3 rounded-full font-mono flex items-center">
+              <span className="inline-block w-2 h-2 bg-white rounded-full mr-1.5 animate-pulse"></span>
+              v2.0 ULTRA
+            </div>
+            <select
+              value={visualEffect}
+              onChange={(e) => setVisualEffect(e.target.value as VisualEffect)}
+              className="bg-gray-800/80 text-green-400 text-xs py-1 px-2 rounded border border-green-500/30 backdrop-blur-sm cursor-pointer hover:bg-gray-700/80 transition-colors"
+            >
+              <option value="neural">Neural Network</option>
+              <option value="particles">Particle Field</option>
+              <option value="matrix">Matrix Rain</option>
+              <option value="none">Classic</option>
+            </select>
           </motion.div>
+
+          {/* Performance Monitor */}
+          <PerformanceMonitor />
+
+          {/* Command Palette */}
+          <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
         </>
       )}
       </AnimatePresence>

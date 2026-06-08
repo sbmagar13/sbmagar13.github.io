@@ -717,6 +717,50 @@ export default function Home() {
 
           {/* Command Palette */}
           <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+
+          {/* 3D Experience Entry Button */}
+          <motion.a
+            href="/experience3d"
+            className="fixed bottom-24 right-4 z-30 group"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 2, duration: 0.8, type: "spring" }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div className="relative">
+              {/* Pulsing rings */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 opacity-75 animate-ping"></div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 opacity-50 blur-xl"></div>
+
+              {/* Main button */}
+              <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 p-4 rounded-full shadow-2xl">
+                <svg
+                  className="w-8 h-8 text-white transform group-hover:rotate-12 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"
+                  />
+                </svg>
+              </div>
+
+              {/* Tooltip */}
+              <div className="absolute right-full mr-4 top-1/2 transform -translate-y-1/2 bg-slate-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-purple-500/30 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <div className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 font-mono text-sm font-bold">
+                  ENTER 3D EXPERIENCE
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Immersive holographic interface
+                </div>
+              </div>
+            </div>
+          </motion.a>
         </>
       )}
       </AnimatePresence>

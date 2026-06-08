@@ -7,9 +7,15 @@
     "build": "next build && touch out/.nojekyll",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "next build && touch out/.nojekyll"
+    "export": "next build && touch out/.nojekyll",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d out",
+    "serve": "npx serve out"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.0",
+    "@react-three/postprocessing": "^3.0.4",
     "@reactflow/core": "^11.11.4",
     "@xterm/xterm": "^5.5.0",
     "framer-motion": "^12.6.3",
@@ -21,6 +27,7 @@
     "react-markdown": "^10.1.0",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
+    "three": "^0.181.2",
     "xterm": "^5.3.0",
     "xterm-addon-fit": "^0.8.0"
   },
@@ -32,6 +39,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
+    "gh-pages": "^6.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

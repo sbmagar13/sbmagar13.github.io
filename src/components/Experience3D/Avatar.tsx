@@ -160,16 +160,15 @@ function Scene({ imageUrl }: { imageUrl: string }) {
         color="#0ea5e9"
       />
 
-      {/* Stat panels. Pulled tighter to the avatar and dropped below the
-          HUD widgets in the corners so nothing overlaps on a typical
-          16:9 viewport. Values picked to read as DevOps at a glance. */}
+      {/* Stat panels. Each one a specific fact from the resume so the
+          page reads as Sagar's actual story rather than a template. */}
       <StatPanel position={[2.3, 1.4, 0.2]} label="Role" value="Senior DevOps · SRE" color={PALETTE.neonCyan} />
-      <StatPanel position={[2.4, 0.3, 0.4]} label="Tenure" value="4+ Years" color={PALETTE.neonMagenta} />
-      <StatPanel position={[2.2, -0.7, 0.1]} label="Cloud" value="AWS" color={PALETTE.neonPurple} />
+      <StatPanel position={[2.4, 0.3, 0.4]} label="Specialty" value="Sole platform owner" color={PALETTE.neonMagenta} />
+      <StatPanel position={[2.2, -0.7, 0.1]} label="Built" value="Multi-region DR" color={PALETTE.neonPurple} />
 
-      <StatPanel position={[-2.3, 1.4, 0.2]} label="Forte" value="Python + AI" color={PALETTE.neonCyan} />
-      <StatPanel position={[-2.4, 0.3, 0.4]} label="Stack" value="K8s · Docker · TF" color={PALETTE.neonMagenta} />
-      <StatPanel position={[-2.2, -0.7, 0.1]} label="Based in" value="Kathmandu" color={PALETTE.neonPurple} />
+      <StatPanel position={[-2.3, 1.4, 0.2]} label="Forte" value="Python + AI Agents" color={PALETTE.neonCyan} />
+      <StatPanel position={[-2.4, 0.3, 0.4]} label="Lately" value="MCP for Claude" color={PALETTE.neonMagenta} />
+      <StatPanel position={[-2.2, -0.7, 0.1]} label="Based in" value="Kathmandu · remote" color={PALETTE.neonPurple} />
 
       {/* Atmospheric dust at distance */}
       {/* Background atmosphere only, kept distant and dim so it doesn't

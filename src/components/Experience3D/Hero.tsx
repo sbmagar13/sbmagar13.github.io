@@ -15,14 +15,16 @@ import { PALETTE } from './Materials';
 // The real DevOps stack orbiting the title. Each tool is the same
 // SkillLogo the SkillsHall uses, so the visual language is consistent
 // across the whole experience: this is what Sagar works with daily.
+// The tools Sagar actually drives daily, not a generic DevOps quiz card.
 const ORBIT_TOOLS = [
   'kubernetes',
   'docker',
   'aws',
+  'aurora',
   'terraform',
   'python',
-  'prometheus',
   'grafana',
+  'opentelemetry',
   'mcp',
 ] as const;
 
@@ -98,12 +100,12 @@ function Scene() {
         </Text>
         <Text
           position={[0, -0.45, 0]}
-          fontSize={0.18}
-          letterSpacing={0.42}
+          fontSize={0.16}
+          letterSpacing={0.34}
           anchorX="center"
           color={PALETTE.neonCyan}
         >
-          SENIOR DEVOPS · SRE
+          DEVOPS · SRE · AI ENGINEER
         </Text>
       </Float>
 
@@ -186,9 +188,10 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
         >
           {[
             { label: 'Experience', value: '4+ Years', color: 'text-cyan-300' },
-            { label: 'Platform', value: 'Sole owner', color: 'text-purple-300' },
-            { label: 'Primary', value: 'eu-north-1', color: 'text-cyan-200' },
-            { label: 'DR Region', value: 'eu-west-1', color: 'text-purple-300' },
+            { label: 'Owns', value: 'Multi-tenant SaaS', color: 'text-purple-300' },
+            { label: 'Built', value: 'Multi-region DR', color: 'text-orange-300' },
+            { label: 'Top Lang', value: 'Python', color: 'text-cyan-200' },
+            { label: 'Building', value: 'MCP for Claude', color: 'text-emerald-300' },
           ].map((s) => (
             <div
               key={s.label}
@@ -214,21 +217,14 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
             Enter Experience →
           </button>
           <a
-            href="/"
+            href="/terminal"
             className="px-8 py-3 rounded-md font-mono text-sm tracking-widest uppercase text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/10 transition-colors"
           >
-            Exit
+            Terminal
           </a>
         </motion.div>
       </div>
 
-      {/* Top chrome */}
-      <div className="absolute top-6 left-6 z-10 font-mono text-xs tracking-[0.3em] text-cyan-400/70 uppercase pointer-events-none">
-        Living portfolio · v3
-      </div>
-      <div className="absolute top-6 right-6 z-10 font-mono text-xs text-slate-400/70 pointer-events-none">
-        a/d or 1-4 to navigate
-      </div>
     </div>
   );
 }

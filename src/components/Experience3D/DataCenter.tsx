@@ -12,6 +12,7 @@ import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import ClickBurst, { useBurstQueue } from './ClickBurst';
+import Typewriter from './Typewriter';
 import { PALETTE, statusColor } from './Materials';
 import type { ScreenMode } from './AnimatedScreen';
 
@@ -31,171 +32,191 @@ interface RackData {
 }
 
 const RACKS: RackData[] = [
+  // ROW 1 (back row, eu-north-1 production stack)
   {
-    id: 'ci-cd-pipeline-overhaul',
-    label: 'ci-cd',
-    sublabel: 'pipeline-overhaul',
+    id: 'eventlogic',
+    label: 'eventlogic',
+    sublabel: 'multi-tenant SaaS · eu-north-1',
     status: 'Running',
     description:
-      'Modernized CI/CD pipeline with parallel execution, BuildKit caching, and integrated testing across staging and prod.',
-    tech: ['GitHub Actions', 'Docker', 'Python', 'BuildKit'],
+      'Swedish multi-tenant event-management SaaS. Sole platform owner. ECS Fargate services behind ALB, Aurora PostgreSQL with schema-per-tenant, ElastiCache Redis, Amazon MQ. Tenant routing via DynamoDB registry. Customers across Europe.',
+    tech: ['ECS Fargate', 'Aurora PostgreSQL', 'ElastiCache', 'Amazon MQ', 'DynamoDB', 'CloudFront'],
     metrics: [
-      { label: 'Uptime', value: '98.5%' },
-      { label: 'Build time', value: '−62%' },
+      { label: 'Region', value: 'eu-north-1' },
+      { label: 'Tenancy', value: 'schema-per-tenant' },
     ],
     position: [-4.5, 0, -2.5],
-    screen: 'terminal',
-  },
-  {
-    id: 'kubernetes-monitoring',
-    label: 'k8s-mon',
-    sublabel: 'kubernetes-monitoring',
-    status: 'Maintenance',
-    description:
-      'Prometheus + Grafana stack with custom dashboards for cluster health, resource usage, and per-namespace drill-down.',
-    tech: ['Kubernetes', 'Prometheus', 'Grafana', 'Helm'],
-    metrics: [
-      { label: 'Uptime', value: '98.5%' },
-      { label: 'Alerts/wk', value: '~5' },
-    ],
-    position: [-2.7, 0, -2.5],
     screen: 'graph',
   },
   {
-    id: 'monitoring-alerting-system',
-    label: 'alerts',
-    sublabel: 'monitoring-alerting',
+    id: 'multi-region-dr',
+    label: 'dr-failover',
+    sublabel: 'cross-region disaster recovery',
     status: 'Running',
     description:
-      'Cross-service monitoring and alerting platform with intelligent routing and on-call escalation policies.',
-    tech: ['Prometheus', 'Grafana', 'AlertManager', 'Loki'],
+      'Cross-region disaster recovery from eu-north-1 to eu-west-1. Built where none existed. Aurora Global Database for sub-second cross-region replication, EFS and ECR replication, shared KMS keys across regions. Documented runbook for promotion.',
+    tech: ['Aurora Global DB', 'EFS', 'ECR', 'KMS', 'Route 53'],
     metrics: [
-      { label: 'Uptime', value: '99.95%' },
-      { label: 'MTTR', value: '<15m' },
+      { label: 'Primary', value: 'eu-north-1' },
+      { label: 'Failover', value: 'eu-west-1' },
     ],
-    position: [-0.9, 0, -2.5],
+    position: [-2.7, 0, -2.5],
     screen: 'pulse',
   },
   {
-    id: 'terraform-modules-library',
-    label: 'tf-mods',
-    sublabel: 'terraform-modules',
-    status: 'Maintenance',
+    id: 'tenant-orchestrator',
+    label: 'tenant-orch',
+    sublabel: 'provisioning service',
+    status: 'Running',
     description:
-      'Reusable Terraform modules for AWS infrastructure with built-in security and compliance checks.',
-    tech: ['Terraform', 'AWS', 'IaC', 'Security'],
+      'Python tenant-provisioning orchestrator. One API call sets up schema-per-tenant on Aurora, wires SQS and EventBridge, creates ALB listener rules, provisions a CloudFront / S3 distribution, configures Route 53 records, and registers the tenant in DynamoDB.',
+    tech: ['Python', 'FastAPI', 'Aurora', 'SQS', 'EventBridge', 'Route 53'],
     metrics: [
-      { label: 'Uptime', value: '100%' },
-      { label: 'Modules', value: '18' },
+      { label: 'Per tenant', value: 'one call' },
+      { label: 'Steps', value: '6+' },
+    ],
+    position: [-0.9, 0, -2.5],
+    screen: 'terminal',
+  },
+  {
+    id: 'reliability-program',
+    label: 'reliability',
+    sublabel: 'incident · 19m outage fix',
+    status: 'Running',
+    description:
+      'Diagnosed a 19-minute full-platform outage caused by blocking Redis KEYS calls exhausting the Tomcat/JDBC thread pool. Added connection-pool checkout timeouts, tuned RDS parameters, and drove a 68-task reliability program across 11 epics and 7 sprints to prevent recurrence.',
+    tech: ['Aurora', 'Redis', 'JDBC', 'Postmortem', 'SLOs'],
+    metrics: [
+      { label: 'Outage', value: '19 min' },
+      { label: 'Tasks', value: '68 / 11 epics' },
     ],
     position: [0.9, 0, -2.5],
+    screen: 'pulse',
+  },
+  {
+    id: 'oneuptime',
+    label: 'oneuptime',
+    sublabel: 'self-hosted SRE platform',
+    status: 'Running',
+    description:
+      'Self-hosted OneUptime on K3s in eu-central-1 (separate region from primary). Status pages, uptime monitoring, on-call scheduling, incident management. Designed so observability survives a primary-region outage.',
+    tech: ['K3s', 'OneUptime', 'OpenTelemetry', 'Loki'],
+    metrics: [
+      { label: 'Region', value: 'eu-central-1' },
+      { label: 'Surface', value: 'status / on-call' },
+    ],
+    position: [2.7, 0, -2.5],
     screen: 'htop',
   },
   {
-    id: 'python-web-platform',
-    label: 'web',
-    sublabel: 'python-platform',
+    id: 'otel-pipeline',
+    label: 'otel',
+    sublabel: 'observability pipeline',
     status: 'Running',
     description:
-      'Modern web platform built on Python frameworks (Django, FastAPI, Flask) with REST APIs and a responsive frontend.',
-    tech: ['Python', 'Django', 'FastAPI', 'Flask'],
-    metrics: [
-      { label: 'Uptime', value: '99.8%' },
-      { label: 'p95', value: '120ms' },
-    ],
-    position: [2.7, 0, -2.5],
+      'OpenTelemetry collector dual-exports metrics, logs, and traces to OneUptime and Loki at the same time. Consolidated fragmented monitoring into one observability stack. Grafana sits on top.',
+    tech: ['OpenTelemetry', 'Loki', 'Grafana', 'Prometheus'],
+    position: [4.5, 0, -2.5],
     screen: 'logs',
   },
+
+  // ROW 2 (front row, platform tooling + AI side projects)
   {
-    id: 'devops-ai-assistant',
-    label: 'ai-ops',
-    sublabel: 'devops-ai-assistant',
-    status: 'In Progress',
+    id: 'es-cluster',
+    label: 'es-cluster',
+    sublabel: '3-node Elasticsearch',
+    status: 'Maintenance',
     description:
-      'Personal AI assistant that automates routine DevOps tasks using LLMs and MCP frameworks for tool integration.',
-    tech: ['Python', 'LLMs', 'MCP', 'AI Agents'],
-    position: [4.5, 0, -2.5],
-    screen: 'matrix',
-  },
-  // Row 2 (facing the other way)
-  {
-    id: 'llm-infra-analyzer',
-    label: 'infra-ai',
-    sublabel: 'llm-infra-analyzer',
-    status: 'In Progress',
-    description:
-      'LLM-powered tool that reads Terraform / k8s configs and surfaces optimization opportunities and best-practice risks.',
-    tech: ['Python', 'LLMs', 'Terraform'],
+      'Self-managed three-node Elasticsearch cluster managed with Terraform and Ansible. Split deploy and split-restart playbooks so a single config change cannot cascade across the cluster.',
+    tech: ['Elasticsearch', 'Terraform', 'Ansible'],
+    metrics: [
+      { label: 'Nodes', value: '3' },
+      { label: 'Deploy', value: 'split-restart' },
+    ],
     position: [-4.5, 0, 2.5],
     rotation: [0, Math.PI, 0],
     screen: 'graph',
   },
   {
-    id: 'llm-code-reviewer',
-    label: 'code-ai',
-    sublabel: 'llm-code-reviewer',
+    id: 'ci-cd-platform',
+    label: 'ci-cd',
+    sublabel: 'pipelines · 3 platforms',
     status: 'Running',
     description:
-      'Automated code-review tool. Uses LLMs to analyze pull requests, suggest improvements, flag potential bugs.',
-    tech: ['Python', 'LLMs', 'GitHub API'],
-    metrics: [{ label: 'Uptime', value: '94.3%' }],
+      'CI/CD pipelines spanning Jenkins, GitLab CI, and AWS CodePipeline / CodeBuild. Targets include ECS, Lambda, CloudFront, and EC2 deployments. App and infra share pipeline patterns.',
+    tech: ['Jenkins', 'GitLab CI', 'CodePipeline', 'CodeBuild', 'Docker'],
+    metrics: [
+      { label: 'Platforms', value: '3' },
+      { label: 'Targets', value: 'ECS · λ · CF · EC2' },
+    ],
     position: [-2.7, 0, 2.5],
     rotation: [0, Math.PI, 0],
     screen: 'terminal',
   },
   {
-    id: 'mcp-agent-framework',
-    label: 'mcp-fw',
-    sublabel: 'mcp-agent-framework',
+    id: 'aws-finops',
+    label: 'finops',
+    sublabel: 'AWS cost optimization',
+    status: 'Maintenance',
+    description:
+      'Cut monthly AWS spend by removing orphaned NAT Gateways, adding S3 and DynamoDB gateway endpoints to drop data-transfer cost, setting log-retention policies on CloudWatch, and right-sizing EBS volumes.',
+    tech: ['VPC Endpoints', 'CloudWatch Logs', 'EBS', 'NAT'],
+    position: [-0.9, 0, 2.5],
+    rotation: [0, Math.PI, 0],
+    screen: 'graph',
+  },
+  {
+    id: 'hashnode-mcp',
+    label: 'hashnode-mcp',
+    sublabel: 'MCP server for Claude',
     status: 'In Progress',
     description:
-      'Framework for building specialized MCP agents with domain knowledge and DevOps-focused capabilities.',
-    tech: ['TypeScript', 'MCP', 'Node.js'],
-    position: [-0.9, 0, 2.5],
+      'Model Context Protocol server connecting AI assistants like Claude to the Hashnode API for content creation, management, and search. Open-source on GitHub.',
+    tech: ['Python', 'MCP', 'Hashnode API'],
+    github: 'https://github.com/sbmagar13/hashnode-mcp-server',
+    position: [0.9, 0, 2.5],
     rotation: [0, Math.PI, 0],
     screen: 'matrix',
   },
   {
-    id: 'mcp-tools-explorer',
-    label: 'mcp-x',
-    sublabel: 'mcp-tools-explorer',
-    status: 'In Progress',
+    id: 'vqgan-clip',
+    label: 'vqgan-clip',
+    sublabel: 'text-to-image · 2021',
+    status: 'Completed',
     description:
-      'Experimental project exploring Model Context Protocol, building custom MCP servers for DevOps automation.',
-    tech: ['TypeScript', 'MCP', 'Node.js'],
-    position: [0.9, 0, 2.5],
-    rotation: [0, Math.PI, 0],
-    screen: 'terminal',
-  },
-  {
-    id: 'kubernetes-cluster-planner',
-    label: 'k8s-plan',
-    sublabel: 'cluster-planner',
-    status: 'In Progress',
-    description:
-      'Planning tool for Kubernetes cluster architecture, resource allocation, and scaling strategies.',
-    tech: ['Kubernetes', 'Go', 'Planning'],
+      'Multimodal text-to-image generation using VQGAN + CLIP architectures in PyTorch. From the AI/ML era of the career, kept here as an artifact.',
+    tech: ['PyTorch', 'CLIP', 'VQGAN', 'Python'],
+    github: 'https://github.com/sbmagar/VQGAN-CLIP-Text-to-Image',
     position: [2.7, 0, 2.5],
     rotation: [0, Math.PI, 0],
-    screen: 'htop',
+    screen: 'matrix',
   },
 ];
 
-// Connections to render as fiber cables. From → to are rack ids.
+// Connections between racks rendered as fiber cables. Each line traces
+// a real data path: EventLogic feeds the DR side, the tenant orchestrator
+// writes into both Aurora and the registry, observability collects from
+// every production service, CI/CD ships to ECS and Lambda, etc.
 const CABLES: { from: string; to: string; color?: string }[] = [
-  { from: 'ci-cd-pipeline-overhaul', to: 'kubernetes-monitoring' },
-  { from: 'kubernetes-monitoring', to: 'monitoring-alerting-system' },
-  { from: 'monitoring-alerting-system', to: 'terraform-modules-library', color: PALETTE.neonMagenta },
-  { from: 'terraform-modules-library', to: 'python-web-platform' },
-  { from: 'python-web-platform', to: 'devops-ai-assistant' },
-  { from: 'devops-ai-assistant', to: 'llm-infra-analyzer', color: PALETTE.neonPurple },
-  { from: 'llm-infra-analyzer', to: 'llm-code-reviewer' },
-  { from: 'llm-code-reviewer', to: 'mcp-agent-framework', color: PALETTE.neonMagenta },
-  { from: 'mcp-agent-framework', to: 'mcp-tools-explorer' },
-  { from: 'mcp-tools-explorer', to: 'kubernetes-cluster-planner' },
-  // A diagonal across the aisle for visual interest
-  { from: 'kubernetes-monitoring', to: 'llm-code-reviewer', color: PALETTE.neonCyan },
-  { from: 'terraform-modules-library', to: 'mcp-agent-framework', color: PALETTE.neonCyan },
+  // Production data flow inside eu-north-1
+  { from: 'eventlogic', to: 'tenant-orchestrator' },
+  { from: 'tenant-orchestrator', to: 'reliability-program' },
+  { from: 'reliability-program', to: 'oneuptime', color: PALETTE.neonMagenta },
+  { from: 'oneuptime', to: 'otel-pipeline' },
+
+  // Cross-region DR replication
+  { from: 'eventlogic', to: 'multi-region-dr', color: PALETTE.neonPurple },
+
+  // Front row platform tooling
+  { from: 'es-cluster', to: 'ci-cd-platform' },
+  { from: 'ci-cd-platform', to: 'aws-finops' },
+  { from: 'aws-finops', to: 'hashnode-mcp', color: PALETTE.neonMagenta },
+  { from: 'hashnode-mcp', to: 'vqgan-clip' },
+
+  // Cross-aisle observability + delivery lines
+  { from: 'otel-pipeline', to: 'es-cluster', color: PALETTE.neonCyan },
+  { from: 'ci-cd-platform', to: 'eventlogic', color: PALETTE.neonCyan },
+  { from: 'multi-region-dr', to: 'oneuptime', color: PALETTE.neonCyan },
 ];
 
 function CableLayer({ activeId }: { activeId: string | null }) {
@@ -294,17 +315,17 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered, bursts, onBurstDo
       <mesh rotation-x={-Math.PI / 2} position-y={-1.4} receiveShadow>
         <planeGeometry args={[60, 60]} />
         <MeshReflectorMaterial
-          blur={[300, 100]}
+          blur={[120, 40]}
           resolution={1024}
-          mixBlur={1}
-          mixStrength={50}
-          roughness={0.6}
+          mixBlur={0.55}
+          mixStrength={32}
+          roughness={0.45}
           depthScale={1.2}
           minDepthThreshold={0.4}
           maxDepthThreshold={1.4}
           color="#0f172a"
-          metalness={0.7}
-          mirror={0.4}
+          metalness={0.85}
+          mirror={0.55}
         />
       </mesh>
 
@@ -344,7 +365,7 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered, bursts, onBurstDo
         bounds={[16, 6, 14]}
         color={PALETTE.neonCyan}
         size={6}
-        speed={0.35}
+        speed={0.2}
         behavior="drift"
         opacity={0.3}
       />
@@ -427,17 +448,17 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered, bursts, onBurstDo
         minPolarAngle={Math.PI / 6}
         maxPolarAngle={Math.PI / 2.05}
         autoRotate={activeId === null && hoveredId === null}
-        autoRotateSpeed={0.25}
-        dampingFactor={0.06}
+        autoRotateSpeed={0.14}
+        dampingFactor={0.085}
       />
     </>
   );
 }
 
-export default function DataCenter() {
+export default function DataCenter({ active = true }: { active?: boolean } = {}) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const active = useMemo(() => RACKS.find((r) => r.id === activeId) ?? null, [activeId]);
+  const activeRack = useMemo(() => RACKS.find((r) => r.id === activeId) ?? null, [activeId]);
   const { bursts, trigger: triggerBurst, remove: removeBurst } = useBurstQueue();
 
   const handleRackClick = (id: string) => {
@@ -457,8 +478,9 @@ export default function DataCenter() {
       <Canvas
         shadows
         camera={{ position: [0, 4.5, 9], fov: 45 }}
-        gl={{ antialias: false, powerPreference: 'high-performance' }}
-        dpr={[1, 1.6]}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        dpr={[1, 1.75]}
+        frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 8, 30]} />
@@ -475,8 +497,7 @@ export default function DataCenter() {
           <CinematicEffects
             bloomIntensity={0.6}
             bloomThreshold={0.55}
-            bokehScale={1.4}
-            chromaticAberration={0.0005}
+            chromaticAberration={0.00015}
           />
         </Suspense>
       </Canvas>
@@ -488,7 +509,7 @@ export default function DataCenter() {
           Production environment
         </div>
         <div className="mt-1.5 font-mono text-3xl font-semibold text-white tracking-wider">
-          DATA CENTER
+          <Typewriter text="DATA CENTER" speed={55} caret />
         </div>
         <div className="mt-1.5 font-mono text-xs text-slate-300 max-w-md mx-auto">
           {RACKS.length} live systems · click a rack to inspect · drag to orbit
@@ -497,9 +518,9 @@ export default function DataCenter() {
 
       {/* Detail panel */}
       <AnimatePresence>
-        {active ? (
+        {activeRack ? (
           <motion.aside
-            key={active.id}
+            key={activeRack.id}
             initial={{ x: 60, opacity: 0, scale: 0.96 }}
             animate={{ x: 0, opacity: 1, scale: 1 }}
             exit={{ x: 60, opacity: 0, scale: 0.96 }}
@@ -514,13 +535,13 @@ export default function DataCenter() {
                     className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse"
                     aria-hidden
                   />
-                  {active.status}
+                  {activeRack.status}
                 </div>
                 <div className="mt-3 font-mono text-2xl font-semibold text-white tracking-wide leading-tight">
-                  {active.sublabel}
+                  {activeRack.sublabel}
                 </div>
                 <div className="mt-1 font-mono text-[11px] text-slate-400 tracking-wider">
-                  rack-{active.label}
+                  rack-{activeRack.label}
                 </div>
               </div>
               <button
@@ -533,12 +554,12 @@ export default function DataCenter() {
             </div>
 
             {/* Description */}
-            <p className="mt-5 text-slate-200 text-[15px] leading-relaxed">{active.description}</p>
+            <p className="mt-5 text-slate-200 text-[15px] leading-relaxed">{activeRack.description}</p>
 
             {/* Metrics */}
-            {active.metrics && active.metrics.length > 0 ? (
+            {activeRack.metrics && activeRack.metrics.length > 0 ? (
               <div className="mt-5 grid grid-cols-2 gap-2.5">
-                {active.metrics.map((m) => (
+                {activeRack.metrics.map((m) => (
                   <div
                     key={m.label}
                     className="rounded-md border border-cyan-500/25 bg-slate-900/70 px-3.5 py-2.5"
@@ -558,7 +579,7 @@ export default function DataCenter() {
                 Tech stack
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {active.tech.map((t) => (
+                {activeRack.tech.map((t) => (
                   <span
                     key={t}
                     className="px-2.5 py-1 text-[11px] font-mono text-cyan-100 bg-cyan-500/5 border border-cyan-500/30 rounded"

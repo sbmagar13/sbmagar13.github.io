@@ -159,13 +159,15 @@ export default function ServerRack({
         document.body.style.cursor = '';
       }}
     >
-      {/* Main frame, slightly inset front panel suggestion */}
+      {/* Main frame, slightly inset front panel suggestion. Premium PBR:
+          high metalness, low roughness for sharper highlights. */}
       <mesh castShadow receiveShadow>
         <boxGeometry args={[RACK_WIDTH, RACK_HEIGHT, RACK_DEPTH]} />
         <meshStandardMaterial
           color={PALETTE.steel}
-          metalness={0.85}
-          roughness={0.45}
+          metalness={0.92}
+          roughness={0.3}
+          envMapIntensity={1.1}
         />
       </mesh>
 

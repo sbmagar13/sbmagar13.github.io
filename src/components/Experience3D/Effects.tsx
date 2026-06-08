@@ -35,18 +35,18 @@ interface Props {
  * Tuned for a dim, neon-lit data-center aesthetic.
  */
 export default function CinematicEffects({
-  // Conservative defaults, bloom should make emissive things sparkle,
-  // not turn the whole scene white. Per-scene overrides can amp these up
-  // when the composition actually calls for more glow.
+  // Premium defaults. Bloom for emissive things only. DoF off by default
+  // (caused readability complaints in earlier passes); opt in per scene
+  // with a wide focus zone when we genuinely want background softness.
   bloomIntensity = 0.55,
   bloomThreshold = 0.55,
-  dof = true,
-  focusDistance = 0.025,
-  focalLength = 0.03,
-  bokehScale = 1.6,
-  vignette = 0.55,
-  noise = 0.025,
-  chromaticAberration = 0.0006,
+  dof = false,
+  focusDistance = 0.1,
+  focalLength = 0.04,
+  bokehScale = 0.5,
+  vignette = 0.5,
+  noise = 0.012,
+  chromaticAberration = 0.00015,
 }: Props) {
   return (
     <EffectComposer multisampling={0} enableNormalPass={false}>
@@ -54,7 +54,7 @@ export default function CinematicEffects({
       <Bloom
         intensity={bloomIntensity}
         luminanceThreshold={bloomThreshold}
-        luminanceSmoothing={0.25}
+        luminanceSmoothing={0.28}
         kernelSize={KernelSize.MEDIUM}
         mipmapBlur
       />
@@ -72,7 +72,7 @@ export default function CinematicEffects({
         radialModulation={false}
         modulationOffset={0}
       />
-      <Vignette eskil={false} offset={0.25} darkness={vignette} />
+      <Vignette eskil={false} offset={0.3} darkness={vignette} />
       <Noise opacity={noise} blendFunction={BlendFunction.OVERLAY} premultiply />
     </EffectComposer>
   );

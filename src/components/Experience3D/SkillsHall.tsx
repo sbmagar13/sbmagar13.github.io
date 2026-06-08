@@ -11,6 +11,7 @@ import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import SkillLogo, { hasCustomLogo, logoTint } from './SkillLogo';
 import LabelPlate from './LabelPlate';
+import Typewriter from './Typewriter';
 import { PALETTE } from './Materials';
 
 type Category =
@@ -34,44 +35,89 @@ interface SkillData {
   blurb?: string;
 }
 
-// Compact migration of the TechStack array, kept inline so this scene
-// renders without a data-file dependency.
+// Real skills inventory pulled from the Senior DevOps / SRE resume.
+// Highlighted ones are where Sagar has owned production end to end.
 const SKILLS: SkillData[] = [
-  { id: 'python', name: 'Python', category: 'development', years: 6, highlight: true, blurb: 'Default for tooling and services.' },
-  { id: 'kubernetes', name: 'Kubernetes', category: 'infrastructure', years: 3, highlight: true, blurb: 'Container orchestration.' },
-  { id: 'docker', name: 'Docker', category: 'infrastructure', years: 4, highlight: true, blurb: 'Containers, multi-stage builds.' },
-  { id: 'terraform', name: 'Terraform', category: 'infrastructure', years: 4, highlight: true, blurb: 'IaC. Modules, remote state.' },
-  { id: 'aws', name: 'AWS', category: 'cloud', years: 4, highlight: true, blurb: 'Primary cloud. EC2 / S3 / RDS / IAM.' },
-  { id: 'azure', name: 'Azure', category: 'cloud', years: 3, blurb: 'Microsoft cloud.' },
-  { id: 'heroku', name: 'Heroku', category: 'cloud', years: 2, blurb: 'Quick PaaS deploys.' },
+  // Cloud and infrastructure (heavy AWS)
+  { id: 'aws', name: 'AWS', category: 'cloud', years: 4, highlight: true, blurb: 'Sole owner of multi-tenant SaaS on AWS. 15+ services in production.' },
+  { id: 'ecs-fargate', name: 'ECS Fargate', category: 'cloud', years: 3, highlight: true, blurb: 'Serverless container orchestration. EventLogic runs here.' },
+  { id: 'lambda', name: 'AWS Lambda', category: 'cloud', years: 4, blurb: 'Serverless functions wired into pipelines and event flows.' },
+  { id: 'aurora', name: 'Aurora PostgreSQL', category: 'database', years: 3, highlight: true, blurb: 'Schema-per-tenant, multi-region Global Database.' },
+  { id: 'elasticache', name: 'ElastiCache (Redis)', category: 'database', years: 3, blurb: 'Managed Redis. Connection-pool tuning saved a 19-min outage.' },
+  { id: 'amazon-mq', name: 'Amazon MQ', category: 'cloud', years: 2, blurb: 'Managed message broker for inter-service queues.' },
+  { id: 'dynamodb', name: 'DynamoDB', category: 'database', years: 3, blurb: 'Tenant registry, key-value lookups, hot paths.' },
+  { id: 'cloudfront', name: 'CloudFront', category: 'cloud', years: 4, blurb: 'CDN + edge for tenant distribution.' },
+  { id: 's3', name: 'S3', category: 'cloud', years: 4, blurb: 'Object storage. Static assets, backups, logs.' },
+  { id: 'api-gateway', name: 'API Gateway', category: 'cloud', years: 3, blurb: 'Managed API frontends for Lambda and ECS.' },
+  { id: 'route53', name: 'Route 53', category: 'infrastructure', years: 4, blurb: 'DNS for multi-tenant routing.' },
+  { id: 'vpc', name: 'VPC Networking', category: 'infrastructure', years: 4, blurb: 'Subnets, peering, endpoints, NAT, security groups.' },
+  { id: 'efs', name: 'EFS', category: 'cloud', years: 2, blurb: 'Cross-region replication for stateful workloads.' },
+  { id: 'ecr', name: 'ECR', category: 'cloud', years: 4, blurb: 'Container registry with cross-region replication.' },
+
+  // IaC and configuration
+  { id: 'terraform', name: 'Terraform', category: 'infrastructure', years: 4, highlight: true, blurb: 'Primary IaC. Modules, remote state, drift detection.' },
+  { id: 'terragrunt', name: 'Terragrunt', category: 'infrastructure', years: 3, highlight: true, blurb: 'DRY Terraform across environments.' },
+  { id: 'cloudformation', name: 'CloudFormation', category: 'infrastructure', years: 3, blurb: 'AWS-native IaC for legacy stacks.' },
+  { id: 'cdk', name: 'AWS CDK', category: 'infrastructure', years: 2, blurb: 'Code-first IaC for AWS.' },
+  { id: 'ansible', name: 'Ansible', category: 'infrastructure', years: 4, blurb: 'Config management. Split-restart playbooks for Elasticsearch.' },
+
+  // Containers and orchestration
+  { id: 'docker', name: 'Docker', category: 'infrastructure', years: 4, highlight: true, blurb: 'Multi-stage builds. Image hygiene. Daily driver.' },
+  { id: 'kubernetes', name: 'Kubernetes (K3s)', category: 'infrastructure', years: 3, highlight: true, blurb: 'Self-hosted K3s in eu-central-1 for OneUptime.' },
+
+  // CI/CD
+  { id: 'gitlab-ci', name: 'GitLab CI', category: 'cicd', years: 4, highlight: true, blurb: 'Primary pipeline platform for app and infra deploys.' },
+  { id: 'jenkins', name: 'Jenkins', category: 'cicd', years: 4, blurb: 'Long-running automation. ECS, Lambda, EC2 deploys.' },
+  { id: 'aws-codepipeline', name: 'CodePipeline', category: 'cicd', years: 3, blurb: 'AWS-native release pipelines with CodeBuild.' },
   { id: 'github-actions', name: 'GitHub Actions', category: 'cicd', years: 3, blurb: 'Workflows close to the code.' },
-  { id: 'gitlab-ci', name: 'GitLab CI', category: 'cicd', years: 3, blurb: 'Pipelines in GitLab.' },
-  { id: 'jenkins', name: 'Jenkins', category: 'cicd', years: 2, blurb: 'Legacy CI server.' },
-  { id: 'aws-codepipeline', name: 'CodePipeline', category: 'cicd', years: 3, blurb: 'AWS-native release pipelines.' },
-  { id: 'postgresql', name: 'PostgreSQL', category: 'database', years: 4, blurb: 'Primary RDBMS.' },
-  { id: 'aws-rds', name: 'AWS RDS', category: 'database', years: 3, blurb: 'Managed databases on AWS.' },
-  { id: 'redis', name: 'Redis', category: 'database', years: 3, blurb: 'Cache and rate limits.' },
-  { id: 'prometheus', name: 'Prometheus', category: 'monitoring', years: 3, blurb: 'Metrics, PromQL, alerts.' },
-  { id: 'grafana', name: 'Grafana', category: 'monitoring', years: 3, blurb: 'Dashboards.' },
-  { id: 'elk', name: 'ELK Stack', category: 'monitoring', years: 4, blurb: 'Logs at scale.' },
-  { id: 'loki', name: 'Loki', category: 'monitoring', years: 2, blurb: 'Log aggregation.' },
-  { id: 'ansible', name: 'Ansible', category: 'infrastructure', years: 4, blurb: 'Configuration management.' },
-  { id: 'istio', name: 'Istio', category: 'infrastructure', years: 2, blurb: 'Service mesh.' },
-  { id: 'nginx', name: 'nginx', category: 'infrastructure', years: 5, blurb: 'Reverse proxy & TLS.' },
-  { id: 'dns', name: 'DNS / Route53', category: 'infrastructure', years: 5, blurb: 'DNS management.' },
-  { id: 'cloudflare', name: 'Cloudflare', category: 'infrastructure', years: 3, blurb: 'CDN, edge, DDoS.' },
-  { id: 'aws-iam', name: 'AWS IAM', category: 'security', years: 5, blurb: 'Identity & policies.' },
-  { id: 'aws-waf', name: 'AWS WAF / Shield', category: 'security', years: 3, blurb: 'Edge firewall.' },
-  { id: 'aws-guardduty', name: 'GuardDuty', category: 'security', years: 3, blurb: 'Threat detection.' },
-  { id: 'openai', name: 'OpenAI API', category: 'ai-ml', years: 2, highlight: true, blurb: 'GPT-4 tooling.' },
-  { id: 'langchain', name: 'LangChain', category: 'ai-ml', years: 1, blurb: 'LLM workflows.' },
-  { id: 'pytorch', name: 'PyTorch', category: 'ai-ml', years: 2, blurb: 'Deep learning.' },
-  { id: 'huggingface', name: 'Hugging Face', category: 'ai-ml', years: 1, blurb: 'NLP models.' },
-  { id: 'mcp', name: 'MCP', category: 'ai-ml', years: 1, blurb: 'Model Context Protocol.' },
-  { id: 'arch', name: 'Arch Linux', category: 'os', years: 5, highlight: true, blurb: 'Daily driver.' },
-  { id: 'ubuntu', name: 'Ubuntu', category: 'os', years: 6, blurb: 'Server default.' },
-  { id: 'centos', name: 'CentOS / Rocky', category: 'os', years: 4, blurb: 'RHEL family.' },
-  { id: 'ffmpeg', name: 'FFmpeg', category: 'misc', years: 2, blurb: 'Video/audio pipelines.' },
+
+  // Observability
+  { id: 'prometheus', name: 'Prometheus', category: 'monitoring', years: 3, highlight: true, blurb: 'Metrics + PromQL + alerting.' },
+  { id: 'grafana', name: 'Grafana', category: 'monitoring', years: 3, highlight: true, blurb: 'Dashboards across Prometheus, Loki, CloudWatch.' },
+  { id: 'loki', name: 'Loki', category: 'monitoring', years: 2, blurb: 'Log aggregation. Dual-export target with OneUptime.' },
+  { id: 'opentelemetry', name: 'OpenTelemetry', category: 'monitoring', years: 2, highlight: true, blurb: 'Unified collector. Dual-export to OneUptime + Loki.' },
+  { id: 'cloudwatch', name: 'AWS CloudWatch', category: 'monitoring', years: 4, blurb: 'Metrics, logs, alarms, dashboards.' },
+  { id: 'oneuptime', name: 'OneUptime', category: 'monitoring', years: 1, blurb: 'Self-hosted SRE platform. Status pages + on-call.' },
+  { id: 'elk', name: 'ELK Stack', category: 'monitoring', years: 4, blurb: '3-node self-managed Elasticsearch cluster.' },
+  { id: 'elasticsearch', name: 'Elasticsearch', category: 'monitoring', years: 4, blurb: 'Self-managed cluster with split-restart safety.' },
+
+  // Databases (continued)
+  { id: 'postgresql', name: 'PostgreSQL', category: 'database', years: 4, blurb: 'EXPLAIN, indexes, replication.' },
+  { id: 'redis', name: 'Redis', category: 'database', years: 3, blurb: 'Cache, rate limits, ephemeral state.' },
+
+  // Security
+  { id: 'aws-iam', name: 'AWS IAM', category: 'security', years: 4, highlight: true, blurb: 'Roles, fine-grained policies, cross-account.' },
+  { id: 'kms', name: 'AWS KMS', category: 'security', years: 4, blurb: 'Shared KMS keys for cross-region DR.' },
+  { id: 'secrets-manager', name: 'Secrets Manager', category: 'security', years: 3, blurb: 'Rotation, secure injection into ECS.' },
+  { id: 'aws-inspector', name: 'AWS Inspector', category: 'security', years: 2, blurb: 'Continuous vulnerability scanning.' },
+  { id: 'cloudtrail', name: 'CloudTrail', category: 'security', years: 4, blurb: 'API audit trail. Multi-account aggregation.' },
+  { id: 'openvpn', name: 'OpenVPN', category: 'security', years: 3, blurb: 'Production access. User and route management.' },
+
+  // Programming
+  { id: 'python', name: 'Python', category: 'development', years: 5, highlight: true, blurb: 'FastAPI, Django, Flask. Tenant orchestrator. Default tool.' },
+  { id: 'fastapi', name: 'FastAPI', category: 'development', years: 3, blurb: 'Typed async APIs.' },
+  { id: 'django', name: 'Django', category: 'development', years: 3, blurb: 'Admin-heavy CRUD services.' },
+  { id: 'flask', name: 'Flask', category: 'development', years: 3, blurb: 'Small standalone services.' },
+  { id: 'bash', name: 'Bash', category: 'development', years: 5, blurb: 'Shell scripting, deploy automation, runbooks.' },
+  { id: 'javascript', name: 'JavaScript', category: 'development', years: 4, blurb: 'Light frontend, Node tooling, infra glue.' },
+
+  // AI/ML and tooling
+  { id: 'mcp', name: 'Anthropic MCP', category: 'ai-ml', years: 1, highlight: true, blurb: 'Built Hashnode MCP server. Tool integration for Claude.' },
+  { id: 'langgraph', name: 'LangGraph', category: 'ai-ml', years: 1, blurb: 'Agent orchestration graphs.' },
+  { id: 'langchain', name: 'LangChain', category: 'ai-ml', years: 1, blurb: 'LLM-powered workflows.' },
+  { id: 'local-llm', name: 'Local LLM Inference', category: 'ai-ml', years: 1, blurb: 'Self-hosted models for private inference.' },
+  { id: 'pytorch', name: 'PyTorch', category: 'ai-ml', years: 2, blurb: 'VQGAN + CLIP. Deep learning prototypes.' },
+  { id: 'rasa', name: 'RASA', category: 'ai-ml', years: 2, blurb: 'Conversational AI / NLP chatbots.' },
+
+  // Data pipelines
+  { id: 'airflow', name: 'Apache Airflow', category: 'misc', years: 2, blurb: 'DAG-based scheduling.' },
+  { id: 'airbyte', name: 'Airbyte', category: 'misc', years: 1, blurb: 'ELT connectors.' },
+  { id: 'celery', name: 'Celery + RabbitMQ', category: 'misc', years: 3, blurb: 'Async task processing.' },
+  { id: 'ffmpeg', name: 'FFmpeg', category: 'misc', years: 2, blurb: 'RTSP / NVR / video pipelines.' },
+
+  // OS
+  { id: 'arch', name: 'Arch Linux', category: 'os', years: 5, highlight: true, blurb: 'Daily driver. KISS. Rolling release.' },
+  { id: 'ubuntu', name: 'Ubuntu', category: 'os', years: 6, blurb: 'Production servers, default base image.' },
 ];
 
 const CATEGORY_COLORS: Record<Category, string> = {
@@ -235,19 +281,20 @@ function Pedestal({ position, skill, highlighted, hovered, onHover, onClick }: P
       </Float>
 
       {/* Name label, billboarded so it always faces the camera as you
-          orbit the hall, with a dark plate behind for legibility. */}
+          orbit the hall, with a dark plate behind for legibility. Bigger
+          text now so the info is readable across the whole hall. */}
       <LabelPlate
-        position={[0, -0.15, 0.55]}
+        position={[0, -0.2, 0.55]}
         text={skill.name}
         subtext={`${skill.years}Y · ${skill.category.toUpperCase()}`}
-        size={0.13}
-        subSize={0.06}
+        size={0.17}
+        subSize={0.08}
         color="#f1f5f9"
         subColor={color}
         billboard
         plate
-        plateOpacity={0.85}
-        padding={[0.12, 0.07]}
+        plateOpacity={0.9}
+        padding={[0.18, 0.1]}
         border={highlighted || hovered}
         borderColor={color}
       />
@@ -290,7 +337,7 @@ function Scene({
   hoveredId: string | null;
   setHovered: (id: string | null) => void;
 }) {
-  const positions = useMemo(() => arrangeGrid(SKILLS, 7, 1.4), []);
+  const positions = useMemo(() => arrangeGrid(SKILLS, 8, 1.85), []);
 
   return (
     <>
@@ -303,17 +350,17 @@ function Scene({
       <mesh rotation-x={-Math.PI / 2} position-y={-0.4} receiveShadow>
         <planeGeometry args={[40, 40]} />
         <MeshReflectorMaterial
-          blur={[200, 80]}
+          blur={[100, 30]}
           resolution={1024}
-          mixBlur={1}
-          mixStrength={28}
-          roughness={0.7}
+          mixBlur={0.5}
+          mixStrength={22}
+          roughness={0.5}
           depthScale={1}
           minDepthThreshold={0.4}
           maxDepthThreshold={1.2}
           color="#0f172a"
-          metalness={0.6}
-          mirror={0.35}
+          metalness={0.78}
+          mirror={0.5}
         />
       </mesh>
 
@@ -342,7 +389,7 @@ function Scene({
         bounds={[12, 4, 12]}
         color={PALETTE.neonCyan}
         size={6}
-        speed={0.3}
+        speed={0.18}
         behavior="drift"
         opacity={0.28}
       />
@@ -355,19 +402,19 @@ function Scene({
         target={[0, 0.5, 0]}
         enablePan={false}
         enableZoom
-        minDistance={5}
-        maxDistance={16}
+        minDistance={6}
+        maxDistance={22}
         minPolarAngle={Math.PI / 7}
         maxPolarAngle={Math.PI / 2.1}
         autoRotate={selectedId === null}
-        autoRotateSpeed={0.2}
-        dampingFactor={0.06}
+        autoRotateSpeed={0.12}
+        dampingFactor={0.085}
       />
     </>
   );
 }
 
-export default function SkillsHall() {
+export default function SkillsHall({ active = true }: { active?: boolean } = {}) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const selected = useMemo(() => SKILLS.find((s) => s.id === selectedId) ?? null, [selectedId]);
@@ -376,9 +423,10 @@ export default function SkillsHall() {
     <div className="w-full h-screen relative bg-black">
       <Canvas
         shadows
-        camera={{ position: [0, 4, 8], fov: 50 }}
-        gl={{ antialias: false, powerPreference: 'high-performance' }}
-        dpr={[1, 1.6]}
+        camera={{ position: [0, 5.5, 12], fov: 52 }}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        dpr={[1, 1.75]}
+        frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 8, 24]} />
@@ -392,9 +440,7 @@ export default function SkillsHall() {
           <CinematicEffects
             bloomIntensity={0.55}
             bloomThreshold={0.55}
-            bokehScale={1.3}
-            chromaticAberration={0.0004}
-            dof
+            chromaticAberration={0.00015}
           />
         </Suspense>
       </Canvas>
@@ -405,7 +451,7 @@ export default function SkillsHall() {
           Inventory
         </div>
         <div className="mt-1.5 font-mono text-3xl font-semibold text-white tracking-wider">
-          SKILLS HALL
+          <Typewriter text="SKILLS HALL" speed={60} caret />
         </div>
         <div className="mt-1.5 font-mono text-xs text-slate-300">
           {SKILLS.length} skills · category-coded by shape · click for details

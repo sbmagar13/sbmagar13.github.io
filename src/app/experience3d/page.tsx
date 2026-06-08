@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import HolographicHUD from '@/components/Experience3D/HolographicHUD';
+import HoloCursor from '@/components/Experience3D/HoloCursor';
 
 // Heavy 3D scenes, lazy-loaded so navigation between sections only
 // pays for what it shows.
@@ -41,6 +42,52 @@ function SceneFallback() {
 
 export default function Experience3DPage() {
   const [section, setSection] = useState<Section>('hero');
+  // Once a section is visited it stays mounted. Switching back is now
+  // instant because the WebGL context, shaders and textures are still in
+  // memory. First visit pays the mount cost; subsequent visits are free.
+  const [visited, setVisited] = useState<Set<Section>>(new Set(['hero']));
+
+  useEffect(() => {
+    setVisited((prev) => {
+      if (prev.has(section)) return prev;
+      const next = new Set(prev);
+      next.add(section);
+      return next;
+    });
+  }, [section]);
+
+  // Kick off background module loading for every scene immediately so
+  // the JS chunks are in the browser cache before they're needed.
+  useEffect(() => {
+    void import('@/components/Experience3D/Avatar');
+    void import('@/components/Experience3D/Journey');
+    void import('@/components/Experience3D/DataCenter');
+    void import('@/components/Experience3D/SkillsHall');
+  }, []);
+
+  // After the Hero has settled, silently pre-mount the other scenes with
+  // their render loops paused. WebGL contexts, shaders, geometries and
+  // the photo texture are already on the GPU. First click on any tab is
+  // therefore instant, no Canvas init or shader compile. Staggered so
+  // four Canvases don't initialize on the same frame (which would cause
+  // a single noticeable spike on the Hero scene).
+  useEffect(() => {
+    const order: Section[] = ['avatar', 'projects', 'journey', 'skills'];
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    order.forEach((id, i) => {
+      timers.push(
+        setTimeout(() => {
+          setVisited((prev) => {
+            if (prev.has(id)) return prev;
+            const next = new Set(prev);
+            next.add(id);
+            return next;
+          });
+        }, 1400 + i * 450),
+      );
+    });
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -157,29 +204,49 @@ export default function Experience3DPage() {
         </div>
       ) : null}
 
-      {/* The active scene */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={section}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
-          className="absolute inset-0"
-        >
-          <Suspense fallback={<SceneFallback />}>
-            {section === 'hero' ? <Hero onEnter={() => setSection('avatar')} /> : null}
-            {section === 'avatar' ? <Avatar /> : null}
-            {section === 'journey' ? <Journey /> : null}
-            {section === 'projects' ? <DataCenter /> : null}
-            {section === 'skills' ? <SkillsHall /> : null}
-          </Suspense>
-        </motion.div>
-      </AnimatePresence>
+      {/* Scenes are kept mounted once visited. Switching tabs no longer
+          tears down a Canvas and rebuilds it, which is what caused the
+          1, 2-second stutter when returning to Avatar. The frameloop on
+          inactive scenes is paused (frameloop="never") via the `active`
+          prop, so GPU/CPU isn't spent rendering scenes you can't see. */}
+      {(['hero', 'avatar', 'journey', 'projects', 'skills'] as const).map((id) => {
+        if (!visited.has(id)) return null;
+        const isActive = section === id;
+        return (
+          <motion.div
+            key={id}
+            initial={false}
+            animate={{
+              opacity: isActive ? 1 : 0,
+              scale: isActive ? 1 : 0.985,
+            }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: isActive ? 'auto' : 'none',
+              // visibility flip avoids the browser ever painting the
+              // hidden Canvas, but keeps its WebGL context alive.
+              visibility: isActive ? 'visible' : 'hidden',
+            }}
+          >
+            <Suspense fallback={<SceneFallback />}>
+              {id === 'hero' && <Hero active={isActive} onEnter={() => setSection('avatar')} />}
+              {id === 'avatar' && <Avatar active={isActive} />}
+              {id === 'journey' && <Journey active={isActive} />}
+              {id === 'projects' && <DataCenter active={isActive} />}
+              {id === 'skills' && <SkillsHall active={isActive} />}
+            </Suspense>
+          </motion.div>
+        );
+      })}
 
       {/* Persistent holographic HUD overlay (hidden on Hero so the title
           can breathe). Sits above the scene but below the header. */}
       <HolographicHUD hidden={section === 'hero'} section={section} />
+
+      {/* Holographic cursor (hidden on touch devices automatically) */}
+      <HoloCursor />
     </div>
   );
 }

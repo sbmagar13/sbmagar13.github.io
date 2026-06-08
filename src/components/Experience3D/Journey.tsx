@@ -9,6 +9,7 @@ import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import LabelPlate from './LabelPlate';
+import Typewriter from './Typewriter';
 import { PALETTE } from './Materials';
 
 interface Milestone {
@@ -23,51 +24,59 @@ interface Milestone {
 const MILESTONES: Milestone[] = [
   {
     year: '2020',
-    title: 'First server, first incident',
+    title: 'AI / ML beginnings',
     description:
-      'Joined DevOps as a junior. Got handed a Linux server, broke it, fixed it, learned how production really feels.',
+      'VolgAI, Genese Cloud Academy, IBZ Networks. Built AI chatbots with RASA (NLP), backend APIs with Django and Flask, RTSP/FFmpeg pipelines for CCTV image processing. Async work via Celery and RabbitMQ. AWS AI/ML Intership at Genese.',
+    shape: 'book',
+    color: PALETTE.ledWhite,
+  },
+  {
+    year: '2021',
+    title: 'Bachelor + first DevOps role',
+    description:
+      'Graduated Bachelor in Computer Engineering from Tribhuvan University (IOE, Pokhara). Joined Cloudyfox Technology in September as DevOps Engineer. First Terraform / Terragrunt at scale across AWS.',
     shape: 'tower',
     color: PALETTE.neonCyan,
   },
   {
-    year: '2021',
-    title: 'Kubernetes day one',
+    year: '2022',
+    title: 'Containers and pipelines',
     description:
-      'Stood up the first k8s cluster. Helm charts, ingress controllers, lots of kubectl describe pod.',
+      'Ran Kubernetes for containerized workloads at Cloudyfox. Built CI/CD on GitLab CI and Jenkins for both app and infra deploys. SysOps, Linux admin, OpenVPN, centralized logging with CloudWatch, ELK, Grafana.',
     shape: 'cluster',
     color: PALETTE.neonBlue,
   },
   {
-    year: '2022',
-    title: 'IaC everywhere',
+    year: '2023',
+    title: 'Sole owner of a production platform',
     description:
-      'Migrated infrastructure to Terraform. Modules, remote state, drift detection. Stopped clicking around in consoles.',
+      'Joined Threadcode Technologies as DevOps / SRE for EventLogic, a Swedish multi-tenant event-management SaaS. Owner of the entire AWS platform end to end: ECS Fargate, Aurora PostgreSQL, ElastiCache Redis, Amazon MQ in eu-north-1. Technical Reviewer for Python for DevOps (Packt).',
     shape: 'cube',
     color: PALETTE.neonMagenta,
   },
   {
-    year: '2023',
-    title: 'Observability that pages',
+    year: '2024',
+    title: 'Reliability + multi-region DR',
     description:
-      'Built the alerting stack that actually wakes the right person. Prometheus, Grafana, runbook-linked alerts.',
+      'Diagnosed and resolved a 19-minute platform outage caused by blocking Redis KEYS calls exhausting the JDBC thread pool. Drove a 68-task reliability program across 11 epics and 7 sprints. Built cross-region DR from eu-north-1 to eu-west-1 with Aurora Global Database, EFS replication, and shared KMS keys.',
     shape: 'orb',
     color: PALETTE.ledAmber,
   },
   {
-    year: '2024',
-    title: 'Platform engineering',
+    year: '2025',
+    title: 'Observability + AI tooling',
     description:
-      'Started turning the ops toolbox into a platform other engineers use without paging me. Internal templates, self-serve.',
+      'Deployed self-hosted OneUptime on K3s in eu-central-1 for status pages, uptime monitoring, and on-call. OpenTelemetry collector dual-exports to OneUptime and Loki so observability survives a primary-region outage. Built the Hashnode MCP server connecting Claude to content APIs.',
     shape: 'helix',
     color: PALETTE.neonPurple,
   },
   {
-    year: '2025',
-    title: 'AI in the loop',
+    year: '2026',
+    title: 'Now: platform + portfolio',
     description:
-      'Wiring LLMs and MCP into DevOps tooling. Code review, triage, doc generation, infra analysis.',
-    shape: 'book',
-    color: PALETTE.ledWhite,
+      'Still running EventLogic end to end. Hardening the multi-region story, scaling tenant onboarding, sharpening SLOs, and writing more about the reliability work behind it. Shipped this 3D portfolio as the public face of the practice. Open to remote senior DevOps / SRE roles.',
+    shape: 'orb',
+    color: PALETTE.neonCyan,
   },
 ];
 
@@ -316,7 +325,7 @@ function Scene({
         bounds={[12, 6, 12]}
         color={PALETTE.neonCyan}
         size={6}
-        speed={0.3}
+        speed={0.18}
         behavior="drift"
         opacity={0.3}
       />
@@ -341,14 +350,14 @@ function Scene({
         minPolarAngle={Math.PI / 5}
         maxPolarAngle={Math.PI / 1.9}
         autoRotate={selectedIdx === null}
-        autoRotateSpeed={0.4}
-        dampingFactor={0.06}
+        autoRotateSpeed={0.18}
+        dampingFactor={0.085}
       />
     </>
   );
 }
 
-export default function Journey() {
+export default function Journey({ active = true }: { active?: boolean } = {}) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const selected = selectedIdx !== null ? MILESTONES[selectedIdx] : null;
@@ -357,8 +366,9 @@ export default function Journey() {
     <div className="w-full h-screen relative bg-black">
       <Canvas
         camera={{ position: [0, 4, 11], fov: 50 }}
-        gl={{ antialias: false, powerPreference: 'high-performance' }}
-        dpr={[1, 1.6]}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        dpr={[1, 1.75]}
+        frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 8, 24]} />
@@ -372,9 +382,7 @@ export default function Journey() {
           <CinematicEffects
             bloomIntensity={0.6}
             bloomThreshold={0.5}
-            bokehScale={1.3}
-            chromaticAberration={0.0005}
-            dof
+            chromaticAberration={0.00015}
           />
         </Suspense>
       </Canvas>
@@ -385,10 +393,10 @@ export default function Journey() {
           Career arc
         </div>
         <div className="mt-1.5 font-mono text-3xl font-semibold text-white tracking-wider">
-          JOURNEY
+          <Typewriter text="JOURNEY" speed={70} caret />
         </div>
         <div className="mt-1.5 font-mono text-xs text-slate-300">
-          5 years of DevOps · click any monument
+          {`${MILESTONES.length} milestones · 2020 to now · click any monument`}
         </div>
       </div>
 

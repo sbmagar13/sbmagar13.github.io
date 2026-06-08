@@ -10,6 +10,7 @@ import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import LabelPlate from './LabelPlate';
+import Typewriter from './Typewriter';
 import useMouseParallax from './useMouseParallax';
 import { PALETTE } from './Materials';
 
@@ -77,19 +78,19 @@ function StatPanel({
   color: string;
 }) {
   return (
-    <Float speed={1.2} floatIntensity={0.25} rotationIntensity={0.15}>
+    <Float speed={1.1} floatIntensity={0.2} rotationIntensity={0.1}>
       <LabelPlate
         position={position}
         text={value}
         subtext={label.toUpperCase()}
-        size={0.2}
-        subSize={0.075}
+        size={0.16}
+        subSize={0.06}
         color={color}
         subColor="#cbd5e1"
         billboard
         plate
-        plateOpacity={0.85}
-        padding={[0.18, 0.1]}
+        plateOpacity={0.88}
+        padding={[0.14, 0.08]}
         border
         borderColor={color}
       />
@@ -101,16 +102,17 @@ function PlateWithParallax({ imageUrl }: { imageUrl: string }) {
   const groupRef = useRef<THREE.Group>(null);
   const mouse = useMouseParallax();
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!groupRef.current) return;
-    // Tilt toward the cursor, small angle, smoothed.
-    const targetRotY = mouse.current.x * 0.3;
-    const targetRotX = mouse.current.y * -0.18;
-    groupRef.current.rotation.y += (targetRotY - groupRef.current.rotation.y) * 0.05;
-    groupRef.current.rotation.x += (targetRotX - groupRef.current.rotation.x) * 0.05;
-    // Slight breathing/idle drift on top of the parallax.
+    // Tilt toward the cursor with frame-rate independent damping so it
+    // feels equally smooth at 60 and 120 fps.
+    const targetRotY = mouse.current.x * 0.28;
+    const targetRotX = mouse.current.y * -0.16;
+    groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, targetRotY, 4.5, delta);
+    groupRef.current.rotation.x = THREE.MathUtils.damp(groupRef.current.rotation.x, targetRotX, 4.5, delta);
+    // Slight breathing on top of the parallax.
     groupRef.current.position.y =
-      1.05 + Math.sin(state.clock.elapsedTime * 0.8) * 0.03;
+      1.05 + Math.sin(state.clock.elapsedTime * 0.7) * 0.025;
   });
 
   return (
@@ -158,14 +160,16 @@ function Scene({ imageUrl }: { imageUrl: string }) {
         color="#0ea5e9"
       />
 
-      {/* Stat panels, orbit-like positions around the avatar */}
-      <StatPanel position={[3, 2.6, -0.5]} label="Experience" value="5+ Years" color={PALETTE.neonCyan} />
-      <StatPanel position={[3.2, 1, 0.6]} label="Repos" value="49" color={PALETTE.neonMagenta} />
-      <StatPanel position={[2.8, -0.5, -0.2]} label="Top Lang" value="Python" color={PALETTE.neonPurple} />
+      {/* Stat panels. Pulled tighter to the avatar and dropped below the
+          HUD widgets in the corners so nothing overlaps on a typical
+          16:9 viewport. Values picked to read as DevOps at a glance. */}
+      <StatPanel position={[2.3, 1.4, 0.2]} label="Role" value="Senior DevOps · SRE" color={PALETTE.neonCyan} />
+      <StatPanel position={[2.4, 0.3, 0.4]} label="Tenure" value="4+ Years" color={PALETTE.neonMagenta} />
+      <StatPanel position={[2.2, -0.7, 0.1]} label="Cloud" value="AWS" color={PALETTE.neonPurple} />
 
-      <StatPanel position={[-3, 2.4, 0.5]} label="Focus" value="DevOps" color={PALETTE.neonCyan} />
-      <StatPanel position={[-3.3, 0.9, -0.4]} label="Stack" value="K8s / TF" color={PALETTE.neonMagenta} />
-      <StatPanel position={[-2.9, -0.6, 0.4]} label="Location" value="Nepal" color={PALETTE.neonPurple} />
+      <StatPanel position={[-2.3, 1.4, 0.2]} label="Forte" value="Python + AI" color={PALETTE.neonCyan} />
+      <StatPanel position={[-2.4, 0.3, 0.4]} label="Stack" value="K8s · Docker · TF" color={PALETTE.neonMagenta} />
+      <StatPanel position={[-2.2, -0.7, 0.1]} label="Based in" value="Kathmandu" color={PALETTE.neonPurple} />
 
       {/* Atmospheric dust at distance */}
       {/* Background atmosphere only, kept distant and dim so it doesn't
@@ -189,20 +193,27 @@ function Scene({ imageUrl }: { imageUrl: string }) {
         minPolarAngle={Math.PI / 5}
         maxPolarAngle={Math.PI / 1.8}
         autoRotate
-        autoRotateSpeed={0.4}
-        dampingFactor={0.06}
+        autoRotateSpeed={0.18}
+        dampingFactor={0.085}
       />
     </>
   );
 }
 
-export default function Avatar({ imageUrl = '/sagar-mountains.jpg' }: { imageUrl?: string }) {
+export default function Avatar({
+  imageUrl = '/sagar-mountains.jpg',
+  active = true,
+}: {
+  imageUrl?: string;
+  active?: boolean;
+}) {
   return (
     <div className="w-full h-screen relative bg-black">
       <Canvas
         camera={{ position: [0, 1.5, 7], fov: 42 }}
-        gl={{ antialias: false, powerPreference: 'high-performance' }}
-        dpr={[1, 1.6]}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        dpr={[1, 1.75]}
+        frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 6, 18]} />
@@ -213,9 +224,7 @@ export default function Avatar({ imageUrl = '/sagar-mountains.jpg' }: { imageUrl
           <CinematicEffects
             bloomIntensity={0.5}
             bloomThreshold={0.7}
-            bokehScale={1.2}
-            chromaticAberration={0.0004}
-            dof
+            chromaticAberration={0.00015}
           />
         </Suspense>
       </Canvas>
@@ -237,12 +246,15 @@ export default function Avatar({ imageUrl = '/sagar-mountains.jpg' }: { imageUrl
               <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse" />
             </div>
             <div className="mt-2 font-mono text-3xl font-bold text-white tracking-[0.18em] drop-shadow-[0_0_8px_rgba(0,0,0,0.9)]">
-              SAGAR BUDHATHOKI
+              <Typewriter text="SAGAR BUDHATHOKI" speed={48} caret />
             </div>
             <div className="mt-1.5 font-mono text-xs text-slate-200">
-              DevOps engineer
+              Senior DevOps / SRE Engineer
               <span className="mx-2 text-slate-500">·</span>
               <span className="text-cyan-200">sagar@sagarbudhathoki.com</span>
+            </div>
+            <div className="mt-0.5 font-mono text-[10px] text-slate-400 tracking-wider">
+              Kathmandu, Nepal · open to remote
             </div>
           </div>
         </div>

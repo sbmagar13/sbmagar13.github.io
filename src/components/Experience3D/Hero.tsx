@@ -9,49 +9,43 @@ import { VolumetricBeam, NeonStrip } from './Atmosphere';
 import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
+import SkillLogo from './SkillLogo';
 import { PALETTE } from './Materials';
 
-// Floating geodesic shards that drift around the title. Each one is a real
-// mesh with PBR, not a sprite.
-function ShardRing({ count = 14, radius = 4.5 }: { count?: number; radius?: number }) {
+// The real DevOps stack orbiting the title. Each tool is the same
+// SkillLogo the SkillsHall uses, so the visual language is consistent
+// across the whole experience: this is what Sagar works with daily.
+const ORBIT_TOOLS = [
+  'kubernetes',
+  'docker',
+  'aws',
+  'terraform',
+  'python',
+  'prometheus',
+  'grafana',
+  'mcp',
+] as const;
+
+function ToolOrbit({ radius = 4.6 }: { radius?: number }) {
   const groupRef = useRef<THREE.Group>(null);
-  const shards = useMemo(
-    () =>
-      Array.from({ length: count }).map((_, i) => {
-        const angle = (i / count) * Math.PI * 2;
-        const yOffset = Math.sin(angle * 3) * 0.6 + Math.random() * 1.2;
-        const r = radius + (Math.random() - 0.5) * 0.6;
-        return {
-          position: [Math.cos(angle) * r, yOffset, Math.sin(angle) * r] as [number, number, number],
-          scale: 0.18 + Math.random() * 0.18,
-          speed: 0.4 + Math.random() * 0.8,
-          color: [PALETTE.neonCyan, PALETTE.neonMagenta, PALETTE.neonPurple][i % 3],
-        };
-      }),
-    [count, radius],
-  );
-
   useFrame((state) => {
-    if (groupRef.current) groupRef.current.rotation.y = state.clock.elapsedTime * 0.05;
+    if (groupRef.current) groupRef.current.rotation.y = state.clock.elapsedTime * 0.07;
   });
-
   return (
     <group ref={groupRef}>
-      {shards.map((s, i) => (
-        <Float key={i} speed={s.speed} floatIntensity={0.7} rotationIntensity={1.4}>
-          <mesh position={s.position} scale={s.scale}>
-            <octahedronGeometry args={[1, 0]} />
-            <meshStandardMaterial
-              color={s.color}
-              emissive={s.color}
-              emissiveIntensity={0.7}
-              metalness={0.9}
-              roughness={0.15}
-              toneMapped={false}
-            />
-          </mesh>
-        </Float>
-      ))}
+      {ORBIT_TOOLS.map((id, i) => {
+        const count = ORBIT_TOOLS.length;
+        const angle = (i / count) * Math.PI * 2;
+        // Spiral the y up and down so the ring isn't a flat disc.
+        const y = Math.sin(angle * 2) * 0.9 + 0.3;
+        return (
+          <Float key={id} speed={0.7 + (i % 3) * 0.18} floatIntensity={0.45} rotationIntensity={0.2}>
+            <group position={[Math.cos(angle) * radius, y, Math.sin(angle) * radius]} scale={0.78}>
+              <SkillLogo id={id} />
+            </group>
+          </Float>
+        );
+      })}
     </group>
   );
 }
@@ -66,10 +60,10 @@ function CenterOrb() {
           color={PALETTE.neonPurple}
           emissive={PALETTE.neonMagenta}
           emissiveIntensity={0.35}
-          metalness={0.8}
-          roughness={0.18}
-          distort={0.42}
-          speed={2.4}
+          metalness={0.88}
+          roughness={0.14}
+          distort={0.3}
+          speed={1.2}
         />
       </mesh>
     </Float>
@@ -85,7 +79,7 @@ function Scene() {
       <pointLight position={[0, 8, 0]} intensity={0.7} color={PALETTE.ledWhite} distance={14} />
 
       <CenterOrb />
-      <ShardRing count={16} radius={4.8} />
+      <ToolOrbit radius={4.6} />
 
       {/* Title in extruded text */}
       <Float speed={0.6} floatIntensity={0.15} rotationIntensity={0.05}>
@@ -109,7 +103,7 @@ function Scene() {
           anchorX="center"
           color={PALETTE.neonCyan}
         >
-          DEVOPS ENGINEER
+          SENIOR DEVOPS · SRE
         </Text>
       </Float>
 
@@ -129,7 +123,7 @@ function Scene() {
         bounds={[14, 7, 14]}
         color={PALETTE.neonCyan}
         size={7}
-        speed={0.3}
+        speed={0.18}
         behavior="drift"
         opacity={0.3}
       />
@@ -138,7 +132,7 @@ function Scene() {
         bounds={[10, 5, 10]}
         color={PALETTE.neonMagenta}
         size={14}
-        speed={0.7}
+        speed={0.45}
         behavior="orbit"
         opacity={0.18}
       />
@@ -151,22 +145,23 @@ function Scene() {
         enablePan={false}
         enableZoom={false}
         autoRotate
-        autoRotateSpeed={0.4}
+        autoRotateSpeed={0.18}
         minPolarAngle={Math.PI / 3}
         maxPolarAngle={Math.PI / 1.9}
-        dampingFactor={0.06}
+        dampingFactor={0.085}
       />
     </>
   );
 }
 
-export default function Hero({ onEnter }: { onEnter?: () => void }) {
+export default function Hero({ onEnter, active = true }: { onEnter?: () => void; active?: boolean }) {
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
       <Canvas
         camera={{ position: [0, 1.2, 8.5], fov: 45 }}
-        gl={{ antialias: false, powerPreference: 'high-performance' }}
-        dpr={[1, 1.6]}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        dpr={[1, 1.75]}
+        frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 7, 22]} />
@@ -175,9 +170,7 @@ export default function Hero({ onEnter }: { onEnter?: () => void }) {
           <CinematicEffects
             bloomIntensity={0.7}
             bloomThreshold={0.5}
-            bokehScale={1.4}
-            chromaticAberration={0.0005}
-            dof
+            chromaticAberration={0.00015}
           />
         </Suspense>
       </Canvas>
@@ -192,10 +185,10 @@ export default function Hero({ onEnter }: { onEnter?: () => void }) {
           className="flex flex-wrap gap-3 justify-center mb-8"
         >
           {[
-            { label: 'Uptime', value: '99.95%', color: 'text-cyan-300' },
-            { label: 'Deployments', value: '10K+', color: 'text-purple-300' },
-            { label: 'Systems', value: '100+', color: 'text-magenta-300' },
-            { label: 'Experience', value: '5+ Years', color: 'text-cyan-300' },
+            { label: 'Experience', value: '4+ Years', color: 'text-cyan-300' },
+            { label: 'Platform', value: 'Sole owner', color: 'text-purple-300' },
+            { label: 'Primary', value: 'eu-north-1', color: 'text-cyan-200' },
+            { label: 'DR Region', value: 'eu-west-1', color: 'text-purple-300' },
           ].map((s) => (
             <div
               key={s.label}

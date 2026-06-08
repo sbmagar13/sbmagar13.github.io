@@ -32,7 +32,8 @@ type VisualEffect = 'neural' | 'particles' | 'matrix' | 'none';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
-  const [bootMessages, setBootMessages] = useState<string[]>([]);
+  const [bootMessages, setBootMessages] = useState<{ text: string; t: number }[]>([]);
+  const TOTAL_BOOT_MESSAGES = 10;
   const [activeSection, setActiveSection] = useState<Section>('terminal');
   const [visitedSections, setVisitedSections] = useState<Record<Section, boolean>>({
     terminal: true,
@@ -86,7 +87,10 @@ export default function Home() {
   const particleCount = 80; // Increased particle count
   const backgroundRef = useRef<HTMLDivElement>(null);
   
-  // Simulate boot sequence with enhanced messages
+  // Boot sequence — each line waits a randomized amount, so it feels
+  // like a real process where some steps are fast and some are slow.
+  // (Math.random in scheduler-only logic; output isn't displayed via React
+  //  state derived from the random value, so it's safe with static export.)
   useEffect(() => {
     const messages = [
       'Booting sagarbudhathoki.com...',
@@ -98,24 +102,31 @@ export default function Home() {
       'Tailing CI logs...',
       'Verifying TLS certificates...',
       'Warming caches...',
-      'Ready. Type `help` to begin.'
+      'Ready. Type `help` to begin.',
     ];
 
-    let index = 0;
-    const interval = setInterval(() => {
-      if (index < messages.length) {
-        setBootMessages(prev => [...prev, messages[index]]);
-        index++;
-      } else {
-        clearInterval(interval);
-        // Longer pause after the last message so users can read "System ready!"
-        setTimeout(() => {
-          setLoading(false);
-        }, 2000); // Increased from 500ms to 2000ms
-      }
-    }, 800); // Increased from 250ms to 800ms for better readability
+    // Weights pick which lines feel slow vs snappy. Some real DevOps steps
+    // (pulling state, scraping, TLS check) take longer; others print fast.
+    const weights = [0.5, 0.4, 0.5, 1.2, 1.6, 0.8, 0.4, 1.4, 0.6, 0.7];
 
-    return () => clearInterval(interval);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let elapsed = 0;
+    messages.forEach((msg, i) => {
+      // 180–520ms base, scaled by the weight for this step.
+      const jitter = 180 + Math.random() * 340;
+      elapsed += jitter * weights[i];
+      const scheduledAt = elapsed;
+      timers.push(
+        setTimeout(() => {
+          setBootMessages(prev => [...prev, { text: msg, t: scheduledAt / 1000 }]);
+          if (i === messages.length - 1) {
+            timers.push(setTimeout(() => setLoading(false), 1400));
+          }
+        }, scheduledAt)
+      );
+    });
+
+    return () => timers.forEach(clearTimeout);
   }, []);
   
   // Create enhanced particle effect
@@ -376,36 +387,36 @@ export default function Home() {
               animate={{ scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {bootMessages.map((message, i) => (
+              {bootMessages.map((entry, i) => (
                 <motion.div
                   key={i}
                   className="mb-2"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
+                  transition={{ duration: 0.4 }}
                 >
-                  <span className="text-green-300">[{(i * 0.8).toFixed(1)}s] </span>
+                  <span className="text-green-300">[{entry.t.toFixed(1)}s] </span>
                   <motion.span
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
                     className={i === bootMessages.length - 1 ? "text-green-400 font-bold" : ""}
                   >
-                    {message}
+                    {entry.text}
                   </motion.span>
-                  {i === bootMessages.length - 1 && (
+                  {i === bootMessages.length - 1 && i === TOTAL_BOOT_MESSAGES - 1 && (
                     <motion.span
                       className="ml-2 text-green-400"
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: 0.5 }}
+                      transition={{ duration: 0.3, delay: 0.3 }}
                     >
                       ✓
                     </motion.span>
                   )}
                 </motion.div>
               ))}
-              {bootMessages.length < 10 && (
+              {bootMessages.length < TOTAL_BOOT_MESSAGES && (
                 <div className="h-4 flex items-center">
                   <span className="inline-block w-2 h-4 bg-green-500 animate-pulse"></span>
                 </div>
@@ -415,14 +426,14 @@ export default function Home() {
               <div className="mt-6">
                 <div className="flex justify-between text-xs text-gray-400 mb-2">
                   <span>Boot Progress</span>
-                  <span>{Math.round((bootMessages.length / 10) * 100)}%</span>
+                  <span>{Math.round((bootMessages.length / TOTAL_BOOT_MESSAGES) * 100)}%</span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <motion.div
                     className="h-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-full"
                     initial={{ width: 0 }}
-                    animate={{ width: `${(bootMessages.length / 10) * 100}%` }}
-                    transition={{ duration: 0.5 }}
+                    animate={{ width: `${(bootMessages.length / TOTAL_BOOT_MESSAGES) * 100}%` }}
+                    transition={{ duration: 0.4 }}
                   />
                 </div>
               </div>

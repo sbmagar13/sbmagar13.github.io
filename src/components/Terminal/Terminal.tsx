@@ -47,17 +47,42 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   // Initialize terminal
   useEffect(() => {
     if (!terminalRef.current) return;
-    
+
+    let cancelled = false;
+    let teardown: (() => void) | null = null;
+    const fontSize = typeof window !== 'undefined' && window.innerWidth < 768 ? 12 : 14;
+
+    // Wait for Geist Mono to load before opening xterm. xterm.js renders
+    // to a canvas at init time; if the web font isn't ready, the welcome
+    // ASCII banner is drawn in the fallback monospace and the block
+    // glyphs collide ("SAGAR" becomes a jumble on first paint).
+    const fontReady =
+      typeof document !== 'undefined' && document.fonts
+        ? document.fonts.load(`${fontSize}px "Geist Mono"`).catch(() => undefined)
+        : Promise.resolve();
+
+    fontReady.then(() => {
+      const el = terminalRef.current;
+      if (cancelled || !el) return;
+      teardown = initTerminal(el, fontSize);
+    });
+
+    return () => {
+      cancelled = true;
+      teardown?.();
+    };
+
+    function initTerminal(container: HTMLDivElement, fontSize: number): () => void {
     // Clean up any existing terminal
     if (xtermRef.current) {
       xtermRef.current.dispose();
     }
-    
+
     // Create new terminal
     const term = new XTerm({
       cursorBlink: true,
       cursorStyle: 'block',
-      fontFamily: 'var(--font-geist-mono), monospace',
+      fontFamily: 'var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace',
       fontSize: window.innerWidth < 768 ? 12 : 14, // Slightly larger font on mobile for better readability
       lineHeight: window.innerWidth < 768 ? 1.2 : 1.2, // Consistent line height for readability
       theme: {
@@ -85,7 +110,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     term.loadAddon(fitAddon);
     
     // Open terminal
-    term.open(terminalRef.current);
+    term.open(container);
     
     // Improved mobile touch support
     if (terminalRef.current) {
@@ -278,6 +303,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         xtermRef.current.dispose();
       }
     };
+    } // end initTerminal
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   

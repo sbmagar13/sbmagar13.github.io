@@ -107,20 +107,22 @@ export default function Home() {
 
     // Weights pick which lines feel slow vs snappy. Some real DevOps steps
     // (pulling state, scraping, TLS check) take longer; others print fast.
-    const weights = [0.5, 0.4, 0.5, 1.2, 1.6, 0.8, 0.4, 1.4, 0.6, 0.7];
+    const weights = [0.6, 0.5, 0.6, 1.3, 1.8, 0.9, 0.5, 1.6, 0.7, 0.8];
 
     const timers: ReturnType<typeof setTimeout>[] = [];
     let elapsed = 0;
     messages.forEach((msg, i) => {
-      // 180–520ms base, scaled by the weight for this step.
-      const jitter = 180 + Math.random() * 340;
+      // 320–800ms base, scaled by the weight for this step. Total run is
+      // ~5-7 seconds depending on the random draws — long enough to read
+      // the lines, short enough to not feel like a wait.
+      const jitter = 320 + Math.random() * 480;
       elapsed += jitter * weights[i];
       const scheduledAt = elapsed;
       timers.push(
         setTimeout(() => {
           setBootMessages(prev => [...prev, { text: msg, t: scheduledAt / 1000 }]);
           if (i === messages.length - 1) {
-            timers.push(setTimeout(() => setLoading(false), 1400));
+            timers.push(setTimeout(() => setLoading(false), 1800));
           }
         }, scheduledAt)
       );

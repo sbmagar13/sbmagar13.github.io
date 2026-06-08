@@ -3,20 +3,25 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - production  # Default: not running.. so set to production (non-existing)
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: "pages-deploy"
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js ⚙️
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
@@ -25,17 +30,13 @@ jobs:
         run: npm ci
 
       - name: Build 🔧
-        run: |
-          npm run build
-          ls -la out
-          # Create a fallback index.html if the Next.js build doesn't create one
-          if [ ! -f out/index.html ]; then
-            echo "Next.js build did not create index.html, copying fallback"
-            cp public/index-fallback.html out/index.html
-          fi
+        run: npm run build
+
+      - name: Ensure CNAME 📌
+        run: echo "sagarbudhathoki.com" > out/CNAME
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: out # The folder the action should deploy
-          branch: gh-pages # The branch the action should deploy to
+          folder: out
+          branch: gh-pages

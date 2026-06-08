@@ -2,19 +2,20 @@
 
 import { Suspense, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Float, Text } from '@react-three/drei';
+import { OrbitControls, Float } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
+import LabelPlate from './LabelPlate';
 import { PALETTE } from './Materials';
 
 interface Milestone {
   year: string;
   title: string;
   description: string;
-  // Which monument shape to draw (procedural — no models needed).
+  // Which monument shape to draw (procedural, no models needed).
   shape: 'tower' | 'cluster' | 'orb' | 'cube' | 'helix' | 'book';
   color: string;
 }
@@ -171,7 +172,7 @@ function Monument({ shape, color }: { shape: Milestone['shape']; color: string }
   }
 }
 
-// The career path — a CatmullRom curve through all milestone positions.
+// The career path, a CatmullRom curve through all milestone positions.
 function buildPath() {
   const r = 5;
   // Place milestones around a gentle spiral so the camera has movement.
@@ -288,27 +289,24 @@ function Scene({
               <ringGeometry args={[0.28, 0.34, 28]} />
               <meshBasicMaterial color={m.color} transparent opacity={isActive ? 0.9 : 0.55} />
             </mesh>
-            {/* Year label */}
-            <Text
-              position={[0, 1.0, 0]}
-              fontSize={0.22}
+            {/* Year + title label, billboarded with dark plate so it
+                stays readable from every camera angle. */}
+            <LabelPlate
+              position={[0, 1.15, 0]}
+              text={m.year}
+              subtext={m.title.toUpperCase()}
+              size={0.24}
+              subSize={0.072}
               color={m.color}
-              outlineColor="#000"
-              outlineWidth={0.005}
-              anchorX="center"
-            >
-              {m.year}
-            </Text>
-            <Text
-              position={[0, 0.8, 0]}
-              fontSize={0.07}
-              color="#94a3b8"
-              anchorX="center"
-              letterSpacing={0.2}
-              maxWidth={1.6}
-            >
-              {m.title.toUpperCase()}
-            </Text>
+              subColor="#cbd5e1"
+              letterSpacing={0.04}
+              billboard
+              plate
+              plateOpacity={0.85}
+              padding={[0.18, 0.1]}
+              border={isActive || hoveredIdx === i}
+              borderColor={m.color}
+            />
           </group>
         );
       })}
@@ -323,7 +321,7 @@ function Scene({
         opacity={0.3}
       />
 
-      {/* Lens flare at each milestone — small unless selected */}
+      {/* Lens flare at each milestone, small unless selected */}
       {MILESTONES.map((m, i) => (
         <LensFlare
           key={`flare-${i}`}
@@ -382,12 +380,14 @@ export default function Journey() {
       </Canvas>
 
       {/* Heading */}
-      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center">
-        <div className="font-mono text-xs tracking-[0.4em] text-cyan-400/70 uppercase">
+      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/45 backdrop-blur-sm border border-cyan-500/20">
+        <div className="font-mono text-[11px] tracking-[0.32em] text-cyan-300 uppercase">
           Career arc
         </div>
-        <div className="mt-1 font-mono text-2xl text-white/90">JOURNEY</div>
-        <div className="mt-1 font-mono text-[10px] text-slate-400/70">
+        <div className="mt-1.5 font-mono text-3xl font-semibold text-white tracking-wider">
+          JOURNEY
+        </div>
+        <div className="mt-1.5 font-mono text-xs text-slate-300">
           5 years of DevOps · click any monument
         </div>
       </div>
@@ -397,31 +397,35 @@ export default function Journey() {
         {selected ? (
           <motion.aside
             key={selected.year}
-            initial={{ x: 80, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 80, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute top-1/2 -translate-y-1/2 right-6 w-[360px] bg-slate-950/85 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6"
+            initial={{ x: 60, opacity: 0, scale: 0.96 }}
+            animate={{ x: 0, opacity: 1, scale: 1 }}
+            exit={{ x: 60, opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-1/2 -translate-y-1/2 right-6 w-[400px] bg-slate-950/92 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 shadow-2xl shadow-cyan-500/20"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div
-                  className="font-mono text-[10px] tracking-[0.3em] uppercase"
-                  style={{ color: selected.color }}
+                  className="inline-block font-mono text-[11px] tracking-[0.3em] uppercase border rounded px-2 py-1"
+                  style={{
+                    color: selected.color,
+                    borderColor: `${selected.color}66`,
+                    background: `${selected.color}12`,
+                  }}
                 >
-                  Year
+                  Milestone · year
                 </div>
-                <div className="mt-1 font-mono text-3xl text-white">{selected.year}</div>
+                <div className="mt-3 font-mono text-4xl font-semibold text-white tracking-wider">{selected.year}</div>
               </div>
               <button
                 onClick={() => setSelectedIdx(null)}
-                className="text-slate-400 hover:text-white font-mono text-sm"
+                className="text-slate-400 hover:text-white font-mono text-base w-8 h-8 flex items-center justify-center rounded border border-slate-700 hover:border-slate-500 transition-colors"
               >
-                [×]
+                ×
               </button>
             </div>
-            <div className="mt-2 font-mono text-cyan-300 text-sm">{selected.title}</div>
-            <p className="mt-3 text-sm text-slate-300 leading-relaxed">{selected.description}</p>
+            <div className="mt-3 font-mono text-base text-cyan-200 leading-snug">{selected.title}</div>
+            <p className="mt-4 text-[15px] text-slate-200 leading-relaxed">{selected.description}</p>
           </motion.aside>
         ) : null}
       </AnimatePresence>

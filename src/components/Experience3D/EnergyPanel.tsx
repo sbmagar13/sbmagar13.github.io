@@ -9,7 +9,7 @@ import * as THREE from 'three';
  * across its surface plus a hex-grid undertone. Used as overlay decoration
  * on rack panels and other surfaces.
  *
- * Cheap — pure fragment-shader math, no textures.
+ * Cheap, pure fragment-shader math, no textures.
  */
 
 const VERT = /* glsl */ `

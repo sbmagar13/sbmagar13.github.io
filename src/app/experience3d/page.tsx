@@ -3,8 +3,9 @@
 import { useEffect, useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import HolographicHUD from '@/components/Experience3D/HolographicHUD';
 
-// Heavy 3D scenes — lazy-loaded so navigation between sections only
+// Heavy 3D scenes, lazy-loaded so navigation between sections only
 // pays for what it shows.
 const Hero = dynamic(() => import('@/components/Experience3D/Hero'), { ssr: false });
 const Avatar = dynamic(() => import('@/components/Experience3D/Avatar'), { ssr: false });
@@ -151,7 +152,7 @@ export default function Experience3DPage() {
           <div className="opacity-70 tracking-widest uppercase mb-1">Shortcuts</div>
           <div>← / a · prev</div>
           <div>→ / d · next</div>
-          <div>1–4 · jump</div>
+          <div>1,4 · jump</div>
           <div>esc · home</div>
         </div>
       ) : null}
@@ -175,6 +176,10 @@ export default function Experience3DPage() {
           </Suspense>
         </motion.div>
       </AnimatePresence>
+
+      {/* Persistent holographic HUD overlay (hidden on Hero so the title
+          can breathe). Sits above the scene but below the header. */}
+      <HolographicHUD hidden={section === 'hero'} section={section} />
     </div>
   );
 }

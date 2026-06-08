@@ -122,7 +122,7 @@ function Scene() {
       {/* Single beam from above */}
       <VolumetricBeam position={[0, 3, 0]} height={5} bottomRadius={2.5} opacity={0.05} />
 
-      {/* Two parallax layers — main drift for atmosphere, distant orbit
+      {/* Two parallax layers, main drift for atmosphere, distant orbit
           for depth. Opacities kept low so the title is the focal point. */}
       <ParticleStorm
         count={1800}

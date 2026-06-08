@@ -35,7 +35,7 @@ interface Props {
  * Tuned for a dim, neon-lit data-center aesthetic.
  */
 export default function CinematicEffects({
-  // Conservative defaults — bloom should make emissive things sparkle,
+  // Conservative defaults, bloom should make emissive things sparkle,
   // not turn the whole scene white. Per-scene overrides can amp these up
   // when the composition actually calls for more glow.
   bloomIntensity = 0.55,

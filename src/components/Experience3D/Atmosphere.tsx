@@ -13,7 +13,7 @@ interface DustProps {
 }
 
 /**
- * Cinematic dust motes — slow upward drift with a slight horizontal sway.
+ * Cinematic dust motes, slow upward drift with a slight horizontal sway.
  * Renders as a single Points object with vertex colors and additive
  * blending so the motes pop against the bloom pass.
  */
@@ -87,7 +87,7 @@ interface VolumetricBeamProps {
 
 /**
  * Fake-volumetric light cone (cheap version of god rays). A semi-transparent
- * inverted cone shaded with additive blending — looks like a beam of light
+ * inverted cone shaded with additive blending, looks like a beam of light
  * cutting through dust when combined with <DustMotes />.
  */
 export function VolumetricBeam({

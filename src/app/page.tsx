@@ -56,7 +56,7 @@ export default function Home() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // Parallax — throttled via rAF so mousemove doesn't repaint the blurred
+  // Parallax, throttled via rAF so mousemove doesn't repaint the blurred
   // background more than once per animation frame.
   const rafIdRef = useRef<number | null>(null);
   const pendingMouseRef = useRef<{ x: number; y: number } | null>(null);
@@ -87,7 +87,7 @@ export default function Home() {
   const particleCount = 80; // Increased particle count
   const backgroundRef = useRef<HTMLDivElement>(null);
   
-  // Boot sequence — each line waits a randomized amount, so it feels
+  // Boot sequence, each line waits a randomized amount, so it feels
   // like a real process where some steps are fast and some are slow.
   // (Math.random in scheduler-only logic; output isn't displayed via React
   //  state derived from the random value, so it's safe with static export.)
@@ -112,8 +112,8 @@ export default function Home() {
     const timers: ReturnType<typeof setTimeout>[] = [];
     let elapsed = 0;
     messages.forEach((msg, i) => {
-      // 320–800ms base, scaled by the weight for this step. Total run is
-      // ~5-7 seconds depending on the random draws — long enough to read
+      // 320-800ms base, scaled by the weight for this step. Total run is
+      // ~5-7 seconds depending on the random draws, long enough to read
       // the lines, short enough to not feel like a wait.
       const jitter = 320 + Math.random() * 480;
       elapsed += jitter * weights[i];

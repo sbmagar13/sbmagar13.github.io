@@ -11,6 +11,7 @@ import { VolumetricBeam, NeonStrip } from './Atmosphere';
 import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
+import ClickBurst, { useBurstQueue } from './ClickBurst';
 import { PALETTE, statusColor } from './Materials';
 import type { ScreenMode } from './AnimatedScreen';
 
@@ -160,7 +161,7 @@ const RACKS: RackData[] = [
     sublabel: 'mcp-tools-explorer',
     status: 'In Progress',
     description:
-      'Experimental project exploring Model Context Protocol — building custom MCP servers for DevOps automation.',
+      'Experimental project exploring Model Context Protocol, building custom MCP servers for DevOps automation.',
     tech: ['TypeScript', 'MCP', 'Node.js'],
     position: [0.9, 0, 2.5],
     rotation: [0, Math.PI, 0],
@@ -224,22 +225,35 @@ function CableLayer({ activeId }: { activeId: string | null }) {
 function CameraRig({ activeId }: { activeId: string | null }) {
   const target = useRef(new THREE.Vector3(0, 0.4, 0));
   const desired = useRef(new THREE.Vector3(0, 4.5, 9));
+  const lookTarget = useRef(new THREE.Vector3(0, 0.4, 0));
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const cam = state.camera;
-    // When a rack is active, lean the camera toward it.
+    // When a rack is active, lean the camera in close.
     if (activeId) {
       const rack = RACKS.find((r) => r.id === activeId);
       if (rack) {
-        desired.current.set(rack.position[0] * 0.6, 2.5, rack.position[2] > 0 ? 6 : -6);
+        desired.current.set(rack.position[0] * 0.5, 2.2, rack.position[2] > 0 ? 5.4 : -5.4);
         target.current.set(rack.position[0], 0.6, rack.position[2]);
       }
     } else {
       desired.current.set(0, 4.5, 9);
       target.current.set(0, 0.4, 0);
     }
-    cam.position.lerp(desired.current, 0.04);
-    cam.lookAt(target.current);
+
+    // Frame-rate independent damping, fast initial approach that
+    // decelerates smoothly. The damping factor (3.2) is the "speed at
+    // which the camera reaches its target"; higher = snappier.
+    const lambda = 3.2;
+    cam.position.x = THREE.MathUtils.damp(cam.position.x, desired.current.x, lambda, delta);
+    cam.position.y = THREE.MathUtils.damp(cam.position.y, desired.current.y, lambda, delta);
+    cam.position.z = THREE.MathUtils.damp(cam.position.z, desired.current.z, lambda, delta);
+
+    // Smooth the look-at target separately so the framing doesn't snap.
+    lookTarget.current.x = THREE.MathUtils.damp(lookTarget.current.x, target.current.x, lambda, delta);
+    lookTarget.current.y = THREE.MathUtils.damp(lookTarget.current.y, target.current.y, lambda, delta);
+    lookTarget.current.z = THREE.MathUtils.damp(lookTarget.current.z, target.current.z, lambda, delta);
+    cam.lookAt(lookTarget.current);
   });
 
   return null;
@@ -250,12 +264,14 @@ interface SceneProps {
   activeId: string | null;
   hoveredId: string | null;
   setHovered: (id: string | null) => void;
+  bursts: Array<{ id: number; position: [number, number, number]; color: string }>;
+  onBurstDone: (id: number) => void;
 }
 
-function Scene({ onRackClick, activeId, hoveredId, setHovered }: SceneProps) {
+function Scene({ onRackClick, activeId, hoveredId, setHovered, bursts, onBurstDone }: SceneProps) {
   return (
     <>
-      {/* Lights — manual, no remote HDR */}
+      {/* Lights, manual, no remote HDR */}
       <ambientLight intensity={0.12} color="#1e293b" />
 
       {/* Cold key from above */}
@@ -321,7 +337,7 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered }: SceneProps) {
         />
       ))}
 
-      {/* Atmospheric dust — main drift layer only. Toned down so the
+      {/* Atmospheric dust, main drift layer only. Toned down so the
           racks read cleanly. */}
       <ParticleStorm
         count={2000}
@@ -333,7 +349,7 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered }: SceneProps) {
         opacity={0.3}
       />
 
-      {/* Lens flares at the top of every spot light — kept small enough
+      {/* Lens flares at the top of every spot light, kept small enough
           that 11 of them aren't dominating the frame. */}
       {RACKS.map((r) => (
         <LensFlare
@@ -391,6 +407,17 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered }: SceneProps) {
 
       <CameraRig activeId={activeId} />
 
+      {/* Active click bursts. New burst spawns on every rack click and
+          auto-removes when its lifetime ends. */}
+      {bursts.map((b) => (
+        <ClickBurst
+          key={b.id}
+          position={b.position}
+          color={b.color}
+          onDone={() => onBurstDone(b.id)}
+        />
+      ))}
+
       <OrbitControls
         target={[0, 0.4, 0]}
         enablePan={false}
@@ -411,6 +438,19 @@ export default function DataCenter() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const active = useMemo(() => RACKS.find((r) => r.id === activeId) ?? null, [activeId]);
+  const { bursts, trigger: triggerBurst, remove: removeBurst } = useBurstQueue();
+
+  const handleRackClick = (id: string) => {
+    const rack = RACKS.find((r) => r.id === id);
+    if (rack) {
+      // Fire a burst at roughly the centre of the rack.
+      triggerBurst(
+        [rack.position[0], rack.position[1] + 0.4, rack.position[2]],
+        statusColor(rack.status),
+      );
+    }
+    setActiveId((prev) => (prev === id ? null : id));
+  };
 
   return (
     <div className="w-full h-screen relative bg-black">
@@ -425,7 +465,9 @@ export default function DataCenter() {
 
         <Suspense fallback={null}>
           <Scene
-            onRackClick={(id) => setActiveId((prev) => (prev === id ? null : id))}
+            onRackClick={handleRackClick}
+            bursts={bursts}
+            onBurstDone={removeBurst}
             activeId={activeId}
             hoveredId={hoveredId}
             setHovered={setHoveredId}
@@ -439,13 +481,16 @@ export default function DataCenter() {
         </Suspense>
       </Canvas>
 
-      {/* Heading */}
-      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center">
-        <div className="font-mono text-xs tracking-[0.4em] text-cyan-400/70 uppercase">
+      {/* Heading, kept high-contrast and the eyebrow text big enough to
+          read against the busy scene below. */}
+      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/45 backdrop-blur-sm border border-cyan-500/20">
+        <div className="font-mono text-[11px] tracking-[0.32em] text-cyan-300 uppercase">
           Production environment
         </div>
-        <div className="mt-1 font-mono text-2xl text-white/90">DATA CENTER</div>
-        <div className="mt-1 font-mono text-[10px] text-slate-400/70 max-w-md mx-auto">
+        <div className="mt-1.5 font-mono text-3xl font-semibold text-white tracking-wider">
+          DATA CENTER
+        </div>
+        <div className="mt-1.5 font-mono text-xs text-slate-300 max-w-md mx-auto">
           {RACKS.length} live systems · click a rack to inspect · drag to orbit
         </div>
       </div>
@@ -455,58 +500,76 @@ export default function DataCenter() {
         {active ? (
           <motion.aside
             key={active.id}
-            initial={{ x: 80, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 80, opacity: 0 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute top-1/2 -translate-y-1/2 right-6 w-[400px] max-w-[40vw] bg-slate-950/85 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 shadow-2xl shadow-cyan-500/10"
+            initial={{ x: 60, opacity: 0, scale: 0.96 }}
+            animate={{ x: 0, opacity: 1, scale: 1 }}
+            exit={{ x: 60, opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-1/2 -translate-y-1/2 right-6 w-[460px] max-w-[42vw] bg-slate-950/92 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-7 shadow-2xl shadow-cyan-500/20"
           >
+            {/* Status row */}
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-cyan-400">
+                <div className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.3em] uppercase text-cyan-300 bg-cyan-500/10 border border-cyan-400/40 rounded px-2 py-1">
+                  <span
+                    className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse"
+                    aria-hidden
+                  />
                   {active.status}
                 </div>
-                <div className="mt-1 font-mono text-xl text-white">{active.sublabel}</div>
+                <div className="mt-3 font-mono text-2xl font-semibold text-white tracking-wide leading-tight">
+                  {active.sublabel}
+                </div>
+                <div className="mt-1 font-mono text-[11px] text-slate-400 tracking-wider">
+                  rack-{active.label}
+                </div>
               </div>
               <button
                 onClick={() => setActiveId(null)}
-                className="text-slate-400 hover:text-white font-mono text-sm"
+                className="text-slate-400 hover:text-white font-mono text-base leading-none w-8 h-8 flex items-center justify-center rounded border border-slate-700 hover:border-slate-500 transition-colors"
                 aria-label="Close"
               >
-                [×]
+                ×
               </button>
             </div>
 
-            <p className="mt-4 text-slate-300 text-sm leading-relaxed">{active.description}</p>
+            {/* Description */}
+            <p className="mt-5 text-slate-200 text-[15px] leading-relaxed">{active.description}</p>
 
+            {/* Metrics */}
             {active.metrics && active.metrics.length > 0 ? (
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="mt-5 grid grid-cols-2 gap-2.5">
                 {active.metrics.map((m) => (
                   <div
                     key={m.label}
-                    className="rounded border border-cyan-500/20 bg-slate-900/60 px-3 py-2"
+                    className="rounded-md border border-cyan-500/25 bg-slate-900/70 px-3.5 py-2.5"
                   >
-                    <div className="font-mono text-[10px] uppercase tracking-widest text-slate-400">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
                       {m.label}
                     </div>
-                    <div className="font-mono text-lg text-cyan-300">{m.value}</div>
+                    <div className="mt-0.5 font-mono text-xl font-semibold text-cyan-200">{m.value}</div>
                   </div>
                 ))}
               </div>
             ) : null}
 
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {active.tech.map((t) => (
-                <span
-                  key={t}
-                  className="px-2 py-0.5 text-[10px] font-mono text-cyan-200 border border-cyan-500/30 rounded"
-                >
-                  {t}
-                </span>
-              ))}
+            {/* Tech chips */}
+            <div className="mt-5">
+              <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-500 mb-2">
+                Tech stack
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {active.tech.map((t) => (
+                  <span
+                    key={t}
+                    className="px-2.5 py-1 text-[11px] font-mono text-cyan-100 bg-cyan-500/5 border border-cyan-500/30 rounded"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            <div className="mt-5 text-[10px] font-mono text-slate-500">
+            <div className="mt-6 text-[11px] font-mono text-slate-500">
               Press <span className="text-cyan-300">esc</span> or click anywhere to deselect
             </div>
           </motion.aside>

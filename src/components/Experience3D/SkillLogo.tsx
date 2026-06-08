@@ -47,7 +47,7 @@ function Docker({ scale = 1 }: { scale?: number }) {
         <sphereGeometry args={[0.42, 24, 24, 0, Math.PI * 2, 0, Math.PI / 2]} />
         {mat('#0ea5e9', '#0284c7', 0.45)}
       </mesh>
-      {/* Containers — 3×2 grid */}
+      {/* Containers, 3×2 grid */}
       {[-1, 0, 1].flatMap((x) =>
         [0, 1].map((y) => (
           <mesh key={`c-${x}-${y}`} position={[x * 0.22, 0.18 + y * 0.18, 0]}>
@@ -146,7 +146,7 @@ function Terraform({ scale = 1 }: { scale?: number }) {
 function Python({ scale = 1 }: { scale?: number }) {
   const ref = useRef<THREE.Group>(null);
   rotate(ref, 0.5);
-  // Two interlocking torus arcs — yellow snake, blue snake.
+  // Two interlocking torus arcs, yellow snake, blue snake.
   return (
     <group ref={ref} scale={scale}>
       <mesh position={[0, 0.1, 0]} rotation={[0, 0, 0]}>
@@ -215,7 +215,7 @@ function OpenAI({ scale = 1 }: { scale?: number }) {
 function Postgres({ scale = 1 }: { scale?: number }) {
   const ref = useRef<THREE.Group>(null);
   rotate(ref, 0.55);
-  // Stylized elephant head — sphere body + two ear-like flaps + trunk.
+  // Stylized elephant head, sphere body + two ear-like flaps + trunk.
   return (
     <group ref={ref} scale={scale}>
       <mesh position={[0, 0, 0]}>
@@ -286,7 +286,7 @@ export function hasCustomLogo(id: string): boolean {
   return id in LOGOS;
 }
 
-// Reusable highlight color picker — different brand color per logo.
+// Reusable highlight color picker, different brand color per logo.
 export function logoTint(id: string): string {
   switch (id) {
     case 'docker':

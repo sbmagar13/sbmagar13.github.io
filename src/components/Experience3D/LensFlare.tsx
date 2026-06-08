@@ -110,7 +110,7 @@ export default function LensFlare({
       <Billboard>
         {/* Main horizontal anamorphic streak */}
         <FlareCard color={color} scale={[size, size * 0.18]} rotation={0} intensity={baseIntensity} />
-        {/* Crossed vertical streak — thinner */}
+        {/* Crossed vertical streak, thinner */}
         <FlareCard
           color={color}
           scale={[size * 0.65, size * 0.06]}

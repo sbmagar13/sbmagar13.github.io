@@ -62,7 +62,7 @@ export default function AnimatedScreen({
     return {
       lines,
       offset: 0,
-      // For graph/pulse mode — pre-computed sample stream.
+      // For graph/pulse mode, pre-computed sample stream.
       samples: Array.from({ length: 128 }, () => Math.random()),
     };
   }, []);

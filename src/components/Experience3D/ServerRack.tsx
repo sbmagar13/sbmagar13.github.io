@@ -7,6 +7,10 @@ import * as THREE from 'three';
 import { PALETTE } from './Materials';
 import AnimatedScreen, { type ScreenMode } from './AnimatedScreen';
 import EnergyPanel from './EnergyPanel';
+import FanBlade from './FanBlade';
+import LabelPlate from './LabelPlate';
+
+type LedPattern = 'steady' | 'slow' | 'fast' | 'burst';
 
 export interface RackProps {
   position: [number, number, number];
@@ -52,48 +56,89 @@ export default function ServerRack({
   onHover,
 }: RackProps) {
   const ledRefs = useRef<THREE.Mesh[]>([]);
-  const fanRef = useRef<THREE.Mesh>(null);
   const highlightRef = useRef<THREE.Mesh>(null);
 
-  // Pre-compute per-unit randomness once. The seed is the index so the
-  // pattern is the same every mount — no jitter across rerenders.
+  // Pre-compute per-unit attributes. Each LED gets a behaviour pattern,
+  // not just a phase, so the rack looks like 18 independent machines
+  // doing different work instead of 18 synchronised blinkers.
   const unitSpec = useMemo(() => {
     return Array.from({ length: units }).map((_, i) => {
       const seed = i * 137.508;
-      const rand = (s: number) => (Math.sin(s) * 43758.5453) % 1;
+      const rand = (s: number) => Math.abs((Math.sin(s) * 43758.5453) % 1);
+      const r = rand(seed);
+      const pattern: LedPattern =
+        r > 0.85 ? 'burst' : r > 0.6 ? 'fast' : r > 0.3 ? 'slow' : 'steady';
+      const r2 = rand(seed * 1.7);
+      const secondaryPattern: LedPattern =
+        r2 > 0.9 ? 'burst' : r2 > 0.55 ? 'slow' : 'steady';
       return {
-        // Some slots get amber/red instead of green for variety.
+        // Most slots green; a few amber, very few red.
         secondaryColor:
-          rand(seed) > 0.85
-            ? PALETTE.ledAmber
-            : rand(seed * 1.3) > 0.92
-              ? PALETTE.ledRed
-              : PALETTE.ledGreen,
-        phase: Math.abs(rand(seed * 2.7)) * Math.PI * 2,
-        speed: 1 + Math.abs(rand(seed * 3.1)) * 2.5,
+          r > 0.92 ? PALETTE.ledRed : r > 0.78 ? PALETTE.ledAmber : PALETTE.ledGreen,
+        pattern,
+        secondaryPattern,
+        phase: rand(seed * 2.7) * Math.PI * 2,
+        // Idle drift speed for blinkers.
+        speed: 0.8 + rand(seed * 3.1) * 1.8,
+        // Burst cycle period for "data burst" LEDs.
+        burstPeriod: 1.6 + rand(seed * 5.3) * 3.5,
       };
     });
   }, [units]);
 
+  // Translate a pattern into an emissive intensity at time t.
+  function patternIntensity(pattern: LedPattern, t: number, phase: number, speed: number, burstPeriod: number) {
+    switch (pattern) {
+      case 'steady':
+        return 1.2;
+      case 'slow': {
+        // Long lazy fade, looks like a heartbeat.
+        const v = Math.sin(t * speed * 0.4 + phase);
+        return 0.5 + 0.7 * Math.max(0, v);
+      }
+      case 'fast': {
+        // Rapid pulse, looks like activity.
+        const v = 0.5 + 0.5 * Math.sin(t * speed * 2.5 + phase);
+        return 0.6 + v * 0.9;
+      }
+      case 'burst': {
+        // Quiet 90% of the cycle, then a rapid data-burst flicker.
+        const cyclePos = ((t + phase) % burstPeriod) / burstPeriod;
+        if (cyclePos < 0.82) return 0.35;
+        // Fast flicker in the active 18% of the cycle.
+        const flicker = 0.5 + 0.5 * Math.sin(t * 28 + phase * 3);
+        return 1.4 + flicker * 0.8;
+      }
+    }
+  }
+
   useFrame((state) => {
     const t = state.clock.elapsedTime;
 
-    // Drive the LED emissive intensity directly on the material — no React
+    // Drive the LED emissive intensity directly on the material, no React
     // state changes per frame.
     ledRefs.current.forEach((led, i) => {
       if (!led) return;
-      const spec = unitSpec[Math.floor(i / 2)];
+      const unitIdx = Math.floor(i / 2);
+      const isSecondary = i % 2 === 1;
+      const spec = unitSpec[unitIdx];
+      if (!spec) return;
       const mat = led.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 0.4 + 1.4 * (0.5 + 0.5 * Math.sin(t * spec.speed + spec.phase + i));
+      const pattern = isSecondary ? spec.secondaryPattern : spec.pattern;
+      mat.emissiveIntensity = patternIntensity(
+        pattern,
+        t,
+        spec.phase + (isSecondary ? Math.PI : 0),
+        spec.speed,
+        spec.burstPeriod,
+      ) * (highlighted ? 1.25 : 1);
     });
 
-    // Slow rear fan spin.
-    if (fanRef.current) fanRef.current.rotation.z = t * 2.5;
-
-    // Pulse the highlight ring when the rack is the active one.
+    // Pulse the highlight ring when the rack is the active one, use a
+    // smoother cosine curve so the breathing feels organic.
     if (highlightRef.current && highlighted) {
       const mat = highlightRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.4 + 0.4 * Math.sin(t * 3);
+      mat.opacity = 0.45 + 0.35 * (0.5 + 0.5 * Math.cos(t * 2.2));
     }
   });
 
@@ -114,7 +159,7 @@ export default function ServerRack({
         document.body.style.cursor = '';
       }}
     >
-      {/* Main frame — slightly inset front panel suggestion */}
+      {/* Main frame, slightly inset front panel suggestion */}
       <mesh castShadow receiveShadow>
         <boxGeometry args={[RACK_WIDTH, RACK_HEIGHT, RACK_DEPTH]} />
         <meshStandardMaterial
@@ -136,35 +181,21 @@ export default function ServerRack({
         <meshStandardMaterial color={PALETTE.rubber} metalness={0.5} roughness={0.6} />
       </mesh>
 
-      {/* Name plate at the top of the front panel */}
-      <group position={[0, RACK_HEIGHT / 2 - 0.18, RACK_DEPTH / 2 + 0.005]}>
-        <mesh>
-          <boxGeometry args={[RACK_WIDTH * 0.75, 0.18, 0.003]} />
-          <meshStandardMaterial color="#020617" metalness={0.2} roughness={0.9} />
-        </mesh>
-        <Text
-          position={[0, 0.025, 0.004]}
-          fontSize={0.07}
-          anchorX="center"
-          anchorY="middle"
-          color={accent}
-          outlineColor="#000"
-          outlineWidth={0.002}
-        >
-          {label}
-        </Text>
-        {sublabel ? (
-          <Text
-            position={[0, -0.045, 0.004]}
-            fontSize={0.034}
-            anchorX="center"
-            anchorY="middle"
-            color="#94a3b8"
-          >
-            {sublabel}
-          </Text>
-        ) : null}
-      </group>
+      {/* Name plate at the top of the front panel, uses LabelPlate so
+          the text reads against bloom and dim lighting. */}
+      <LabelPlate
+        position={[0, RACK_HEIGHT / 2 - 0.18, RACK_DEPTH / 2 + 0.006]}
+        text={label}
+        subtext={sublabel}
+        size={0.08}
+        subSize={0.038}
+        color={accent}
+        plate
+        plateOpacity={0.92}
+        padding={[0.08, 0.04]}
+        border
+        borderColor={accent}
+      />
 
       {/* Rack units (LEDs + indicator + faint vent) */}
       {unitSpec.map((spec, i) => {
@@ -226,21 +257,25 @@ export default function ServerRack({
         );
       })}
 
-      {/* Cable bundle on top — a few curved bezier-ish humps suggested by a torus */}
+      {/* Cable bundle on top, a few curved bezier-ish humps suggested by a torus */}
       <mesh position={[0, RACK_HEIGHT / 2 + 0.13, -RACK_DEPTH / 4]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.12, 0.018, 6, 12]} />
         <meshStandardMaterial color="#1e293b" metalness={0.3} roughness={0.9} />
       </mesh>
 
-      {/* Rear-mounted fan suggestion */}
-      <mesh
-        ref={fanRef}
-        position={[0, 0, -RACK_DEPTH / 2 - 0.005]}
-        rotation={[0, 0, 0]}
-      >
-        <torusGeometry args={[0.18, 0.04, 6, 12]} />
-        <meshStandardMaterial color={PALETTE.steelDark} metalness={0.7} roughness={0.4} />
-      </mesh>
+      {/* Rear-mounted fan, actual blades, not just a ring */}
+      <FanBlade
+        position={[0, 0.4, -RACK_DEPTH / 2 - 0.005]}
+        radius={0.18}
+        bladeCount={5}
+        speed={highlighted ? 6 : 3.5}
+      />
+      <FanBlade
+        position={[0, -0.4, -RACK_DEPTH / 2 - 0.005]}
+        radius={0.18}
+        bladeCount={5}
+        speed={highlighted ? 5.5 : 3}
+      />
 
       {/* Highlight ring when active */}
       {highlighted ? (
@@ -300,7 +335,7 @@ export default function ServerRack({
         </mesh>
       ))}
 
-      {/* Brand mark — tiny accent text at the bottom corner of the face */}
+      {/* Brand mark, tiny accent text at the bottom corner of the face */}
       <Text
         position={[RACK_WIDTH * 0.32, -RACK_HEIGHT / 2 - 0.03, RACK_DEPTH / 2 + 0.005]}
         fontSize={0.024}

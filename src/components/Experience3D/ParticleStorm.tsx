@@ -11,10 +11,10 @@ import * as THREE from 'three';
  * cost stays roughly the same whether you render 100 or 10k particles.
  *
  * Behaviours:
- *   • drift  — slow upward drift with sideways sway (atmosphere)
- *   • storm  — fast 3D swirl around the origin (energy field)
- *   • rain   — vertical fall with horizontal jitter (matrix-style)
- *   • orbit  — particles orbit the origin on inclined rings
+ *   • drift: slow upward drift with sideways sway (atmosphere)
+ *   • storm: fast 3D swirl around the origin (energy field)
+ *   • rain: vertical fall with horizontal jitter (matrix-style)
+ *   • orbit: particles orbit the origin on inclined rings
  */
 type Behavior = 'drift' | 'storm' | 'rain' | 'orbit';
 

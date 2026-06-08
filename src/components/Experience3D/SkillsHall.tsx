@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Float, Text, MeshReflectorMaterial } from '@react-three/drei';
+import { OrbitControls, Float, MeshReflectorMaterial } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import { NeonStrip } from './Atmosphere';
@@ -10,6 +10,7 @@ import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import SkillLogo, { hasCustomLogo, logoTint } from './SkillLogo';
+import LabelPlate from './LabelPlate';
 import { PALETTE } from './Materials';
 
 type Category =
@@ -33,7 +34,7 @@ interface SkillData {
   blurb?: string;
 }
 
-// Compact migration of the TechStack array — kept inline so this scene
+// Compact migration of the TechStack array, kept inline so this scene
 // renders without a data-file dependency.
 const SKILLS: SkillData[] = [
   { id: 'python', name: 'Python', category: 'development', years: 6, highlight: true, blurb: 'Default for tooling and services.' },
@@ -221,7 +222,7 @@ function Pedestal({ position, skill, highlighted, hovered, onHover, onClick }: P
         <meshBasicMaterial color={color} transparent opacity={highlighted || hovered ? 0.9 : 0.5} />
       </mesh>
 
-      {/* Floating shape — custom 3D logo for highlight skills, generic
+      {/* Floating shape, custom 3D logo for highlight skills, generic
           category shape for the rest */}
       <Float speed={1.3} floatIntensity={0.25} rotationIntensity={hasLogo ? 0.25 : 0.6}>
         <group position={[0, 0.6, 0]} scale={highlighted ? 1.25 : hovered ? 1.12 : 1}>
@@ -233,28 +234,23 @@ function Pedestal({ position, skill, highlighted, hovered, onHover, onClick }: P
         </group>
       </Float>
 
-      {/* Name label */}
-      <Text
-        position={[0, -0.12, 0.51]}
-        rotation={[0, 0, 0]}
-        fontSize={0.13}
-        color="#e2e8f0"
-        anchorX="center"
-        anchorY="middle"
-        outlineColor="#000"
-        outlineWidth={0.003}
-      >
-        {skill.name}
-      </Text>
-      <Text
-        position={[0, -0.25, 0.51]}
-        fontSize={0.06}
-        color={color}
-        anchorX="center"
-        letterSpacing={0.18}
-      >
-        {`${skill.years}Y · ${skill.category.toUpperCase()}`}
-      </Text>
+      {/* Name label, billboarded so it always faces the camera as you
+          orbit the hall, with a dark plate behind for legibility. */}
+      <LabelPlate
+        position={[0, -0.15, 0.55]}
+        text={skill.name}
+        subtext={`${skill.years}Y · ${skill.category.toUpperCase()}`}
+        size={0.13}
+        subSize={0.06}
+        color="#f1f5f9"
+        subColor={color}
+        billboard
+        plate
+        plateOpacity={0.85}
+        padding={[0.12, 0.07]}
+        border={highlighted || hovered}
+        borderColor={color}
+      />
 
       {/* Highlight star on the corner of the pedestal */}
       {skill.highlight ? (
@@ -351,7 +347,7 @@ function Scene({
         opacity={0.28}
       />
 
-      {/* Lens flares at the hall's far corner lights — kept far and dim */}
+      {/* Lens flares at the hall's far corner lights, kept far and dim */}
       <LensFlare position={[-8, 4, -2]} color={PALETTE.neonMagenta} size={1.8} intensity={0.3} />
       <LensFlare position={[8, 4, -2]} color={PALETTE.neonCyan} size={1.8} intensity={0.3} />
 
@@ -404,12 +400,14 @@ export default function SkillsHall() {
       </Canvas>
 
       {/* Heading */}
-      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center">
-        <div className="font-mono text-xs tracking-[0.4em] text-cyan-400/70 uppercase">
+      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/45 backdrop-blur-sm border border-cyan-500/20">
+        <div className="font-mono text-[11px] tracking-[0.32em] text-cyan-300 uppercase">
           Inventory
         </div>
-        <div className="mt-1 font-mono text-2xl text-white/90">SKILLS HALL</div>
-        <div className="mt-1 font-mono text-[10px] text-slate-400/70">
+        <div className="mt-1.5 font-mono text-3xl font-semibold text-white tracking-wider">
+          SKILLS HALL
+        </div>
+        <div className="mt-1.5 font-mono text-xs text-slate-300">
           {SKILLS.length} skills · category-coded by shape · click for details
         </div>
       </div>
@@ -429,41 +427,45 @@ export default function SkillsHall() {
         {selected ? (
           <motion.aside
             key={selected.id}
-            initial={{ x: 80, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 80, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute top-1/2 -translate-y-1/2 right-6 w-[340px] bg-slate-950/85 backdrop-blur-md border border-cyan-500/30 rounded-lg p-5"
+            initial={{ x: 60, opacity: 0, scale: 0.96 }}
+            animate={{ x: 0, opacity: 1, scale: 1 }}
+            exit={{ x: 60, opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-1/2 -translate-y-1/2 right-6 w-[380px] bg-slate-950/92 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 shadow-2xl shadow-cyan-500/20"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div
-                  className="font-mono text-[10px] tracking-[0.3em] uppercase"
-                  style={{ color: CATEGORY_COLORS[selected.category] }}
+                  className="inline-block font-mono text-[11px] tracking-[0.3em] uppercase border rounded px-2 py-1"
+                  style={{
+                    color: CATEGORY_COLORS[selected.category],
+                    borderColor: `${CATEGORY_COLORS[selected.category]}66`,
+                    background: `${CATEGORY_COLORS[selected.category]}10`,
+                  }}
                 >
                   {selected.category}
                 </div>
-                <div className="mt-1 font-mono text-xl text-white">{selected.name}</div>
+                <div className="mt-3 font-mono text-2xl font-semibold text-white">{selected.name}</div>
               </div>
               <button
                 onClick={() => setSelectedId(null)}
-                className="text-slate-400 hover:text-white font-mono text-sm"
+                className="text-slate-400 hover:text-white font-mono text-base w-8 h-8 flex items-center justify-center rounded border border-slate-700 hover:border-slate-500 transition-colors"
               >
-                [×]
+                ×
               </button>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="rounded border border-cyan-500/20 bg-slate-900/60 px-3 py-2">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-slate-400">Years</div>
-                <div className="font-mono text-lg text-cyan-300">{selected.years}</div>
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <div className="rounded-md border border-cyan-500/25 bg-slate-900/70 px-3.5 py-2.5">
+                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">Years</div>
+                <div className="mt-0.5 font-mono text-xl font-semibold text-cyan-200">{selected.years}</div>
               </div>
-              <div className="rounded border border-cyan-500/20 bg-slate-900/60 px-3 py-2">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-slate-400">Highlight</div>
-                <div className="font-mono text-lg text-cyan-300">{selected.highlight ? 'Yes' : '—'}</div>
+              <div className="rounded-md border border-cyan-500/25 bg-slate-900/70 px-3.5 py-2.5">
+                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">Highlight</div>
+                <div className="mt-0.5 font-mono text-xl font-semibold text-cyan-200">{selected.highlight ? 'Yes' : ','}</div>
               </div>
             </div>
             {selected.blurb ? (
-              <p className="mt-3 text-sm text-slate-300 leading-relaxed">{selected.blurb}</p>
+              <p className="mt-4 text-[15px] text-slate-200 leading-relaxed">{selected.blurb}</p>
             ) : null}
           </motion.aside>
         ) : null}

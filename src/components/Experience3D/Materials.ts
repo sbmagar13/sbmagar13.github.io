@@ -2,7 +2,7 @@
 // One place to retune the whole look.
 
 export const PALETTE = {
-  // Background gradient (bottom → top) — cold data-center void.
+  // Background gradient (bottom → top), cold data-center void.
   voidA: '#020617', // near-black, slate-950
   voidB: '#0b132b', // deep navy
   voidC: '#1a1240', // dark indigo

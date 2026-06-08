@@ -2,13 +2,14 @@
 
 import { Suspense, useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, OrbitControls, Text, ContactShadows } from '@react-three/drei';
+import { Float, OrbitControls, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 import HoloPlate from './HoloPlate';
 import HoloProjector from './HoloProjector';
 import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
+import LabelPlate from './LabelPlate';
 import useMouseParallax from './useMouseParallax';
 import { PALETTE } from './Materials';
 
@@ -62,7 +63,8 @@ function RisingMotes({ count = 200 }: { count?: number }) {
   );
 }
 
-// Floating info chips around the avatar.
+// Floating info chips around the avatar. Uses LabelPlate so the text
+// reads clearly against the holographic glow.
 function StatPanel({
   position,
   label,
@@ -75,55 +77,22 @@ function StatPanel({
   color: string;
 }) {
   return (
-    <Float speed={1.5} floatIntensity={0.4} rotationIntensity={0.2}>
-      <group position={position}>
-        {/* Panel back */}
-        <mesh>
-          <planeGeometry args={[1.4, 0.6]} />
-          <meshStandardMaterial
-            color="#020617"
-            emissive={color}
-            emissiveIntensity={0.07}
-            transparent
-            opacity={0.7}
-            metalness={0.3}
-            roughness={0.6}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-        {/* Glow border */}
-        {[
-          { p: [0, 0.31, 0.01], s: [1.42, 0.012, 0.005] },
-          { p: [0, -0.31, 0.01], s: [1.42, 0.012, 0.005] },
-          { p: [-0.71, 0, 0.01], s: [0.012, 0.61, 0.005] },
-          { p: [0.71, 0, 0.01], s: [0.012, 0.61, 0.005] },
-        ].map((b, i) => (
-          <mesh key={i} position={b.p as [number, number, number]}>
-            <boxGeometry args={b.s as [number, number, number]} />
-            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2} toneMapped={false} />
-          </mesh>
-        ))}
-        {/* Text */}
-        <Text
-          position={[0, 0.13, 0.02]}
-          fontSize={0.08}
-          color="#94a3b8"
-          anchorX="center"
-          letterSpacing={0.08}
-        >
-          {label.toUpperCase()}
-        </Text>
-        <Text
-          position={[0, -0.08, 0.02]}
-          fontSize={0.18}
-          color={color}
-          anchorX="center"
-          outlineColor="#000"
-          outlineWidth={0.004}
-        >
-          {value}
-        </Text>
-      </group>
+    <Float speed={1.2} floatIntensity={0.25} rotationIntensity={0.15}>
+      <LabelPlate
+        position={position}
+        text={value}
+        subtext={label.toUpperCase()}
+        size={0.2}
+        subSize={0.075}
+        color={color}
+        subColor="#cbd5e1"
+        billboard
+        plate
+        plateOpacity={0.85}
+        padding={[0.18, 0.1]}
+        border
+        borderColor={color}
+      />
     </Float>
   );
 }
@@ -134,7 +103,7 @@ function PlateWithParallax({ imageUrl }: { imageUrl: string }) {
 
   useFrame((state) => {
     if (!groupRef.current) return;
-    // Tilt toward the cursor — small angle, smoothed.
+    // Tilt toward the cursor, small angle, smoothed.
     const targetRotY = mouse.current.x * 0.3;
     const targetRotX = mouse.current.y * -0.18;
     groupRef.current.rotation.y += (targetRotY - groupRef.current.rotation.y) * 0.05;
@@ -167,7 +136,7 @@ function Scene({ imageUrl }: { imageUrl: string }) {
       <pointLight position={[0, -2, 4]} intensity={0.7} color={PALETTE.neonPurple} distance={10} />
 
       {/* One small, off-axis flare so it doesn't blow out the face. The
-          second light source is intentionally not flared — too much
+          second light source is intentionally not flared, too much
           additive bloom around the photo washes it out. */}
       <LensFlare position={[6, 3.5, 4]} color={PALETTE.neonCyan} size={1.6} intensity={0.4} pulse={false} />
 
@@ -189,7 +158,7 @@ function Scene({ imageUrl }: { imageUrl: string }) {
         color="#0ea5e9"
       />
 
-      {/* Stat panels — orbit-like positions around the avatar */}
+      {/* Stat panels, orbit-like positions around the avatar */}
       <StatPanel position={[3, 2.6, -0.5]} label="Experience" value="5+ Years" color={PALETTE.neonCyan} />
       <StatPanel position={[3.2, 1, 0.6]} label="Repos" value="49" color={PALETTE.neonMagenta} />
       <StatPanel position={[2.8, -0.5, -0.2]} label="Top Lang" value="Python" color={PALETTE.neonPurple} />
@@ -199,7 +168,7 @@ function Scene({ imageUrl }: { imageUrl: string }) {
       <StatPanel position={[-2.9, -0.6, 0.4]} label="Location" value="Nepal" color={PALETTE.neonPurple} />
 
       {/* Atmospheric dust at distance */}
-      {/* Background atmosphere only — kept distant and dim so it doesn't
+      {/* Background atmosphere only, kept distant and dim so it doesn't
           fight with the photo for attention. No close-in orbital particles. */}
       <ParticleStorm
         count={1200}
@@ -251,14 +220,31 @@ export default function Avatar({ imageUrl = '/sagar-mountains.jpg' }: { imageUrl
         </Suspense>
       </Canvas>
 
-      {/* Heading */}
-      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center">
-        <div className="font-mono text-xs tracking-[0.4em] text-cyan-400/70 uppercase">
-          Identity holograph
-        </div>
-        <div className="mt-1 font-mono text-2xl text-white/90">SAGAR BUDHATHOKI</div>
-        <div className="mt-1 font-mono text-[10px] text-slate-400/70">
-          DevOps engineer · sagar@sagarbudhathoki.com
+      {/* Heading. Bolder backdrop + corner brackets so it reads against
+          the bright halo of the holographic plate behind it. */}
+      <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2">
+        <div className="relative px-8 py-4 rounded-lg bg-slate-950/85 backdrop-blur-md border border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.18)]">
+          {/* Decorative corner brackets */}
+          <span aria-hidden className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-300 rounded-tl-sm" />
+          <span aria-hidden className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-300 rounded-tr-sm" />
+          <span aria-hidden className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-300 rounded-bl-sm" />
+          <span aria-hidden className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-300 rounded-br-sm" />
+
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.32em] text-cyan-200 uppercase">
+              <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse" />
+              Identity holograph
+              <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse" />
+            </div>
+            <div className="mt-2 font-mono text-3xl font-bold text-white tracking-[0.18em] drop-shadow-[0_0_8px_rgba(0,0,0,0.9)]">
+              SAGAR BUDHATHOKI
+            </div>
+            <div className="mt-1.5 font-mono text-xs text-slate-200">
+              DevOps engineer
+              <span className="mx-2 text-slate-500">·</span>
+              <span className="text-cyan-200">sagar@sagarbudhathoki.com</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

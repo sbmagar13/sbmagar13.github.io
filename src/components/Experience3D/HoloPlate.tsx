@@ -32,7 +32,7 @@ void main() {
   float bend = (uv.x - 0.5) * (uv.y - 0.5) * 0.04;
   uv += vec2(bend, bend * 0.5);
 
-  // RGB split — sample the three channels at slightly offset UVs.
+  // RGB split, sample the three channels at slightly offset UVs.
   float r = texture2D(uMap, uv + vec2( uRgbSplit, 0.0)).r;
   float g = texture2D(uMap, uv).g;
   float b = texture2D(uMap, uv - vec2( uRgbSplit, 0.0)).b;
@@ -51,7 +51,7 @@ void main() {
   float noise = hash(floor(uTime * 30.0) + uv.y * 100.0) * 0.05;
   color += noise;
 
-  // Cool tint — lighter mix so the actual face stays recognizable.
+  // Cool tint, lighter mix so the actual face stays recognizable.
   color = mix(color, uTint * (0.4 + dot(color, vec3(0.3, 0.6, 0.1))), 0.22);
 
   // Edge fade so it doesn't look like a hard-edged photo.
@@ -122,7 +122,7 @@ export default function HoloPlate({
         <meshBasicMaterial color="#020617" transparent opacity={0.65} depthWrite={false} />
       </mesh>
 
-      {/* Edge frame — thin lit rectangle to read as a "panel". Emissive
+      {/* Edge frame, thin lit rectangle to read as a "panel". Emissive
           intensity kept low so bloom doesn't turn the border into a halo. */}
       {[
         { p: [0, size[1] / 2, 0.01], s: [size[0] * 1.04, 0.014, 0.005] },

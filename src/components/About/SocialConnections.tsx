@@ -45,19 +45,19 @@ const SocialConnections = () => {
       color: 'bg-blue-500 hover:bg-blue-400',
       username: 'S_agarM_agar'
     },
-    { 
-      name: 'Email', 
-      url: 'mailto:mail@budhathokisagar.com.np', 
-      icon: <FaEnvelope size={24} />, 
+    {
+      name: 'Email',
+      url: 'mailto:sagar@sagarbudhathoki.com',
+      icon: <FaEnvelope size={24} />,
       color: 'bg-red-600 hover:bg-red-500',
-      username: 'mail@budhathokisagar.com.np'
+      username: 'sagar@sagarbudhathoki.com'
     },
-    { 
-      name: 'Website', 
-      url: 'https://budhathokisagar.com.np', 
-      icon: <FaGlobe size={24} />, 
+    {
+      name: 'Website',
+      url: 'https://sagarbudhathoki.com',
+      icon: <FaGlobe size={24} />,
       color: 'bg-green-600 hover:bg-green-500',
-      username: 'budhathokisagar.com.np'
+      username: 'sagarbudhathoki.com'
     },
     { 
       name: 'Stack Overflow', 

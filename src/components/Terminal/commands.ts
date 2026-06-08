@@ -248,7 +248,8 @@ Type 'deploy [number]' to see deployment details.
 \x1b[1;32m=== CONNECTION DETAILS ===\x1b[0m
 
 \x1b[1;36mName:\x1b[0m Sagar Budhathoki
-\x1b[1;36mEmail:\x1b[0m mail@budhathokisagar.com.np
+\x1b[1;36mEmail:\x1b[0m sagar@sagarbudhathoki.com (or hello@sagarbudhathoki.com)
+\x1b[1;36mWebsite:\x1b[0m https://sagarbudhathoki.com
 \x1b[1;36mGitHub:\x1b[0m https://github.com/sbmagar13
 \x1b[1;36mLinkedIn:\x1b[0m https://linkedin.com/in/sbmagar13
 \x1b[1;36mTwitter:\x1b[0m https://twitter.com/S_agarM_agar
@@ -276,8 +277,8 @@ Type 'connect' for more detailed social connection options.
   \x1b[1;36mSpotify:       \x1b[0m https://open.spotify.com/user/qzb6mxppi1qt8o50cgkrbyw4v
 
 \x1b[1;33mDirect Contact:\x1b[0m
-  \x1b[1;36mEmail:        \x1b[0m mail@budhathokisagar.com.np
-  \x1b[1;36mWebsite:      \x1b[0m https://budhathokisagar.com.np
+  \x1b[1;36mEmail:        \x1b[0m sagar@sagarbudhathoki.com (or hello@sagarbudhathoki.com)
+  \x1b[1;36mWebsite:      \x1b[0m https://sagarbudhathoki.com
   \x1b[1;36mPhone:        \x1b[0m +9779864420272, +9779805275666
 
 \x1b[1;33mConnection Status:\x1b[0m

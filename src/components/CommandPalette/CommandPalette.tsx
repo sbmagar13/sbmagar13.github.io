@@ -63,7 +63,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       description: 'Connect on LinkedIn',
       icon: <FaLinkedin />,
       action: () => {
-        window.open('https://linkedin.com/in/sagarbudhathoki', '_blank');
+        window.open('https://linkedin.com/in/sbmagar13', '_blank');
         onClose();
       },
       keywords: ['linkedin', 'connect', 'network', 'professional']
@@ -74,7 +74,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       description: 'Get in touch via email',
       icon: <FaEnvelope />,
       action: () => {
-        window.location.href = 'mailto:sagar@example.com';
+        window.location.href = 'mailto:sagar@sagarbudhathoki.com';
         onClose();
       },
       keywords: ['email', 'contact', 'mail', 'message']
@@ -85,7 +85,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       description: 'See the code behind this portfolio',
       icon: <FaCode />,
       action: () => {
-        window.open('https://github.com/sagarbudhathoki/brain-portfolio', '_blank');
+        window.open('https://github.com/sbmagar13/brain-portfolio', '_blank');
         onClose();
       },
       keywords: ['source', 'code', 'repository', 'github']

@@ -1,81 +1,66 @@
-## Getting Started
+# sagarbudhathoki.com
 
-First, run the development server:
+Source for my personal site at https://sagarbudhathoki.com.
+
+It's a terminal-driven DevOps portfolio. The landing page boots into a fake shell where you can poke around with `help`, `about`, `projects`, `skills`, and `blog`. There's also a separate `/experience3d` route that loads a heavier Three.js scene.
+
+## Stack
+
+- Next.js 15 (App Router, static export)
+- React 19, TypeScript
+- Tailwind 4
+- framer-motion for transitions
+- @react-three/fiber + drei for the 3D route (dynamic-loaded so it doesn't block the landing bundle)
+- xterm for the terminal feel
+- gray-matter + remark for the blog posts in `content/blog/`
+
+## Local dev
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-<!-- GitAds-Verify: 76IO4G6LZX4FAJHGL75YVBM4ZKKTKMUL -->
-## GitAds Sponsored
-[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=sbmagar13/sbmagar13.github.io@github)](https://gitads.dev/v1/ad-track?source=sbmagar13/sbmagar13.github.io@github)
+Then open http://localhost:3000.
 
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on GitHub Pages
-
-This project is configured for deployment to GitHub Pages using GitHub Actions. Here's how to deploy:
-
-1. Push your code to a GitHub repository
-2. Make sure your repository is set up for GitHub Pages:
-   - Go to your repository settings
-   - Navigate to "Pages"
-   - Set the source to "GitHub Actions"
-3. Push to the `main` branch to trigger the deployment workflow
-
-The GitHub Action will:
-1. Build the Next.js project with static export
-2. Deploy the built files to the `gh-pages` branch
-3. Make the site available at `https://yourusername.github.io/brain-portfolio`
-
-### Manual Deployment
-
-You can also manually deploy by running:
+## Build
 
 ```bash
 npm run build
-# This will create the 'out' directory with static files
 ```
 
-Then push the contents of the `out` directory to the `gh-pages` branch of your repository.
+Outputs static files to `out/`. The build also touches `out/.nojekyll` so GitHub Pages serves the underscore-prefixed Next.js assets.
 
-### Troubleshooting GitHub Pages Deployment
+## Deploy
 
-If you encounter issues with the GitHub Pages deployment:
+Deploys run on every push to `main` via `.github/workflows/deploy.yml`. The workflow builds, writes the `CNAME` for `sagarbudhathoki.com`, and pushes to the `gh-pages` branch.
 
-1. **Empty page or 404 error**:
-   - Check that the `.nojekyll` file exists in the `out` directory
-   - Verify that the GitHub Pages source is set to the `gh-pages` branch
-   - Make sure the `basePath` in `next.config.ts` is set correctly (should be `/brain-portfolio` for GitHub Pages)
+To deploy manually: `npm run deploy` (uses the `gh-pages` package).
 
-2. **Missing assets**:
-   - Check that the paths to assets are correct in your code
-   - For images and other static assets, make sure they're in the `public` directory
+## Project layout
 
-3. **Debugging**:
-   - Try accessing `/test.html` on your GitHub Pages site to check if static files are being served correctly
-   - Check the GitHub Actions logs for any errors during the build and deployment process
+```
+src/
+  app/                # Next.js routes
+    page.tsx          # terminal-first landing
+    experience3d/     # heavier 3D route
+    sitemap.ts        # SEO
+    robots.ts         # SEO
+  components/
+    Terminal/         # the fake shell + commands
+    About/ Projects/ Tools/ Blog/   # sections
+    Effects/          # NeuralNetwork, ParticleField, MatrixRain
+    Avatar/ Hero/ Loading/ Mobile/  # 3D-route pieces
+  lib/ hooks/ utils/
+content/blog/         # markdown posts
+public/               # static assets
+examples/             # portfolio sample infra (Docker, k8s, Terraform). Not used to deploy this site.
+```
 
-4. **Fixing issues**:
-   - After making changes, push to the `main` branch to trigger a new deployment
-   - You can also manually run the GitHub Action from the "Actions" tab in your repository
+## Adding a blog post
+
+Drop a markdown file with frontmatter into `content/blog/`. Restart dev or rebuild.
+
+## License
+
+Personal portfolio. Code is mine. Feel free to read it for ideas, don't clone it wholesale.

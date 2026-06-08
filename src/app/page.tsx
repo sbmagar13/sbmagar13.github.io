@@ -77,16 +77,16 @@ export default function Home() {
   // Simulate boot sequence with enhanced messages
   useEffect(() => {
     const messages = [
-      'Initializing DevOps Brain v2.0 ULTRA...',
-      'Bootstrapping Kubernetes clusters...',
-      'Activating AI-powered infrastructure optimization...',
-      'Loading neural network visualization...',
-      'Establishing quantum entanglement protocols...',
-      'Deploying serverless edge functions globally...',
-      'Initializing chaos engineering framework...',
-      'Syncing with 150+ DevOps tools...',
-      'Optimizing performance metrics...',
-      'System ready! Welcome to the future of DevOps!'
+      'Booting sagarbudhathoki.com...',
+      'Loading shell environment...',
+      'Mounting /projects, /skills, /blog...',
+      'Connecting to Kubernetes context...',
+      'Pulling Terraform state...',
+      'Starting Prometheus scrape...',
+      'Tailing CI logs...',
+      'Verifying TLS certificates...',
+      'Warming caches...',
+      'Ready. Type `help` to begin.'
     ];
 
     let index = 0;
@@ -360,8 +360,8 @@ export default function Home() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                <h1 className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">DevOps Brain</h1>
-                <p className="text-gray-400">Booting system...</p>
+                <h1 className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">sagar.sh</h1>
+                <p className="text-gray-400">Booting...</p>
               </motion.div>
             </div>
             <motion.div 
@@ -441,10 +441,10 @@ export default function Home() {
               </motion.div>
               <div>
                 <GlitchText
-                  text="DevOps Brain 2.0"
+                  text="sagar.sh"
                   className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-cyan-500 to-blue-600"
                 />
-                <p className="text-gray-400 text-xs sm:text-sm mt-1">Elite DevOps Engineering | by <span className="text-green-400 font-bold">Sagar Budhathoki</span></p>
+                <p className="text-gray-400 text-xs sm:text-sm mt-1">DevOps engineer · <span className="text-green-400 font-bold">Sagar Budhathoki</span></p>
               </div>
             </div>
             
@@ -663,7 +663,7 @@ export default function Home() {
               <span>Uptime: {uptime.days}d {uptime.hours}h {uptime.minutes}m</span>
             </div>
             <div className="text-center sm:text-right">
-              <span>© {new Date().getFullYear()} DevOps Brain | <span className="text-green-500 hover:underline cursor-pointer">v1.2.3</span></span>
+              <span>© {new Date().getFullYear()} Sagar Budhathoki · <a href="https://github.com/sbmagar13" className="text-green-500 hover:underline">github.com/sbmagar13</a></span>
             </div>
           </motion.div>
           
@@ -696,9 +696,9 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 1, duration: 0.5 }}
           >
-            <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white text-xs py-1 px-3 rounded-full font-mono flex items-center">
-              <span className="inline-block w-2 h-2 bg-white rounded-full mr-1.5 animate-pulse"></span>
-              v2.0 ULTRA
+            <div className="bg-gray-900/70 text-green-400 text-xs py-1 px-3 rounded-full font-mono flex items-center border border-green-500/30 backdrop-blur-sm">
+              <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-1.5 animate-pulse"></span>
+              online
             </div>
             <select
               value={visualEffect}

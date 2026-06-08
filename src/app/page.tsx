@@ -55,19 +55,31 @@ export default function Home() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // Parallax effect for background elements
+  // Parallax — throttled via rAF so mousemove doesn't repaint the blurred
+  // background more than once per animation frame.
+  const rafIdRef = useRef<number | null>(null);
+  const pendingMouseRef = useRef<{ x: number; y: number } | null>(null);
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    const { clientX, clientY } = e;
-    const { innerWidth, innerHeight } = window;
-    
-    // Update motion values based on mouse position
-    mouseX.set(clientX / innerWidth);
-    mouseY.set(clientY / innerHeight);
+    pendingMouseRef.current = {
+      x: e.clientX / window.innerWidth,
+      y: e.clientY / window.innerHeight,
+    };
+    if (rafIdRef.current !== null) return;
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      if (!pendingMouseRef.current) return;
+      mouseX.set(pendingMouseRef.current.x);
+      mouseY.set(pendingMouseRef.current.y);
+    });
   }, [mouseX, mouseY]);
-  
-  // Transform mouse position to parallax values
-  const backgroundX = useTransform(mouseX, [0, 1], [-10, 10]);
-  const backgroundY = useTransform(mouseY, [0, 1], [-10, 10]);
+
+  useEffect(() => () => {
+    if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
+  }, []);
+
+  // Smaller parallax range so the heavy blur has less area to repaint.
+  const backgroundX = useTransform(mouseX, [0, 1], [-6, 6]);
+  const backgroundY = useTransform(mouseY, [0, 1], [-6, 6]);
   
   // Particle animation refs
   const particlesRef = useRef<HTMLDivElement>(null);
@@ -186,17 +198,6 @@ export default function Home() {
     };
   }, [loading]);
   
-  // Handle scroll detection for header effects
-  useEffect(() => {
-    const handleScroll = () => {
-      // Header effect based on scroll position
-      // Apply any scroll-based effects here if needed
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   // Handle terminal commands that switch sections
   const handleTerminalCommand = (command: string) => {
     switch (command) {
@@ -329,19 +330,24 @@ export default function Home() {
       {/* Old particle background for fallback */}
       {visualEffect === 'none' && <div ref={particlesRef} className="absolute inset-0 z-0 overflow-hidden"></div>}
       
-      {/* Animated background gradients with parallax effect */}
-      <motion.div 
+      {/* Animated background gradients with parallax effect.
+          pointer-events-none keeps the bg from intercepting input.
+          will-change + translateZ promote it to its own GPU layer so the
+          blur composites cheaply during mouse parallax and scroll. */}
+      <motion.div
         ref={backgroundRef}
-        className="absolute inset-0 z-0 overflow-hidden"
-        style={{ 
+        className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
+        style={{
           x: backgroundX,
-          y: backgroundY
+          y: backgroundY,
+          willChange: 'transform',
+          transform: 'translateZ(0)',
         }}
       >
-        <div className={`absolute top-0 left-0 w-1/3 h-1/3 ${theme === 'dark' ? 'bg-green-500' : 'bg-green-300'} rounded-full filter blur-[150px] opacity-10 animate-pulse`}></div>
-        <div className={`absolute bottom-0 right-0 w-1/3 h-1/3 ${theme === 'dark' ? 'bg-blue-500' : 'bg-blue-300'} rounded-full filter blur-[150px] opacity-10 animate-pulse`} style={{ animationDelay: '1s' }}></div>
-        <div className={`absolute top-1/2 right-1/4 w-1/4 h-1/4 ${theme === 'dark' ? 'bg-purple-500' : 'bg-purple-300'} rounded-full filter blur-[150px] opacity-10 animate-pulse`} style={{ animationDelay: '2s' }}></div>
-        <div className={`absolute bottom-1/4 left-1/3 w-1/5 h-1/5 ${theme === 'dark' ? 'bg-cyan-500' : 'bg-cyan-300'} rounded-full filter blur-[150px] opacity-10 animate-pulse`} style={{ animationDelay: '3s' }}></div>
+        <div className={`absolute top-0 left-0 w-1/3 h-1/3 ${theme === 'dark' ? 'bg-green-500' : 'bg-green-300'} rounded-full filter blur-[90px] opacity-10 animate-pulse`}></div>
+        <div className={`absolute bottom-0 right-0 w-1/3 h-1/3 ${theme === 'dark' ? 'bg-blue-500' : 'bg-blue-300'} rounded-full filter blur-[90px] opacity-10 animate-pulse`} style={{ animationDelay: '1s' }}></div>
+        <div className={`absolute top-1/2 right-1/4 w-1/4 h-1/4 ${theme === 'dark' ? 'bg-purple-500' : 'bg-purple-300'} rounded-full filter blur-[90px] opacity-10 animate-pulse`} style={{ animationDelay: '2s' }}></div>
+        <div className={`absolute bottom-1/4 left-1/3 w-1/5 h-1/5 ${theme === 'dark' ? 'bg-cyan-500' : 'bg-cyan-300'} rounded-full filter blur-[90px] opacity-10 animate-pulse`} style={{ animationDelay: '3s' }}></div>
       </motion.div>
       
       <AnimatePresence mode="wait">

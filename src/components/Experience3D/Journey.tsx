@@ -5,8 +5,9 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Float, Text } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { DustMotes } from './Atmosphere';
 import CinematicEffects from './Effects';
+import LensFlare from './LensFlare';
+import ParticleStorm from './ParticleStorm';
 import { PALETTE } from './Materials';
 
 interface Milestone {
@@ -312,7 +313,26 @@ function Scene({
         );
       })}
 
-      <DustMotes count={400} radius={10} height={6} color={PALETTE.neonCyan} size={0.022} />
+      <ParticleStorm
+        count={1500}
+        bounds={[12, 6, 12]}
+        color={PALETTE.neonCyan}
+        size={6}
+        speed={0.3}
+        behavior="drift"
+        opacity={0.3}
+      />
+
+      {/* Lens flare at each milestone — small unless selected */}
+      {MILESTONES.map((m, i) => (
+        <LensFlare
+          key={`flare-${i}`}
+          position={[points[i].x, points[i].y + 0.4, points[i].z]}
+          color={m.color}
+          size={selectedIdx === i ? 2 : 1.1}
+          intensity={selectedIdx === i ? 0.8 : 0.25}
+        />
+      ))}
 
       <OrbitControls
         target={[0, 0, 0]}
@@ -351,7 +371,13 @@ export default function Journey() {
             hoveredIdx={hoveredIdx}
             setHovered={setHoveredIdx}
           />
-          <CinematicEffects bloomIntensity={1.2} bloomThreshold={0.18} bokehScale={2} dof />
+          <CinematicEffects
+            bloomIntensity={0.6}
+            bloomThreshold={0.5}
+            bokehScale={1.3}
+            chromaticAberration={0.0005}
+            dof
+          />
         </Suspense>
       </Canvas>
 

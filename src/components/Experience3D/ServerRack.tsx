@@ -5,6 +5,8 @@ import { useFrame, ThreeEvent } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { PALETTE } from './Materials';
+import AnimatedScreen, { type ScreenMode } from './AnimatedScreen';
+import EnergyPanel from './EnergyPanel';
 
 export interface RackProps {
   position: [number, number, number];
@@ -15,6 +17,7 @@ export interface RackProps {
   accent?: string;
   units?: number;
   highlighted?: boolean;
+  screenMode?: ScreenMode;
   onClick?: (e: ThreeEvent<MouseEvent>) => void;
   onHover?: (hover: boolean) => void;
 }
@@ -44,6 +47,7 @@ export default function ServerRack({
   accent = PALETTE.neonCyan,
   units = 18,
   highlighted = false,
+  screenMode = 'graph',
   onClick,
   onHover,
 }: RackProps) {
@@ -249,6 +253,63 @@ export default function ServerRack({
           <meshBasicMaterial color={accent} transparent opacity={0.5} side={THREE.DoubleSide} />
         </mesh>
       ) : null}
+
+      {/* Animated screen embedded in the upper third of the front face */}
+      <AnimatedScreen
+        position={[0, RACK_HEIGHT * 0.18, RACK_DEPTH / 2 + 0.012]}
+        size={[RACK_WIDTH * 0.6, RACK_HEIGHT * 0.12]}
+        mode={screenMode}
+        accent={accent}
+      />
+
+      {/* Energy-line shader overlay on the lower front (subtle) */}
+      <EnergyPanel
+        position={[0, -RACK_HEIGHT * 0.32, RACK_DEPTH / 2 + 0.01]}
+        size={[RACK_WIDTH * 0.7, RACK_HEIGHT * 0.18]}
+        color={accent}
+        speed={1.6}
+        density={9}
+        opacity={highlighted ? 0.85 : 0.55}
+      />
+
+      {/* Power LEDs at the bottom front */}
+      <mesh position={[-RACK_WIDTH * 0.3, -RACK_HEIGHT / 2 - 0.07, RACK_DEPTH / 2 + 0.005]}>
+        <sphereGeometry args={[0.018, 12, 12]} />
+        <meshStandardMaterial
+          color={PALETTE.ledGreen}
+          emissive={PALETTE.ledGreen}
+          emissiveIntensity={2.5}
+          toneMapped={false}
+        />
+      </mesh>
+      <mesh position={[-RACK_WIDTH * 0.24, -RACK_HEIGHT / 2 - 0.07, RACK_DEPTH / 2 + 0.005]}>
+        <sphereGeometry args={[0.018, 12, 12]} />
+        <meshStandardMaterial
+          color={statusColor}
+          emissive={statusColor}
+          emissiveIntensity={2.5}
+          toneMapped={false}
+        />
+      </mesh>
+
+      {/* Handles either side of the front face */}
+      {[-1, 1].map((d) => (
+        <mesh key={d} position={[d * (RACK_WIDTH / 2 - 0.03), -RACK_HEIGHT * 0.35, RACK_DEPTH / 2 + 0.04]}>
+          <cylinderGeometry args={[0.022, 0.022, 0.18, 8]} />
+          <meshStandardMaterial color={PALETTE.steelDark} metalness={0.9} roughness={0.35} />
+        </mesh>
+      ))}
+
+      {/* Brand mark — tiny accent text at the bottom corner of the face */}
+      <Text
+        position={[RACK_WIDTH * 0.32, -RACK_HEIGHT / 2 - 0.03, RACK_DEPTH / 2 + 0.005]}
+        fontSize={0.024}
+        letterSpacing={0.3}
+        color="#475569"
+        anchorX="center"
+      >
+        {`MODEL-${(label.length * 41) % 999}`.padStart(7, '0')}
+      </Text>
     </group>
   );
 }

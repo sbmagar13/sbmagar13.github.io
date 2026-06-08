@@ -35,15 +35,18 @@ interface Props {
  * Tuned for a dim, neon-lit data-center aesthetic.
  */
 export default function CinematicEffects({
-  bloomIntensity = 0.9,
-  bloomThreshold = 0.2,
+  // Conservative defaults — bloom should make emissive things sparkle,
+  // not turn the whole scene white. Per-scene overrides can amp these up
+  // when the composition actually calls for more glow.
+  bloomIntensity = 0.55,
+  bloomThreshold = 0.55,
   dof = true,
-  focusDistance = 0.02,
-  focalLength = 0.04,
-  bokehScale = 3,
-  vignette = 0.6,
-  noise = 0.03,
-  chromaticAberration = 0.0015,
+  focusDistance = 0.025,
+  focalLength = 0.03,
+  bokehScale = 1.6,
+  vignette = 0.55,
+  noise = 0.025,
+  chromaticAberration = 0.0006,
 }: Props) {
   return (
     <EffectComposer multisampling={0} enableNormalPass={false}>
@@ -51,8 +54,8 @@ export default function CinematicEffects({
       <Bloom
         intensity={bloomIntensity}
         luminanceThreshold={bloomThreshold}
-        luminanceSmoothing={0.15}
-        kernelSize={KernelSize.LARGE}
+        luminanceSmoothing={0.25}
+        kernelSize={KernelSize.MEDIUM}
         mipmapBlur
       />
       {dof ? (

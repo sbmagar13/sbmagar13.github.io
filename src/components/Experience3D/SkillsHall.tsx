@@ -5,8 +5,11 @@ import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, Float, Text, MeshReflectorMaterial } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { DustMotes, NeonStrip } from './Atmosphere';
+import { NeonStrip } from './Atmosphere';
 import CinematicEffects from './Effects';
+import LensFlare from './LensFlare';
+import ParticleStorm from './ParticleStorm';
+import SkillLogo, { hasCustomLogo, logoTint } from './SkillLogo';
 import { PALETTE } from './Materials';
 
 type Category =
@@ -186,7 +189,8 @@ interface PedestalProps {
 }
 
 function Pedestal({ position, skill, highlighted, hovered, onHover, onClick }: PedestalProps) {
-  const color = CATEGORY_COLORS[skill.category];
+  const hasLogo = hasCustomLogo(skill.id);
+  const color = hasLogo ? logoTint(skill.id) : CATEGORY_COLORS[skill.category];
   return (
     <group
       position={position}
@@ -217,10 +221,15 @@ function Pedestal({ position, skill, highlighted, hovered, onHover, onClick }: P
         <meshBasicMaterial color={color} transparent opacity={highlighted || hovered ? 0.9 : 0.5} />
       </mesh>
 
-      {/* Floating shape */}
-      <Float speed={1.3} floatIntensity={0.25} rotationIntensity={0.6}>
+      {/* Floating shape — custom 3D logo for highlight skills, generic
+          category shape for the rest */}
+      <Float speed={1.3} floatIntensity={0.25} rotationIntensity={hasLogo ? 0.25 : 0.6}>
         <group position={[0, 0.6, 0]} scale={highlighted ? 1.25 : hovered ? 1.12 : 1}>
-          <CategoryShape category={skill.category} color={color} />
+          {hasLogo ? (
+            <SkillLogo id={skill.id} scale={0.85} />
+          ) : (
+            <CategoryShape category={skill.category} color={color} />
+          )}
         </group>
       </Float>
 
@@ -332,7 +341,19 @@ function Scene({
       <NeonStrip start={[-6, -0.39, -3.6]} end={[6, -0.39, -3.6]} color={PALETTE.neonCyan} />
       <NeonStrip start={[-6, -0.39, 3.6]} end={[6, -0.39, 3.6]} color={PALETTE.neonMagenta} />
 
-      <DustMotes count={350} radius={10} height={4} color={PALETTE.neonCyan} size={0.02} />
+      <ParticleStorm
+        count={1500}
+        bounds={[12, 4, 12]}
+        color={PALETTE.neonCyan}
+        size={6}
+        speed={0.3}
+        behavior="drift"
+        opacity={0.28}
+      />
+
+      {/* Lens flares at the hall's far corner lights — kept far and dim */}
+      <LensFlare position={[-8, 4, -2]} color={PALETTE.neonMagenta} size={1.8} intensity={0.3} />
+      <LensFlare position={[8, 4, -2]} color={PALETTE.neonCyan} size={1.8} intensity={0.3} />
 
       <OrbitControls
         target={[0, 0.5, 0]}
@@ -372,7 +393,13 @@ export default function SkillsHall() {
             hoveredId={hoveredId}
             setHovered={setHoveredId}
           />
-          <CinematicEffects bloomIntensity={1.0} bloomThreshold={0.2} bokehScale={1.8} dof />
+          <CinematicEffects
+            bloomIntensity={0.55}
+            bloomThreshold={0.55}
+            bokehScale={1.3}
+            chromaticAberration={0.0004}
+            dof
+          />
         </Suspense>
       </Canvas>
 

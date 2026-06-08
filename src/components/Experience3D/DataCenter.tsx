@@ -7,9 +7,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import ServerRack from './ServerRack';
 import CableFlow from './CableFlow';
-import { DustMotes, VolumetricBeam, NeonStrip } from './Atmosphere';
+import { VolumetricBeam, NeonStrip } from './Atmosphere';
 import CinematicEffects from './Effects';
+import LensFlare from './LensFlare';
+import ParticleStorm from './ParticleStorm';
 import { PALETTE, statusColor } from './Materials';
+import type { ScreenMode } from './AnimatedScreen';
 
 // 11 racks = 11 projects. Real names, real statuses. Edit at will.
 interface RackData {
@@ -23,6 +26,7 @@ interface RackData {
   github?: string;
   position: [number, number, number];
   rotation?: [number, number, number];
+  screen?: ScreenMode;
 }
 
 const RACKS: RackData[] = [
@@ -39,6 +43,7 @@ const RACKS: RackData[] = [
       { label: 'Build time', value: '−62%' },
     ],
     position: [-4.5, 0, -2.5],
+    screen: 'terminal',
   },
   {
     id: 'kubernetes-monitoring',
@@ -53,6 +58,7 @@ const RACKS: RackData[] = [
       { label: 'Alerts/wk', value: '~5' },
     ],
     position: [-2.7, 0, -2.5],
+    screen: 'graph',
   },
   {
     id: 'monitoring-alerting-system',
@@ -67,6 +73,7 @@ const RACKS: RackData[] = [
       { label: 'MTTR', value: '<15m' },
     ],
     position: [-0.9, 0, -2.5],
+    screen: 'pulse',
   },
   {
     id: 'terraform-modules-library',
@@ -81,6 +88,7 @@ const RACKS: RackData[] = [
       { label: 'Modules', value: '18' },
     ],
     position: [0.9, 0, -2.5],
+    screen: 'htop',
   },
   {
     id: 'python-web-platform',
@@ -95,6 +103,7 @@ const RACKS: RackData[] = [
       { label: 'p95', value: '120ms' },
     ],
     position: [2.7, 0, -2.5],
+    screen: 'logs',
   },
   {
     id: 'devops-ai-assistant',
@@ -105,6 +114,7 @@ const RACKS: RackData[] = [
       'Personal AI assistant that automates routine DevOps tasks using LLMs and MCP frameworks for tool integration.',
     tech: ['Python', 'LLMs', 'MCP', 'AI Agents'],
     position: [4.5, 0, -2.5],
+    screen: 'matrix',
   },
   // Row 2 (facing the other way)
   {
@@ -117,6 +127,7 @@ const RACKS: RackData[] = [
     tech: ['Python', 'LLMs', 'Terraform'],
     position: [-4.5, 0, 2.5],
     rotation: [0, Math.PI, 0],
+    screen: 'graph',
   },
   {
     id: 'llm-code-reviewer',
@@ -129,6 +140,7 @@ const RACKS: RackData[] = [
     metrics: [{ label: 'Uptime', value: '94.3%' }],
     position: [-2.7, 0, 2.5],
     rotation: [0, Math.PI, 0],
+    screen: 'terminal',
   },
   {
     id: 'mcp-agent-framework',
@@ -140,6 +152,7 @@ const RACKS: RackData[] = [
     tech: ['TypeScript', 'MCP', 'Node.js'],
     position: [-0.9, 0, 2.5],
     rotation: [0, Math.PI, 0],
+    screen: 'matrix',
   },
   {
     id: 'mcp-tools-explorer',
@@ -151,6 +164,7 @@ const RACKS: RackData[] = [
     tech: ['TypeScript', 'MCP', 'Node.js'],
     position: [0.9, 0, 2.5],
     rotation: [0, Math.PI, 0],
+    screen: 'terminal',
   },
   {
     id: 'kubernetes-cluster-planner',
@@ -162,6 +176,7 @@ const RACKS: RackData[] = [
     tech: ['Kubernetes', 'Go', 'Planning'],
     position: [2.7, 0, 2.5],
     rotation: [0, Math.PI, 0],
+    screen: 'htop',
   },
 ];
 
@@ -306,8 +321,30 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered }: SceneProps) {
         />
       ))}
 
-      {/* Atmospheric dust */}
-      <DustMotes count={500} radius={12} height={6} color={PALETTE.neonCyan} size={0.025} />
+      {/* Atmospheric dust — main drift layer only. Toned down so the
+          racks read cleanly. */}
+      <ParticleStorm
+        count={2000}
+        bounds={[16, 6, 14]}
+        color={PALETTE.neonCyan}
+        size={6}
+        speed={0.35}
+        behavior="drift"
+        opacity={0.3}
+      />
+
+      {/* Lens flares at the top of every spot light — kept small enough
+          that 11 of them aren't dominating the frame. */}
+      {RACKS.map((r) => (
+        <LensFlare
+          key={`flare-${r.id}`}
+          position={[r.position[0], 3.7, r.position[2]]}
+          color={activeId === r.id ? '#ffffff' : PALETTE.neonCyan}
+          size={activeId === r.id ? 2.4 : 1.4}
+          intensity={activeId === r.id ? 0.9 : 0.3}
+          pulse
+        />
+      ))}
 
       {/* The racks */}
       {RACKS.map((r) => (
@@ -318,6 +355,7 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered }: SceneProps) {
           label={r.label}
           sublabel={r.sublabel}
           statusColor={statusColor(r.status)}
+          screenMode={r.screen}
           accent={
             activeId === r.id
               ? PALETTE.ledWhite
@@ -392,7 +430,12 @@ export default function DataCenter() {
             hoveredId={hoveredId}
             setHovered={setHoveredId}
           />
-          <CinematicEffects bloomIntensity={1.1} bloomThreshold={0.15} bokehScale={2.2} />
+          <CinematicEffects
+            bloomIntensity={0.6}
+            bloomThreshold={0.55}
+            bokehScale={1.4}
+            chromaticAberration={0.0005}
+          />
         </Suspense>
       </Canvas>
 

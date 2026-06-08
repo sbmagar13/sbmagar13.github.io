@@ -51,9 +51,8 @@ void main() {
   float noise = hash(floor(uTime * 30.0) + uv.y * 100.0) * 0.05;
   color += noise;
 
-  // Cyan/cool tint mix — keep enough of the real colors to recognize the face,
-  // but tilt the palette to feel like a projection.
-  color = mix(color, uTint * (0.4 + dot(color, vec3(0.3, 0.6, 0.1))), 0.45);
+  // Cool tint — lighter mix so the actual face stays recognizable.
+  color = mix(color, uTint * (0.4 + dot(color, vec3(0.3, 0.6, 0.1))), 0.22);
 
   // Edge fade so it doesn't look like a hard-edged photo.
   float edge = smoothstep(0.0, 0.08, uv.x)
@@ -91,7 +90,7 @@ export default function HoloPlate({
       uOpacity: { value: opacity },
       uTint: { value: new THREE.Color(tint) },
       uScanlineFreq: { value: 220 },
-      uRgbSplit: { value: 0.004 },
+      uRgbSplit: { value: 0.0022 },
     }),
     [texture, opacity, tint],
   );
@@ -116,31 +115,27 @@ export default function HoloPlate({
         />
       </mesh>
 
-      {/* Glow halo behind the plate */}
+      {/* A dark backplate so the photo reads against the void instead of
+          competing with whatever's behind it. */}
       <mesh position={[0, 0, -0.02]}>
-        <planeGeometry args={[size[0] * 1.18, size[1] * 1.12]} />
-        <meshBasicMaterial
-          color={tint}
-          transparent
-          opacity={0.12}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
+        <planeGeometry args={[size[0] * 1.04, size[1] * 1.04]} />
+        <meshBasicMaterial color="#020617" transparent opacity={0.65} depthWrite={false} />
       </mesh>
 
-      {/* Edge frame — thin glowing rectangle to read as a "panel" */}
+      {/* Edge frame — thin lit rectangle to read as a "panel". Emissive
+          intensity kept low so bloom doesn't turn the border into a halo. */}
       {[
-        { p: [0, size[1] / 2, 0.01], s: [size[0] * 1.04, 0.018, 0.005] },
-        { p: [0, -size[1] / 2, 0.01], s: [size[0] * 1.04, 0.018, 0.005] },
-        { p: [-size[0] / 2, 0, 0.01], s: [0.018, size[1] * 1.04, 0.005] },
-        { p: [size[0] / 2, 0, 0.01], s: [0.018, size[1] * 1.04, 0.005] },
+        { p: [0, size[1] / 2, 0.01], s: [size[0] * 1.04, 0.014, 0.005] },
+        { p: [0, -size[1] / 2, 0.01], s: [size[0] * 1.04, 0.014, 0.005] },
+        { p: [-size[0] / 2, 0, 0.01], s: [0.014, size[1] * 1.04, 0.005] },
+        { p: [size[0] / 2, 0, 0.01], s: [0.014, size[1] * 1.04, 0.005] },
       ].map((side, i) => (
         <mesh key={i} position={side.p as [number, number, number]}>
           <boxGeometry args={side.s as [number, number, number]} />
           <meshStandardMaterial
             color={tint}
             emissive={tint}
-            emissiveIntensity={2}
+            emissiveIntensity={0.6}
             toneMapped={false}
           />
         </mesh>

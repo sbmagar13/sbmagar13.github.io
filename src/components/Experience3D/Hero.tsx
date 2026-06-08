@@ -5,8 +5,10 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, OrbitControls, MeshDistortMaterial, Text, ContactShadows } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import * as THREE from 'three';
-import { DustMotes, VolumetricBeam, NeonStrip } from './Atmosphere';
+import { VolumetricBeam, NeonStrip } from './Atmosphere';
 import CinematicEffects from './Effects';
+import LensFlare from './LensFlare';
+import ParticleStorm from './ParticleStorm';
 import { PALETTE } from './Materials';
 
 // Floating geodesic shards that drift around the title. Each one is a real
@@ -120,7 +122,29 @@ function Scene() {
       {/* Single beam from above */}
       <VolumetricBeam position={[0, 3, 0]} height={5} bottomRadius={2.5} opacity={0.05} />
 
-      <DustMotes count={500} radius={10} height={6} color={PALETTE.neonCyan} size={0.025} />
+      {/* Two parallax layers — main drift for atmosphere, distant orbit
+          for depth. Opacities kept low so the title is the focal point. */}
+      <ParticleStorm
+        count={1800}
+        bounds={[14, 7, 14]}
+        color={PALETTE.neonCyan}
+        size={7}
+        speed={0.3}
+        behavior="drift"
+        opacity={0.3}
+      />
+      <ParticleStorm
+        count={400}
+        bounds={[10, 5, 10]}
+        color={PALETTE.neonMagenta}
+        size={14}
+        speed={0.7}
+        behavior="orbit"
+        opacity={0.18}
+      />
+
+      {/* Small accent flare behind the orb, not in front. */}
+      <LensFlare position={[0, 0.4, -1.4]} color={PALETTE.neonMagenta} size={2.2} intensity={0.45} />
 
       <OrbitControls
         target={[0, 0.2, 0]}
@@ -148,7 +172,13 @@ export default function Hero({ onEnter }: { onEnter?: () => void }) {
         <fog attach="fog" args={['#020617', 7, 22]} />
         <Suspense fallback={null}>
           <Scene />
-          <CinematicEffects bloomIntensity={1.5} bloomThreshold={0.15} bokehScale={2.4} dof />
+          <CinematicEffects
+            bloomIntensity={0.7}
+            bloomThreshold={0.5}
+            bokehScale={1.4}
+            chromaticAberration={0.0005}
+            dof
+          />
         </Suspense>
       </Canvas>
 

@@ -6,8 +6,10 @@ import { Float, OrbitControls, Text, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 import HoloPlate from './HoloPlate';
 import HoloProjector from './HoloProjector';
-import { DustMotes } from './Atmosphere';
 import CinematicEffects from './Effects';
+import LensFlare from './LensFlare';
+import ParticleStorm from './ParticleStorm';
+import useMouseParallax from './useMouseParallax';
 import { PALETTE } from './Materials';
 
 // Particles that rise through the projection beam.
@@ -126,6 +128,35 @@ function StatPanel({
   );
 }
 
+function PlateWithParallax({ imageUrl }: { imageUrl: string }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const mouse = useMouseParallax();
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    // Tilt toward the cursor — small angle, smoothed.
+    const targetRotY = mouse.current.x * 0.3;
+    const targetRotX = mouse.current.y * -0.18;
+    groupRef.current.rotation.y += (targetRotY - groupRef.current.rotation.y) * 0.05;
+    groupRef.current.rotation.x += (targetRotX - groupRef.current.rotation.x) * 0.05;
+    // Slight breathing/idle drift on top of the parallax.
+    groupRef.current.position.y =
+      1.05 + Math.sin(state.clock.elapsedTime * 0.8) * 0.03;
+  });
+
+  return (
+    <group ref={groupRef} position={[0, 1.05, 0]}>
+      <HoloPlate
+        imageUrl={imageUrl}
+        position={[0, 0, 0]}
+        size={[2.4, 3.0]}
+        tint={PALETTE.neonCyan}
+        opacity={0.95}
+      />
+    </group>
+  );
+}
+
 function Scene({ imageUrl }: { imageUrl: string }) {
   return (
     <>
@@ -135,16 +166,13 @@ function Scene({ imageUrl }: { imageUrl: string }) {
       <pointLight position={[-4, 2, -3]} intensity={1.1} color={PALETTE.neonMagenta} distance={14} />
       <pointLight position={[0, -2, 4]} intensity={0.7} color={PALETTE.neonPurple} distance={10} />
 
-      {/* The photo as a holographic plate */}
-      <Float speed={1.2} floatIntensity={0.25} rotationIntensity={0.05}>
-        <HoloPlate
-          imageUrl={imageUrl}
-          position={[0, 1.05, 0]}
-          size={[2.4, 3.0]}
-          tint={PALETTE.neonCyan}
-          opacity={0.95}
-        />
-      </Float>
+      {/* One small, off-axis flare so it doesn't blow out the face. The
+          second light source is intentionally not flared — too much
+          additive bloom around the photo washes it out. */}
+      <LensFlare position={[6, 3.5, 4]} color={PALETTE.neonCyan} size={1.6} intensity={0.4} pulse={false} />
+
+      {/* The photo as a holographic plate (with cursor parallax) */}
+      <PlateWithParallax imageUrl={imageUrl} />
 
       {/* Projector base */}
       <HoloProjector position={[0, -1.7, 0]} beamHeight={4.2} beamColor={PALETTE.neonCyan} />
@@ -171,7 +199,17 @@ function Scene({ imageUrl }: { imageUrl: string }) {
       <StatPanel position={[-2.9, -0.6, 0.4]} label="Location" value="Nepal" color={PALETTE.neonPurple} />
 
       {/* Atmospheric dust at distance */}
-      <DustMotes count={250} radius={8} height={6} color={PALETTE.neonCyan} size={0.018} />
+      {/* Background atmosphere only — kept distant and dim so it doesn't
+          fight with the photo for attention. No close-in orbital particles. */}
+      <ParticleStorm
+        count={1200}
+        bounds={[12, 5, 12]}
+        color={PALETTE.neonCyan}
+        size={5}
+        speed={0.25}
+        behavior="drift"
+        opacity={0.25}
+      />
 
       <OrbitControls
         target={[0, 0.5, 0]}
@@ -201,7 +239,15 @@ export default function Avatar({ imageUrl = '/sagar-mountains.jpg' }: { imageUrl
         <fog attach="fog" args={['#020617', 6, 18]} />
         <Suspense fallback={null}>
           <Scene imageUrl={imageUrl} />
-          <CinematicEffects bloomIntensity={1.4} bloomThreshold={0.18} bokehScale={2.5} dof />
+          {/* Less bloom + higher threshold so only true highlights glow.
+              Smaller DoF so the photo stays readable. */}
+          <CinematicEffects
+            bloomIntensity={0.5}
+            bloomThreshold={0.7}
+            bokehScale={1.2}
+            chromaticAberration={0.0004}
+            dof
+          />
         </Suspense>
       </Canvas>
 

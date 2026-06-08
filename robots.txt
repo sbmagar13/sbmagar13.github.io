@@ -1,0 +1,5 @@
+User-Agent: *
+Allow: /
+
+Host: https://sagarbudhathoki.com
+Sitemap: https://sagarbudhathoki.com/sitemap.xml

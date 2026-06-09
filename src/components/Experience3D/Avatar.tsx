@@ -164,10 +164,10 @@ function Scene({ imageUrl }: { imageUrl: string }) {
           page reads as Sagar's actual story rather than a template. */}
       <StatPanel position={[2.3, 1.4, 0.2]} label="Role" value="Senior DevOps · SRE" color={PALETTE.neonCyan} />
       <StatPanel position={[2.4, 0.3, 0.4]} label="Specialty" value="Sole platform owner" color={PALETTE.neonMagenta} />
-      <StatPanel position={[2.2, -0.7, 0.1]} label="Built" value="Multi-region DR" color={PALETTE.neonPurple} />
+      <StatPanel position={[2.2, -0.7, 0.1]} label="Built" value="Cross-region DR" color={PALETTE.neonPurple} />
 
       <StatPanel position={[-2.3, 1.4, 0.2]} label="Forte" value="Python + AI Agents" color={PALETTE.neonCyan} />
-      <StatPanel position={[-2.4, 0.3, 0.4]} label="Lately" value="MCP for Claude" color={PALETTE.neonMagenta} />
+      <StatPanel position={[-2.4, 0.3, 0.4]} label="Lately" value="AI agents for DevOps" color={PALETTE.neonMagenta} />
       <StatPanel position={[-2.2, -0.7, 0.1]} label="Based in" value="Kathmandu · remote" color={PALETTE.neonPurple} />
 
       {/* Atmospheric dust at distance */}

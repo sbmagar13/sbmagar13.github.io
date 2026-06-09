@@ -64,17 +64,17 @@ const MILESTONES: Milestone[] = [
   },
   {
     year: '2025',
-    title: 'Observability + AI tooling',
+    title: 'Observability + first MCP work',
     description:
-      'Deployed self-hosted OneUptime on K3s in eu-central-1 for status pages, uptime monitoring, and on-call. OpenTelemetry collector dual-exports to OneUptime and Loki so observability survives a primary-region outage. Built the Hashnode MCP server connecting Claude to content APIs.',
+      'Deployed self-hosted OneUptime on K3s in eu-central-1 for status pages, uptime monitoring, and on-call. OpenTelemetry collector dual-exports to OneUptime and Loki so observability survives a primary-region outage. Shipped an open-source Hashnode MCP server for Claude (later shelved when Hashnode terminated their public API).',
     shape: 'helix',
     color: PALETTE.neonPurple,
   },
   {
     year: '2026',
-    title: 'Now: platform + portfolio',
+    title: 'Agentic DevOps + platform hardening',
     description:
-      'Still running EventLogic end to end. Hardening the multi-region story, scaling tenant onboarding, sharpening SLOs, and writing more about the reliability work behind it. Shipped this 3D portfolio as the public face of the practice. Open to remote senior DevOps / SRE roles.',
+      'Still running the production platform end to end. Hardening the multi-region story, sharpening SLOs, and going deep on AI agents for DevOps work: MCP, LangGraph, local LLM inference, self-learning side projects that wrap real ops tasks. Shipped this 3D portfolio as the public face of the practice. Open to remote senior DevOps / SRE roles.',
     shape: 'orb',
     color: PALETTE.neonCyan,
   },

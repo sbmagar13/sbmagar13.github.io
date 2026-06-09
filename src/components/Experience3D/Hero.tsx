@@ -87,10 +87,10 @@ const STORIES: Record<ToolId, { tool: string; title: string; when: string; body:
   },
   mcp: {
     tool: 'Anthropic MCP',
-    title: 'Hashnode MCP server for Claude',
+    title: 'AI agents for DevOps work',
     when: '2025 — present',
     body:
-      'Open-source Model Context Protocol server connecting AI assistants such as Claude to the Hashnode API for content creation, management, and search. Live on GitHub.',
+      'Self-learning track. Building MCP-based agents that wrap real DevOps tasks (log triage, runbook prompts, infra analysis) so Claude and similar assistants can drive them. Earlier built a Hashnode MCP server, which is shelved now that Hashnode has terminated their public API. Current focus is the broader agentic-DevOps stack: MCP, LangGraph, local LLM inference.',
   },
 };
 
@@ -235,11 +235,11 @@ function Scene({ onPick, picked }: SceneProps) {
 }
 
 const STAT_CARDS: { label: string; value: string; sub?: string; color: string }[] = [
-  { label: 'Experience', value: '4+ Years', color: 'text-cyan-300' },
+  { label: 'Experience', value: '5+ Years', color: 'text-cyan-300' },
   { label: 'Owns', value: 'Multi-tenant event SaaS', sub: 'Grails · ECS Fargate · Aurora', color: 'text-purple-300' },
   { label: 'Built', value: 'Cross-region DR', sub: 'Aurora Global · EFS · ECR', color: 'text-orange-300' },
   { label: 'Top Lang', value: 'Python', color: 'text-cyan-200' },
-  { label: 'Building', value: 'Hashnode MCP', sub: 'For Claude · open-source', color: 'text-emerald-300' },
+  { label: 'Building', value: 'AI Agents for DevOps', sub: 'self-learning projects', color: 'text-emerald-300' },
 ];
 
 export default function Hero({ onEnter, active = true }: { onEnter?: () => void; active?: boolean }) {

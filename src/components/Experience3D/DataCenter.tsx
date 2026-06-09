@@ -168,10 +168,10 @@ const RACKS: RackData[] = [
   {
     id: 'hashnode-mcp',
     label: 'hashnode-mcp',
-    sublabel: 'MCP server for Claude',
-    status: 'In Progress',
+    sublabel: 'shelved · API terminated',
+    status: 'Completed',
     description:
-      'Model Context Protocol server connecting AI assistants like Claude to the Hashnode API for content creation, management, and search. Open-source on GitHub.',
+      'Open-source Model Context Protocol server that wired AI assistants like Claude into the Hashnode content API. Shelved after Hashnode terminated public API access. The pattern lives on in the broader agentic-DevOps work.',
     tech: ['Python', 'MCP', 'Hashnode API'],
     github: 'https://github.com/sbmagar13/hashnode-mcp-server',
     position: [0.9, 0, 2.5],

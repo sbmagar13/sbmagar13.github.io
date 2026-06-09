@@ -393,7 +393,7 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
       </Canvas>
 
       {/* Heading */}
-      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/45 backdrop-blur-sm border border-cyan-500/20">
+      <div className="hidden sm:block pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/45 backdrop-blur-sm border border-cyan-500/20">
         <div className="font-mono text-[11px] tracking-[0.32em] text-cyan-300 uppercase">
           Career arc
         </div>

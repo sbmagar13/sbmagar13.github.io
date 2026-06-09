@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, Suspense } from 'react';
+import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import HolographicHUD from '@/components/Experience3D/HolographicHUD';
@@ -8,6 +8,7 @@ import HoloCursor from '@/components/Experience3D/HoloCursor';
 import CinematicIntro from '@/components/Experience3D/CinematicIntro';
 import SceneWarp from '@/components/Experience3D/SceneWarp';
 import Achievements, { type Achievement } from '@/components/Experience3D/Achievements';
+import { usePerfTier } from '@/components/Experience3D/usePerfTier';
 
 // Heavy 3D scenes, lazy-loaded so navigation between sections only
 // pays for what it shows.
@@ -57,11 +58,19 @@ const KONAMI = [
 ];
 
 export default function Experience3DPage() {
+  const tier = usePerfTier();
+  const isLow = tier === 'low';
   const [section, setSection] = useState<Section>('hero');
-  // Once a section is visited it stays mounted. Switching back is now
-  // instant because the WebGL context, shaders and textures are still in
-  // memory. First visit pays the mount cost; subsequent visits are free.
+  // Once a section is visited it stays mounted on desktop, so switching
+  // back is instant. On mobile this strategy explodes (5 WebGL contexts
+  // active at once on phone GPUs), so phones get mount-on-demand:
+  // mountedSections always equals { section } and the previous scene
+  // unmounts when you navigate away.
   const [visited, setVisited] = useState<Set<Section>>(new Set(['hero']));
+  const mountedSections = useMemo(
+    () => (isLow ? new Set<Section>([section]) : visited),
+    [isLow, section, visited],
+  );
   // Intro shows once per browser session.
   const [showIntro, setShowIntro] = useState(false);
   // Konami code easter egg.
@@ -143,7 +152,11 @@ export default function Experience3DPage() {
   // therefore instant, no Canvas init or shader compile. Staggered so
   // four Canvases don't initialize on the same frame (which would cause
   // a single noticeable spike on the Hero scene).
+  //
+  // Skipped on mobile. Five concurrent WebGL contexts will OOM a phone
+  // GPU; better to pay a brief remount cost on each tab switch.
   useEffect(() => {
+    if (isLow) return;
     const order: Section[] = ['avatar', 'projects', 'journey', 'skills'];
     const timers: ReturnType<typeof setTimeout>[] = [];
     order.forEach((id, i) => {
@@ -159,7 +172,7 @@ export default function Experience3DPage() {
       );
     });
     return () => timers.forEach(clearTimeout);
-  }, []);
+  }, [isLow]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -213,27 +226,36 @@ export default function Experience3DPage() {
             transition={{ duration: 0.3 }}
             className="fixed top-0 left-0 right-0 z-40 px-6 py-4 flex items-center justify-between bg-gradient-to-b from-slate-950/80 to-transparent backdrop-blur-sm pointer-events-none"
           >
+            {/* Brand hidden on mobile so the nav has room. The home dot
+                on the left edge replaces it. */}
             <button
               onClick={() => setSection('hero')}
-              className="font-mono text-sm tracking-[0.3em] text-cyan-300/90 hover:text-white transition-colors pointer-events-auto"
+              className="hidden sm:inline-block font-mono text-sm tracking-[0.3em] text-cyan-300/90 hover:text-white transition-colors pointer-events-auto"
             >
               SAGAR BUDHATHOKI
             </button>
-            <nav className="flex items-center gap-1 pointer-events-auto">
+            <button
+              onClick={() => setSection('hero')}
+              className="sm:hidden font-mono text-base tracking-widest text-cyan-300 hover:text-white transition-colors pointer-events-auto"
+              aria-label="Home"
+            >
+              SB
+            </button>
+            <nav className="flex items-center gap-0 sm:gap-1 pointer-events-auto">
               {SECTIONS.filter((s) => s.id !== 'hero').map((s) => (
                 <button
                   key={s.id}
                   onClick={() => setSection(s.id)}
-                  className={`relative px-4 py-2 font-mono text-xs tracking-widest transition-colors ${
+                  className={`relative px-2 sm:px-4 py-2 font-mono text-[10px] sm:text-xs tracking-widest transition-colors ${
                     section === s.id ? 'text-cyan-300' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   {s.label}
-                  <span className="ml-2 text-[10px] text-purple-300/70">[{s.key}]</span>
+                  <span className="hidden sm:inline ml-2 text-[10px] text-purple-300/70">[{s.key}]</span>
                   {section === s.id ? (
                     <motion.div
                       layoutId="navActive"
-                      className="absolute -bottom-0.5 left-2 right-2 h-px bg-cyan-300"
+                      className="absolute -bottom-0.5 left-1 right-1 sm:left-2 sm:right-2 h-px bg-cyan-300"
                     />
                   ) : null}
                 </button>
@@ -241,7 +263,7 @@ export default function Experience3DPage() {
             </nav>
             <a
               href="/terminal"
-              className="font-mono text-xs tracking-widest text-purple-300 border border-purple-500/30 hover:bg-purple-500/10 px-4 py-2 rounded transition-colors pointer-events-auto"
+              className="hidden sm:inline-block font-mono text-xs tracking-widest text-purple-300 border border-purple-500/30 hover:bg-purple-500/10 px-4 py-2 rounded transition-colors pointer-events-auto"
             >
               TERMINAL
             </a>
@@ -257,7 +279,7 @@ export default function Experience3DPage() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -50, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed left-4 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3"
+            className="hidden sm:flex fixed left-4 top-1/2 -translate-y-1/2 z-40 flex-col gap-3"
           >
             {SECTIONS.filter((s) => s.id !== 'hero').map((s) => (
               <button
@@ -279,9 +301,10 @@ export default function Experience3DPage() {
         ) : null}
       </AnimatePresence>
 
-      {/* Keyboard shortcuts hint (bottom-left) */}
+      {/* Keyboard shortcuts hint (bottom-left). Hidden on touch
+          devices, those users can't type a/d anyway. */}
       {section !== 'hero' ? (
-        <div className="fixed bottom-6 left-6 z-30 font-mono text-[10px] text-slate-500/70 leading-relaxed pointer-events-none">
+        <div className="hidden sm:block fixed bottom-6 left-6 z-30 font-mono text-[10px] text-slate-500/70 leading-relaxed pointer-events-none">
           <div className="opacity-70 tracking-widest uppercase mb-1">Shortcuts</div>
           <div>← / a · prev</div>
           <div>→ / d · next</div>
@@ -296,7 +319,7 @@ export default function Experience3DPage() {
           inactive scenes is paused (frameloop="never") via the `active`
           prop, so GPU/CPU isn't spent rendering scenes you can't see. */}
       {(['hero', 'avatar', 'journey', 'projects', 'skills'] as const).map((id) => {
-        if (!visited.has(id)) return null;
+        if (!mountedSections.has(id)) return null;
         const isActive = section === id;
         return (
           <motion.div
@@ -328,8 +351,9 @@ export default function Experience3DPage() {
       })}
 
       {/* Persistent holographic HUD overlay (hidden on Hero so the title
-          can breathe). Sits above the scene but below the header. */}
-      <HolographicHUD hidden={section === 'hero'} section={section} />
+          can breathe). Also hidden on phones, where the corner widgets
+          collide with the navigation and cost paints we can't afford. */}
+      <HolographicHUD hidden={section === 'hero' || isLow} section={section} />
 
       {/* Holographic cursor (hidden on touch devices automatically) */}
       <HoloCursor />

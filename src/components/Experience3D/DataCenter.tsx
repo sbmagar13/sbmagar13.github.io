@@ -518,7 +518,7 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
 
       {/* Heading, kept high-contrast and the eyebrow text big enough to
           read against the busy scene below. */}
-      <div className="pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/45 backdrop-blur-sm border border-cyan-500/20">
+      <div className="hidden sm:block pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/45 backdrop-blur-sm border border-cyan-500/20">
         <div className="font-mono text-[11px] tracking-[0.32em] text-cyan-300 uppercase">
           Production environment
         </div>

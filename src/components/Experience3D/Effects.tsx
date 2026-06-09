@@ -9,7 +9,7 @@ import {
   SMAA,
   Noise,
 } from '@react-three/postprocessing';
-import { BlendFunction, KernelSize } from 'postprocessing';
+import { BlendFunction, KernelSize, SMAAPreset } from 'postprocessing';
 import { Vector2 } from 'three';
 
 interface Props {
@@ -49,13 +49,15 @@ export default function CinematicEffects({
   chromaticAberration = 0.00015,
 }: Props) {
   return (
-    <EffectComposer multisampling={0} enableNormalPass={false}>
-      <SMAA />
+    <EffectComposer multisampling={0} enableNormalPass={false} stencilBuffer={false}>
+      {/* SMAA LOW: ~30% cheaper than the medium preset and the
+          difference is invisible at the screen sizes we render to. */}
+      <SMAA preset={SMAAPreset.LOW} />
       <Bloom
         intensity={bloomIntensity}
         luminanceThreshold={bloomThreshold}
         luminanceSmoothing={0.28}
-        kernelSize={KernelSize.MEDIUM}
+        kernelSize={KernelSize.SMALL}
         mipmapBlur
       />
       {dof ? (

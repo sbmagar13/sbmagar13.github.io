@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -39,26 +39,30 @@ const SYSTEM_LOG = [
  * Everything is pointer-events: none so it never blocks the 3D below.
  */
 export default function HolographicHUD({ hidden = false, section }: Props) {
-  const [now, setNow] = useState(() => new Date());
+  // Clock + uptime tick once per second. They used to live in React
+  // state, which meant the HUD re-rendered every second. Now they're
+  // ref-driven so the React tree stays static and only two textContent
+  // strings change.
+  const timeRef = useRef<HTMLDivElement>(null);
+  const uptimeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
+    const tick = () => {
+      const now = new Date();
+      const diff = now.getTime() - CAREER_START.getTime();
+      const days = Math.floor(diff / 86_400_000);
+      const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+      const minutes = Math.floor((diff % 3_600_000) / 60_000);
+      if (timeRef.current) timeRef.current.textContent = now.toISOString().slice(11, 19) + ' UTC';
+      if (uptimeRef.current) {
+        uptimeRef.current.textContent =
+          `${days}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m`;
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-
-  const uptime = useMemo(() => {
-    const diff = now.getTime() - CAREER_START.getTime();
-    const days = Math.floor(diff / 86_400_000);
-    const hours = Math.floor((diff % 86_400_000) / 3_600_000);
-    const minutes = Math.floor((diff % 3_600_000) / 60_000);
-    return { days, hours, minutes };
-  }, [now]);
-
-  const timeStr = useMemo(
-    () =>
-      now.toISOString().slice(11, 19) + ' UTC',
-    [now],
-  );
 
   return (
     <AnimatePresence>
@@ -81,12 +85,9 @@ export default function HolographicHUD({ hidden = false, section }: Props) {
               </div>
               <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
                 <div className="text-slate-500 uppercase tracking-widest">Now</div>
-                <div className="text-cyan-100 tabular-nums">{timeStr}</div>
+                <div ref={timeRef} className="text-cyan-100 tabular-nums" />
                 <div className="text-slate-500 uppercase tracking-widest">Career</div>
-                <div className="text-cyan-100 tabular-nums">
-                  {uptime.days}d {String(uptime.hours).padStart(2, '0')}h{' '}
-                  {String(uptime.minutes).padStart(2, '0')}m
-                </div>
+                <div ref={uptimeRef} className="text-cyan-100 tabular-nums" />
               </div>
             </div>
           </div>
@@ -135,16 +136,24 @@ function CornerBrackets({ color = 'border-cyan-300' }: { color?: string }) {
 }
 
 // A small counter that just ticks upward, giving the "frames captured"
-// look of a real telemetry monitor.
+// look of a real telemetry monitor. The number was previously held in
+// React state which meant a re-render 30 times per second just to draw
+// a number. Now it's a ref + direct innerText so no React work fires.
 function FrameTicker() {
-  const [frame, setFrame] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const frameRef = useRef(0);
   useEffect(() => {
-    const id = setInterval(() => setFrame((f) => (f + 1) % 1_000_000), 33);
+    const id = setInterval(() => {
+      frameRef.current = (frameRef.current + 1) % 1_000_000;
+      if (ref.current) {
+        ref.current.textContent = String(frameRef.current).padStart(6, '0');
+      }
+    }, 33);
     return () => clearInterval(id);
   }, []);
   return (
     <div className="mt-1 text-[10px] text-slate-400 tabular-nums">
-      frame <span className="text-purple-200">{String(frame).padStart(6, '0')}</span>
+      frame <span ref={ref} className="text-purple-200">000000</span>
     </div>
   );
 }

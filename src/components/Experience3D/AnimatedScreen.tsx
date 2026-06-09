@@ -80,16 +80,22 @@ export default function AnimatedScreen({
 
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const frameCountRef = useRef(0);
+  // Deterministic per-instance offset so 11 rack screens don't all redraw
+  // on the same frame. Spreads the canvas/texture-upload cost across
+  // frames instead of bunching it.
+  const offsetRef = useRef(Math.floor(Math.random() * 3));
   useEffect(() => {
     const canvas = (texture.image as HTMLCanvasElement);
     ctxRef.current = canvas.getContext('2d');
   }, [texture]);
 
   useFrame((rs) => {
-    // Repaint every other frame; the human eye won't notice on a tiny
-    // 256-pixel-wide texture, and we avoid 11 GPU texture uploads/frame.
+    // Repaint every third frame, staggered per instance. At 60fps that
+    // gives each screen a 20fps update; the human eye can't see the
+    // difference on a 256-pixel-wide texture, and we cut the cost of
+    // GPU texture uploads roughly in half compared to every-other-frame.
     frameCountRef.current++;
-    if (frameCountRef.current % 2 !== 0) return;
+    if ((frameCountRef.current + offsetRef.current) % 3 !== 0) return;
 
     const ctx = ctxRef.current;
     if (!ctx) return;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface Counter {
   label: string;
@@ -29,36 +29,38 @@ function format(n: number, abbreviate?: boolean): string {
   return Math.floor(n).toString();
 }
 
+function renderValue(label: string, v: number, abbreviate?: boolean): string {
+  if (label === 'SLO budget') return v.toFixed(3);
+  return format(v, abbreviate);
+}
+
 /**
  * Floating activity strip for the Hero. Four plausible production
  * metrics that increment over time so the page feels live even when
- * nothing's happening. Deploys creep upward, packets tick fast,
- * latency wobbles around a baseline, SLO budget drifts.
+ * nothing's happening.
+ *
+ * The values used to live in React state, which meant a full subtree
+ * re-render once per second. Now they live in refs and the visible
+ * numbers are updated via direct DOM textContent. No React work per
+ * tick, no reconciliation, no GC churn.
  */
 export default function LiveCounters() {
-  const [values, setValues] = useState<number[]>(COUNTERS.map((c) => c.base));
+  const valueRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const valuesRef = useRef<number[]>(COUNTERS.map((c) => c.base));
 
   useEffect(() => {
     const id = setInterval(() => {
-      setValues((prev) =>
-        prev.map((v, i) => {
-          const c = COUNTERS[i];
-          if (c.label === 'p95 latency') {
-            // wobble around ~120ms
-            return 110 + Math.random() * 25;
-          }
-          if (c.label === 'SLO budget') {
-            // drift very slowly between 99.95 and 99.99
-            return 99.95 + Math.random() * 0.04;
-          }
-          if (c.label === 'Deploys today') {
-            // a deploy lands every 30-90s on average
-            return v + (Math.random() < c.rate / 8 ? 1 : 0);
-          }
-          // Packets, ticking fast
-          return v + Math.round(c.rate * (0.7 + Math.random() * 0.6));
-        }),
-      );
+      valuesRef.current = valuesRef.current.map((v, i) => {
+        const c = COUNTERS[i];
+        if (c.label === 'p95 latency') return 110 + Math.random() * 25;
+        if (c.label === 'SLO budget') return 99.95 + Math.random() * 0.04;
+        if (c.label === 'Deploys today') return v + (Math.random() < c.rate / 8 ? 1 : 0);
+        return v + Math.round(c.rate * (0.7 + Math.random() * 0.6));
+      });
+      valuesRef.current.forEach((v, i) => {
+        const el = valueRefs.current[i];
+        if (el) el.textContent = renderValue(COUNTERS[i].label, v, COUNTERS[i].abbreviate);
+      });
     }, 1000);
     return () => clearInterval(id);
   }, []);
@@ -78,12 +80,15 @@ export default function LiveCounters() {
             {c.label}
           </div>
           <div className={`text-base tabular-nums ${c.color}`}>
-            {c.label === 'SLO budget'
-              ? values[i].toFixed(3)
-              : format(values[i], c.abbreviate)}
+            <span
+              ref={(el) => {
+                valueRefs.current[i] = el;
+              }}
+            >
+              {renderValue(c.label, c.base, c.abbreviate)}
+            </span>
             {c.suffix ? <span className="text-slate-400 text-xs ml-0.5">{c.suffix}</span> : null}
           </div>
-          {/* Tiny pulse light to suggest live data */}
           <span className="absolute top-2 right-2 w-1 h-1 rounded-full bg-cyan-300 animate-pulse" />
         </div>
       ))}

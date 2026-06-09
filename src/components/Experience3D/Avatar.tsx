@@ -12,6 +12,7 @@ import ParticleStorm from './ParticleStorm';
 import LabelPlate from './LabelPlate';
 import Typewriter from './Typewriter';
 import useMouseParallax from './useMouseParallax';
+import { usePerfTier } from './usePerfTier';
 import { PALETTE } from './Materials';
 
 // Particles that rise through the projection beam.
@@ -206,25 +207,27 @@ export default function Avatar({
   imageUrl?: string;
   active?: boolean;
 }) {
+  const tier = usePerfTier();
+  const isLow = tier === 'low';
   return (
     <div className="w-full h-screen relative bg-black">
       <Canvas
         camera={{ position: [0, 1.5, 7], fov: 42 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
-        dpr={[1, 1.75]}
+        gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
+        dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 6, 18]} />
         <Suspense fallback={null}>
           <Scene imageUrl={imageUrl} />
-          {/* Less bloom + higher threshold so only true highlights glow.
-              Smaller DoF so the photo stays readable. */}
-          <CinematicEffects
-            bloomIntensity={0.5}
-            bloomThreshold={0.7}
-            chromaticAberration={0.00015}
-          />
+          {!isLow ? (
+            <CinematicEffects
+              bloomIntensity={0.5}
+              bloomThreshold={0.7}
+              chromaticAberration={0.00015}
+            />
+          ) : null}
         </Suspense>
       </Canvas>
 

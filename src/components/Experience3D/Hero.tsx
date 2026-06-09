@@ -11,6 +11,7 @@ import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import SkillLogo from './SkillLogo';
 import LabelPlate from './LabelPlate';
+import { usePerfTier, type PerfTier } from './usePerfTier';
 import { PALETTE } from './Materials';
 
 type ToolId =
@@ -191,40 +192,50 @@ function CenterOrb() {
 interface SceneProps {
   onPick: (id: ToolId) => void;
   picked: ToolId | null;
+  tier: PerfTier;
 }
 
-function Scene({ onPick, picked }: SceneProps) {
+function Scene({ onPick, picked, tier }: SceneProps) {
+  const isLow = tier === 'low';
   return (
     <>
-      <ambientLight intensity={0.15} color="#1e293b" />
+      <ambientLight intensity={0.18} color="#1e293b" />
       <pointLight position={[6, 5, 6]} intensity={1.3} color={PALETTE.neonCyan} distance={20} />
       <pointLight position={[-6, -2, -4]} intensity={1.0} color={PALETTE.neonMagenta} distance={18} />
-      <pointLight position={[0, 8, 0]} intensity={0.6} color={PALETTE.ledWhite} distance={14} />
+      {/* Third light is decorative; mobile skips it. */}
+      {!isLow ? (
+        <pointLight position={[0, 8, 0]} intensity={0.6} color={PALETTE.ledWhite} distance={14} />
+      ) : null}
 
       <CenterOrb />
-      <ToolOrbit radius={4.8} onPick={onPick} picked={picked} />
+      <ToolOrbit radius={isLow ? 3.8 : 4.8} onPick={onPick} picked={picked} />
 
-      <ContactShadows position={[0, -2.0, 0]} opacity={0.4} blur={2.5} far={8} color="#000000" />
-      <NeonStrip start={[-6, -1.95, 0]} end={[6, -1.95, 0]} color={PALETTE.neonCyan} thickness={0.022} />
-      <VolumetricBeam position={[0, 3, 0]} height={5} bottomRadius={2.2} opacity={0.04} />
+      {/* Heavy decorative passes only fire on the high tier. Mobile keeps
+          the orb + orbit + sparse particles and skips the rest. */}
+      {!isLow ? (
+        <>
+          <ContactShadows position={[0, -2.0, 0]} opacity={0.4} blur={2.5} far={8} color="#000000" />
+          <NeonStrip start={[-6, -1.95, 0]} end={[6, -1.95, 0]} color={PALETTE.neonCyan} thickness={0.022} />
+          <VolumetricBeam position={[0, 3, 0]} height={5} bottomRadius={2.2} opacity={0.04} />
+          <LensFlare position={[0, 0.4, -1.4]} color={PALETTE.neonMagenta} size={1.6} intensity={0.3} />
+        </>
+      ) : null}
 
       <ParticleStorm
-        count={900}
+        count={isLow ? 250 : 900}
         bounds={[14, 7, 14]}
         color={PALETTE.neonCyan}
-        size={6}
+        size={isLow ? 4 : 6}
         speed={0.14}
         behavior="drift"
-        opacity={0.2}
+        opacity={0.18}
       />
-
-      <LensFlare position={[0, 0.4, -1.4]} color={PALETTE.neonMagenta} size={1.6} intensity={0.3} />
 
       <OrbitControls
         target={[0, 0.2, 0]}
         enablePan={false}
         enableZoom={false}
-        autoRotate
+        autoRotate={!isLow}
         autoRotateSpeed={0.1}
         minPolarAngle={Math.PI / 3}
         maxPolarAngle={Math.PI / 1.9}
@@ -244,25 +255,32 @@ const STAT_CARDS: { label: string; value: string; sub?: string; color: string }[
 
 export default function Hero({ onEnter, active = true }: { onEnter?: () => void; active?: boolean }) {
   const [picked, setPicked] = useState<ToolId | null>(null);
+  const tier = usePerfTier();
+  const isLow = tier === 'low';
   const story = picked ? STORIES[picked] : null;
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
       <Canvas
-        camera={{ position: [0, 1.2, 8.5], fov: 45 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
-        dpr={[1, 1.75]}
+        camera={{ position: [0, 1.2, 8.5], fov: isLow ? 50 : 45 }}
+        gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
+        dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 7, 22]} />
         <Suspense fallback={null}>
-          <Scene onPick={setPicked} picked={picked} />
-          <CinematicEffects
-            bloomIntensity={0.6}
-            bloomThreshold={0.6}
-            chromaticAberration={0.0001}
-          />
+          <Scene onPick={setPicked} picked={picked} tier={tier} />
+          {/* Mobile skips post-processing entirely. SMAA + Bloom + the
+              full composer is the single most expensive thing in the
+              scene on phones. */}
+          {!isLow ? (
+            <CinematicEffects
+              bloomIntensity={0.6}
+              bloomThreshold={0.6}
+              chromaticAberration={0.0001}
+            />
+          ) : null}
         </Suspense>
       </Canvas>
 
@@ -351,7 +369,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 30, opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-8 right-6 z-30 w-[400px] max-w-[44vw] bg-slate-950/95 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto"
+            className="fixed z-30 bg-slate-950/95 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto bottom-4 inset-x-4 sm:inset-x-auto sm:bottom-8 sm:right-6 sm:w-[400px] sm:max-w-[44vw]"
             role="dialog"
             aria-label={`Story: ${story.title}`}
           >

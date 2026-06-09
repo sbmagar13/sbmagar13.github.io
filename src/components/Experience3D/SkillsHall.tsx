@@ -12,6 +12,7 @@ import ParticleStorm from './ParticleStorm';
 import SkillLogo, { hasCustomLogo, logoTint } from './SkillLogo';
 import LabelPlate from './LabelPlate';
 import Typewriter from './Typewriter';
+import { usePerfTier } from './usePerfTier';
 import { PALETTE } from './Materials';
 
 type Category =
@@ -415,6 +416,8 @@ function Scene({
 }
 
 export default function SkillsHall({ active = true }: { active?: boolean } = {}) {
+  const tier = usePerfTier();
+  const isLow = tier === 'low';
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const selected = useMemo(() => SKILLS.find((s) => s.id === selectedId) ?? null, [selectedId]);
@@ -422,10 +425,10 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
   return (
     <div className="w-full h-screen relative bg-black">
       <Canvas
-        shadows
+        shadows={!isLow}
         camera={{ position: [0, 5.5, 12], fov: 52 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
-        dpr={[1, 1.75]}
+        gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
+        dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
@@ -437,11 +440,13 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
             hoveredId={hoveredId}
             setHovered={setHoveredId}
           />
-          <CinematicEffects
-            bloomIntensity={0.55}
-            bloomThreshold={0.55}
-            chromaticAberration={0.00015}
-          />
+          {!isLow ? (
+            <CinematicEffects
+              bloomIntensity={0.55}
+              bloomThreshold={0.55}
+              chromaticAberration={0.00015}
+            />
+          ) : null}
         </Suspense>
       </Canvas>
 

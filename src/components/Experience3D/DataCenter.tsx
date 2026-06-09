@@ -13,6 +13,7 @@ import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import ClickBurst, { useBurstQueue } from './ClickBurst';
 import Typewriter from './Typewriter';
+import { usePerfTier } from './usePerfTier';
 import { PALETTE, statusColor } from './Materials';
 import type { ScreenMode } from './AnimatedScreen';
 
@@ -287,9 +288,10 @@ interface SceneProps {
   setHovered: (id: string | null) => void;
   bursts: Array<{ id: number; position: [number, number, number]; color: string }>;
   onBurstDone: (id: number) => void;
+  isLow: boolean;
 }
 
-function Scene({ onRackClick, activeId, hoveredId, setHovered, bursts, onBurstDone }: SceneProps) {
+function Scene({ onRackClick, activeId, hoveredId, setHovered, bursts, onBurstDone, isLow }: SceneProps) {
   return (
     <>
       {/* Lights, manual, no remote HDR */}
@@ -311,22 +313,29 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered, bursts, onBurstDo
       {/* Magenta rim from the front-low */}
       <pointLight position={[0, -1, 8]} intensity={0.8} color={PALETTE.neonMagenta} distance={18} />
 
-      {/* Reflective floor */}
-      <mesh rotation-x={-Math.PI / 2} position-y={-1.4} receiveShadow>
+      {/* Reflective floor. On mobile, fall back to a plain matte floor;
+          MeshReflectorMaterial re-renders the scene from below into a
+          texture every frame and that's the single most expensive thing
+          in the data center. */}
+      <mesh rotation-x={-Math.PI / 2} position-y={-1.4} receiveShadow={!isLow}>
         <planeGeometry args={[60, 60]} />
-        <MeshReflectorMaterial
-          blur={[120, 40]}
-          resolution={1024}
-          mixBlur={0.55}
-          mixStrength={32}
-          roughness={0.45}
-          depthScale={1.2}
-          minDepthThreshold={0.4}
-          maxDepthThreshold={1.4}
-          color="#0f172a"
-          metalness={0.85}
-          mirror={0.55}
-        />
+        {isLow ? (
+          <meshStandardMaterial color="#0a1224" metalness={0.5} roughness={0.6} />
+        ) : (
+          <MeshReflectorMaterial
+            blur={[120, 40]}
+            resolution={1024}
+            mixBlur={0.55}
+            mixStrength={32}
+            roughness={0.45}
+            depthScale={1.2}
+            minDepthThreshold={0.4}
+            maxDepthThreshold={1.4}
+            color="#0f172a"
+            metalness={0.85}
+            mirror={0.55}
+          />
+        )}
       </mesh>
 
       {/* Subtle contact shadows under each rack so they feel grounded */}
@@ -456,6 +465,8 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered, bursts, onBurstDo
 }
 
 export default function DataCenter({ active = true }: { active?: boolean } = {}) {
+  const tier = usePerfTier();
+  const isLow = tier === 'low';
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const activeRack = useMemo(() => RACKS.find((r) => r.id === activeId) ?? null, [activeId]);
@@ -476,10 +487,10 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
   return (
     <div className="w-full h-screen relative bg-black">
       <Canvas
-        shadows
+        shadows={!isLow}
         camera={{ position: [0, 4.5, 9], fov: 45 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
-        dpr={[1, 1.75]}
+        gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
+        dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
@@ -493,12 +504,15 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
             activeId={activeId}
             hoveredId={hoveredId}
             setHovered={setHoveredId}
+            isLow={isLow}
           />
-          <CinematicEffects
-            bloomIntensity={0.6}
-            bloomThreshold={0.55}
-            chromaticAberration={0.00015}
-          />
+          {!isLow ? (
+            <CinematicEffects
+              bloomIntensity={0.6}
+              bloomThreshold={0.55}
+              chromaticAberration={0.00015}
+            />
+          ) : null}
         </Suspense>
       </Canvas>
 

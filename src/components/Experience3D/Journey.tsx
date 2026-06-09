@@ -10,6 +10,7 @@ import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import LabelPlate from './LabelPlate';
 import Typewriter from './Typewriter';
+import { usePerfTier } from './usePerfTier';
 import { PALETTE } from './Materials';
 
 interface Milestone {
@@ -358,6 +359,8 @@ function Scene({
 }
 
 export default function Journey({ active = true }: { active?: boolean } = {}) {
+  const tier = usePerfTier();
+  const isLow = tier === 'low';
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const selected = selectedIdx !== null ? MILESTONES[selectedIdx] : null;
@@ -366,8 +369,8 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
     <div className="w-full h-screen relative bg-black">
       <Canvas
         camera={{ position: [0, 4, 11], fov: 50 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
-        dpr={[1, 1.75]}
+        gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
+        dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
       >
         <color attach="background" args={[PALETTE.voidA]} />
@@ -379,11 +382,13 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
             hoveredIdx={hoveredIdx}
             setHovered={setHoveredIdx}
           />
-          <CinematicEffects
-            bloomIntensity={0.6}
-            bloomThreshold={0.5}
-            chromaticAberration={0.00015}
-          />
+          {!isLow ? (
+            <CinematicEffects
+              bloomIntensity={0.6}
+              bloomThreshold={0.5}
+              chromaticAberration={0.00015}
+            />
+          ) : null}
         </Suspense>
       </Canvas>
 

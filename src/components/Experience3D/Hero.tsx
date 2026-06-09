@@ -260,12 +260,22 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
   const story = picked ? STORIES[picked] : null;
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    <div className="relative w-full h-full sm:h-screen bg-black overflow-y-auto sm:overflow-hidden">
       <Canvas
         camera={{ position: [0, 1.2, 8.5], fov: isLow ? 50 : 45 }}
         gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
         dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
+        // On phones the Hero overlay is taller than the viewport (title +
+        // 5 stat cards + 4 CTAs) and the page needs to scroll to reach
+        // the bottom CTAs. Pin the Canvas to the viewport with
+        // position: fixed so the 3D background stays put while the
+        // overlay scrolls over it.
+        style={
+          isLow
+            ? { position: 'fixed', inset: 0, width: '100vw', height: '100vh' }
+            : undefined
+        }
       >
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 7, 22]} />
@@ -284,9 +294,12 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
         </Suspense>
       </Canvas>
 
-      {/* Foreground HTML overlay. Name and stats live outside the
-          Canvas so they're always crisp and always legible. */}
-      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none px-6">
+      {/* Foreground HTML overlay. On desktop it's absolutely positioned
+          and centred over the locked viewport. On mobile it flows in
+          normal layout so the outer wrapper can scroll it vertically
+          when the stacked content (title + 5 cards + CTAs) exceeds
+          the viewport height. */}
+      <div className="relative sm:absolute sm:inset-0 z-10 flex flex-col items-center justify-center px-6 py-12 sm:py-0 min-h-screen sm:min-h-0 pointer-events-auto sm:pointer-events-none">
         <motion.div
           initial={{ y: 16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

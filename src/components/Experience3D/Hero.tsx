@@ -10,6 +10,7 @@ import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import SkillLogo from './SkillLogo';
+import HoloTerminal3D from './HoloTerminal3D';
 import { PALETTE } from './Materials';
 
 // The real DevOps stack orbiting the title. Each tool is the same
@@ -82,6 +83,25 @@ function Scene() {
 
       <CenterOrb />
       <ToolOrbit radius={4.6} />
+
+      {/* Two floating holographic terminals next to the title. The left
+          one scrolls real DevOps shell commands, the right one shows a
+          live-looking graph. Reinforces "this is a real engineer's
+          command deck" the moment you land on the page. */}
+      <HoloTerminal3D
+        position={[-3.2, -0.1, 0.5]}
+        rotation={[0, 0.42, 0]}
+        size={[1.7, 1.05]}
+        mode="terminal"
+        accent={PALETTE.neonCyan}
+      />
+      <HoloTerminal3D
+        position={[3.2, -0.1, 0.5]}
+        rotation={[0, -0.42, 0]}
+        size={[1.5, 0.9]}
+        mode="graph"
+        accent={PALETTE.neonMagenta}
+      />
 
       {/* Title in extruded text */}
       <Float speed={0.6} floatIntensity={0.15} rotationIntensity={0.05}>

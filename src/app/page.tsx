@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import HolographicHUD from '@/components/Experience3D/HolographicHUD';
 import HoloCursor from '@/components/Experience3D/HoloCursor';
+import CinematicIntro from '@/components/Experience3D/CinematicIntro';
 
 // Heavy 3D scenes, lazy-loaded so navigation between sections only
 // pays for what it shows.
@@ -40,12 +41,51 @@ function SceneFallback() {
   );
 }
 
+const KONAMI = [
+  'ArrowUp',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowLeft',
+  'ArrowRight',
+  'b',
+  'a',
+];
+
 export default function Experience3DPage() {
   const [section, setSection] = useState<Section>('hero');
   // Once a section is visited it stays mounted. Switching back is now
   // instant because the WebGL context, shaders and textures are still in
   // memory. First visit pays the mount cost; subsequent visits are free.
   const [visited, setVisited] = useState<Set<Section>>(new Set(['hero']));
+  // Intro shows once per browser session.
+  const [showIntro, setShowIntro] = useState(false);
+  // Konami code easter egg.
+  const [konami, setKonami] = useState(false);
+  const konamiBuffer = useRef<string[]>([]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (!sessionStorage.getItem('sb_intro_shown')) {
+        setShowIntro(true);
+      }
+    } catch {
+      // Some browsers / privacy modes block sessionStorage.
+      setShowIntro(true);
+    }
+  }, []);
+
+  const dismissIntro = () => {
+    setShowIntro(false);
+    try {
+      sessionStorage.setItem('sb_intro_shown', '1');
+    } catch {
+      /* ignore */
+    }
+  };
 
   useEffect(() => {
     setVisited((prev) => {
@@ -92,6 +132,20 @@ export default function Experience3DPage() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      // Track the last 10 keys for the Konami sequence. We check before
+      // consuming the event so the regular shortcuts still work.
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      konamiBuffer.current = [...konamiBuffer.current, key].slice(-KONAMI.length);
+      if (
+        konamiBuffer.current.length === KONAMI.length &&
+        konamiBuffer.current.every((k, i) => k === KONAMI[i])
+      ) {
+        konamiBuffer.current = [];
+        setKonami(true);
+        setTimeout(() => setKonami(false), 6000);
+      }
+
       if (e.key === 'Escape') {
         setSection('hero');
         return;
@@ -247,6 +301,66 @@ export default function Experience3DPage() {
 
       {/* Holographic cursor (hidden on touch devices automatically) */}
       <HoloCursor />
+
+      {/* Cinematic boot intro, plays once per session. */}
+      {showIntro ? <CinematicIntro onDone={dismissIntro} /> : null}
+
+      {/* Konami easter egg toast. For the engineers who try. */}
+      <AnimatePresence>
+        {konami ? (
+          <motion.div
+            key="konami"
+            initial={{ y: 80, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 80, opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[70] font-mono pointer-events-none"
+          >
+            <div className="relative rounded-md border border-emerald-400/50 bg-slate-950/95 backdrop-blur-md px-6 py-4 shadow-[0_0_40px_rgba(16,185,129,0.35)]">
+              <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-emerald-300" />
+              <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-emerald-300" />
+              <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-emerald-300" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-emerald-300" />
+              <div className="text-[11px] tracking-[0.4em] uppercase text-emerald-300/80">
+                achievement unlocked
+              </div>
+              <div className="mt-1 text-base text-white tracking-wider">
+                ahem, fellow hacker
+                <span className="ml-2">👋</span>
+              </div>
+              <div className="mt-1 text-[11px] text-slate-400 tracking-wider">
+                konami sequence detected. nice.
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* While konami is active, a subtle full-screen scan line sweeps top
+          to bottom and the scene picks up an emerald hue. */}
+      {konami ? (
+        <div className="pointer-events-none fixed inset-0 z-[65] mix-blend-screen">
+          <div className="absolute inset-0 bg-emerald-500/5 animate-pulse" />
+          <div
+            className="absolute left-0 right-0 h-16"
+            style={{
+              background:
+                'linear-gradient(to bottom, transparent, rgba(16,185,129,0.6), transparent)',
+              animation: 'konamiScan 1.6s linear',
+            }}
+          />
+          <style jsx>{`
+            @keyframes konamiScan {
+              from {
+                top: -10%;
+              }
+              to {
+                top: 110%;
+              }
+            }
+          `}</style>
+        </div>
+      ) : null}
     </div>
   );
 }

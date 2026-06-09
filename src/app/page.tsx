@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import HolographicHUD from '@/components/Experience3D/HolographicHUD';
 import HoloCursor from '@/components/Experience3D/HoloCursor';
 import CinematicIntro from '@/components/Experience3D/CinematicIntro';
+import SceneWarp from '@/components/Experience3D/SceneWarp';
+import Achievements, { type Achievement } from '@/components/Experience3D/Achievements';
 
 // Heavy 3D scenes, lazy-loaded so navigation between sections only
 // pays for what it shows.
@@ -65,6 +67,36 @@ export default function Experience3DPage() {
   // Konami code easter egg.
   const [konami, setKonami] = useState(false);
   const konamiBuffer = useRef<string[]>([]);
+  // Lightweight achievement tracker. A badge unlocks when its condition
+  // first becomes true; the toast in <Achievements /> shows for a few
+  // seconds and the id stays in the unlocked set so we don't fire it
+  // again on later renders.
+  const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
+  const [currentUnlock, setCurrentUnlock] = useState<Achievement | null>(null);
+
+  useEffect(() => {
+    const candidates: Array<{ when: boolean; a: Achievement }> = [
+      {
+        when: visited.size >= 2,
+        a: { id: 'first-contact', title: 'First Contact', detail: 'You stepped out of the Hero.' },
+      },
+      {
+        when: visited.size >= 4,
+        a: { id: 'operator', title: 'Operator', detail: 'Three scenes deep. Carry on.' },
+      },
+      {
+        when: visited.size === 5,
+        a: { id: 'explorer', title: 'Explorer', detail: 'You saw every scene.' },
+      },
+    ];
+    for (const c of candidates) {
+      if (c.when && !unlocked.has(c.a.id)) {
+        setUnlocked((prev) => new Set([...prev, c.a.id]));
+        setCurrentUnlock(c.a);
+        return;
+      }
+    }
+  }, [visited, unlocked]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -301,6 +333,14 @@ export default function Experience3DPage() {
 
       {/* Holographic cursor (hidden on touch devices automatically) */}
       <HoloCursor />
+
+      {/* Brief CRT warp + scan line every time the section changes. Only
+          mounted after the intro has dismissed so the warp doesn't fire
+          underneath the boot overlay where it can't be seen. */}
+      {!showIntro ? <SceneWarp trigger={section} /> : null}
+
+      {/* Achievement toasts (Explorer, Operator, etc.) */}
+      <Achievements unlock={currentUnlock} />
 
       {/* Cinematic boot intro, plays once per session. */}
       {showIntro ? <CinematicIntro onDone={dismissIntro} /> : null}

@@ -11,6 +11,7 @@ import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
 import SkillLogo from './SkillLogo';
 import HoloTerminal3D from './HoloTerminal3D';
+import LiveCounters from './LiveCounters';
 import { PALETTE } from './Materials';
 
 // The real DevOps stack orbiting the title. Each tool is the same
@@ -73,6 +74,22 @@ function CenterOrb() {
   );
 }
 
+// Camera dolly intro: starts pulled back, glides in to the resting
+// position over the first ~2 seconds after mount. Looks like the
+// opening shot of a film. Uses frame-rate independent damping so it
+// feels identical at 60 and 120 fps.
+function HeroCameraIntro() {
+  const startTimeRef = useRef<number | null>(null);
+  useFrame((state, delta) => {
+    if (startTimeRef.current === null) startTimeRef.current = state.clock.elapsedTime;
+    const elapsed = state.clock.elapsedTime - startTimeRef.current;
+    if (elapsed > 2.8) return; // give up after the dolly completes
+    state.camera.position.z = THREE.MathUtils.damp(state.camera.position.z, 8.5, 1.6, delta);
+    state.camera.position.y = THREE.MathUtils.damp(state.camera.position.y, 1.2, 1.6, delta);
+  });
+  return null;
+}
+
 function Scene() {
   return (
     <>
@@ -80,6 +97,8 @@ function Scene() {
       <pointLight position={[6, 5, 6]} intensity={1.5} color={PALETTE.neonCyan} distance={20} />
       <pointLight position={[-6, -2, -4]} intensity={1.2} color={PALETTE.neonMagenta} distance={18} />
       <pointLight position={[0, 8, 0]} intensity={0.7} color={PALETTE.ledWhite} distance={14} />
+
+      <HeroCameraIntro />
 
       <CenterOrb />
       <ToolOrbit radius={4.6} />
@@ -180,7 +199,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
       <Canvas
-        camera={{ position: [0, 1.2, 8.5], fov: 45 }}
+        camera={{ position: [0, 3.2, 14], fov: 45 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         dpr={[1, 1.75]}
         frameloop={active ? 'always' : 'never'}
@@ -196,6 +215,17 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
           />
         </Suspense>
       </Canvas>
+
+      {/* Live activity strip at the top — production metrics that tick
+          up in real time so the page feels alive even when idle. */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 1.4, duration: 0.6 }}
+        className="absolute top-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none"
+      >
+        <LiveCounters />
+      </motion.div>
 
       {/* Overlay UI */}
       <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-24 pointer-events-none">

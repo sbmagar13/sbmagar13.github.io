@@ -382,7 +382,7 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
           <Typewriter text="DATA CENTER" speed={55} caret />
         </div>
         <div className="mt-1.5 font-mono text-xs text-slate-300 max-w-md mx-auto">
-          {RACKS.length} live systems · click a rack to inspect · drag to orbit
+          {RACKS.length} live systems · click a rack for details
         </div>
       </div>
 
@@ -473,7 +473,7 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
             ) : null}
 
             <div className="mt-6 text-[10px] sm:text-[11px] font-mono text-slate-500">
-              Press <span className="text-cyan-300">esc</span> or click anywhere to deselect
+              <span className="text-cyan-300">esc</span> to close
             </div>
           </motion.aside>
         ) : null}

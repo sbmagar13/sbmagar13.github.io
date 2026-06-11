@@ -532,7 +532,7 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
           <Typewriter text="SKILLS HALL" speed={60} caret />
         </div>
         <div className="mt-1.5 font-mono text-xs text-slate-300">
-          {SKILLS.length} skills · islands by category · taller = more years · click for details
+          {SKILLS.length} tools · taller = more years
         </div>
       </div>
 

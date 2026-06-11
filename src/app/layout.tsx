@@ -15,6 +15,52 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = "https://sagarbudhathoki.com";
 
+// JSON-LD identity graph, rendered once in the root layout so every
+// page carries it. The Person node has a stable @id that other pages
+// (e.g. /work's ProfilePage) reference instead of redeclaring it.
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": `${SITE_URL}/#person`,
+      name: "Sagar Budhathoki",
+      alternateName: ["sbmagar13", "Sagar Budhathoki Magar"],
+      jobTitle: "Senior DevOps / SRE Engineer",
+      url: SITE_URL,
+      image: `${SITE_URL}/og-card.png`,
+      email: "mailto:sagar@sagarbudhathoki.com",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Kathmandu",
+        addressCountry: "NP",
+      },
+      sameAs: [
+        "https://github.com/sbmagar13",
+        "https://linkedin.com/in/sbmagar13",
+        "https://blog.budhathokisagar.com.np",
+        "https://stackoverflow.com/users/10819100",
+        "https://twitter.com/s_agarm_agar",
+      ],
+      knowsAbout: [
+        "DevOps",
+        "Site Reliability Engineering",
+        "Kubernetes",
+        "Terraform",
+        "AWS",
+        "Python",
+        "AI agents",
+      ],
+    },
+    {
+      "@type": "WebSite",
+      name: "Sagar Budhathoki",
+      alternateName: "sagar.sh",
+      url: SITE_URL,
+    },
+  ],
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -32,12 +78,17 @@ export const metadata: Metadata = {
     "platform engineering",
     "site reliability",
     "portfolio",
+    "Sagar Budhathoki Nepal",
+    "sbmagar13",
+    "SRE engineer Nepal",
+    "AI agents DevOps",
   ],
   authors: [{ name: "Sagar Budhathoki", url: SITE_URL }],
   creator: "Sagar Budhathoki",
   alternates: { canonical: SITE_URL },
   openGraph: {
     type: "website",
+    locale: "en_US",
     url: SITE_URL,
     siteName: "Sagar Budhathoki",
     title: "Sagar Budhathoki | Senior DevOps / SRE Engineer",
@@ -54,7 +105,11 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   icons: {
-    icon: "/favicon_logo.ico",
+    icon: [
+      { url: "/favicon_logo.ico", sizes: "32x32" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/favicon.png", type: "image/png", sizes: "512x512" },
+    ],
     apple: "/apple-icon.png",
   },
 };
@@ -78,6 +133,10 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
         {children}
         {/* Privacy-light page counter (GoatCounter: no cookies, no PII).
             Register the code 'sbmagar13' at goatcounter.com to activate;

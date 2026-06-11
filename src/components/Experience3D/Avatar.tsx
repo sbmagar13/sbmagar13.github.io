@@ -389,9 +389,9 @@ export default function Avatar({
             </div>
             <p className="mt-4 text-[13px] sm:text-[14px] text-slate-200 leading-relaxed">{stat.detail}</p>
             <div className="mt-4 text-[10px] font-mono text-slate-500">
-              <span className="sm:hidden">Tap × to close · tap another panel to switch</span>
+              <span className="sm:hidden">tap × to close</span>
               <span className="hidden sm:inline">
-                Press <span className="text-cyan-300">esc</span> to close · click another panel to switch
+                <span className="text-cyan-300">esc</span> to close
               </span>
             </div>
           </motion.aside>

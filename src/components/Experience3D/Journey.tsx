@@ -370,7 +370,7 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
           <Typewriter text="JOURNEY" speed={70} caret />
         </div>
         <div className="mt-1.5 font-mono text-xs text-slate-300">
-          {`${MILESTONES.length} milestones · 2020 to now · click any monument`}
+          {`${MILESTONES.length} milestones · click any monument`}
         </div>
       </div>
 
@@ -395,7 +395,7 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
                     background: `${selected.color}12`,
                   }}
                 >
-                  Milestone · {selected.year}
+                  Milestone
                 </div>
                 <div className="mt-3 font-mono text-3xl sm:text-4xl font-semibold text-white tracking-wider">{selected.year}</div>
               </div>

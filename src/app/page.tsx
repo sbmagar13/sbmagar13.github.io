@@ -443,6 +443,38 @@ export default function Experience3DPage() {
 
   return (
     <div className="w-full h-screen overflow-hidden bg-black relative">
+      {/* Static fallback for crawlers and JS-off visitors. Every scene
+          is ssr:false, so without this the prerendered / route ships
+          almost no text. Renders only when JS never runs. Facts mirror
+          IDENTITY in src/data/career.ts. */}
+      <noscript>
+        <div className="min-h-screen overflow-y-auto bg-slate-950 px-6 py-16 font-mono text-slate-300">
+          <h1 className="text-3xl font-semibold text-white">Sagar Budhathoki</h1>
+          <p className="mt-2 text-sm text-cyan-300">Senior DevOps / SRE Engineer</p>
+          <p className="mt-5 max-w-xl text-sm leading-relaxed">
+            DevOps / SRE engineer with 5+ years in production, based in Kathmandu, Nepal and
+            open to remote senior roles. Currently building AI agents for ops.
+          </p>
+          <ul className="mt-8 space-y-2 text-sm">
+            <li>
+              <a className="text-cyan-300 underline underline-offset-4" href="/work">/work</a>
+            </li>
+            <li>
+              <a className="text-cyan-300 underline underline-offset-4" href="/resume">/resume</a>
+            </li>
+            <li>
+              <a className="text-cyan-300 underline underline-offset-4" href="/terminal">/terminal</a>
+            </li>
+            <li>
+              <a className="text-cyan-300 underline underline-offset-4" href="https://github.com/sbmagar13">GitHub</a>
+            </li>
+            <li>
+              <a className="text-cyan-300 underline underline-offset-4" href="https://linkedin.com/in/sbmagar13">LinkedIn</a>
+            </li>
+          </ul>
+        </div>
+      </noscript>
+
       {/* Persistent header (hides on Hero) */}
       <AnimatePresence>
         {section !== 'hero' ? (

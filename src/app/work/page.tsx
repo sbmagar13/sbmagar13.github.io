@@ -17,6 +17,15 @@ export const metadata: Metadata = {
   alternates: { canonical: '/work' },
 };
 
+// ProfilePage JSON-LD: ties this page to the Person node the root
+// layout declares (same @id), instead of redeclaring the person here.
+const PROFILE_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  dateModified: '2026-06-12',
+  mainEntity: { '@id': 'https://sagarbudhathoki.com/#person' },
+};
+
 // Display labels for the skill groups. The category ids and the skills
 // themselves live in src/data/career.ts; only neutral headings live here.
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -108,6 +117,10 @@ export default function WorkPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-300">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(PROFILE_JSON_LD) }}
+      />
       <TopNav />
 
       <main className="mx-auto max-w-3xl px-6 py-12">

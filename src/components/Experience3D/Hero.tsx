@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, OrbitControls, MeshDistortMaterial, ContactShadows } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FaGithub, FaLinkedin, FaEnvelope, FaTerminal } from 'react-icons/fa';
 import * as THREE from 'three';
 import { VolumetricBeam, NeonStrip } from './Atmosphere';
 import ContextGuard from './ContextGuard';
@@ -15,6 +16,10 @@ import LabelPlate from './LabelPlate';
 import { usePerfTier, type PerfTier } from './usePerfTier';
 import { PALETTE } from './Materials';
 import { STORIES, ORBIT_TOOLS, CHIP_LABELS, STAT_CARDS, type ToolId } from '@/data/career';
+
+// Four cards, not five: 'Top Lang / Python' is dropped here because
+// Python already shows up everywhere else on the site.
+const HERO_STATS = STAT_CARDS.filter((s) => s.label !== 'Top Lang');
 
 interface OrbitProps {
   radius?: number;
@@ -198,7 +203,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
         // Clicking empty space (not a tool) dismisses an open story.
         onPointerMissed={() => setPicked(null)}
         // On phones the Hero overlay is taller than the viewport (title +
-        // 5 stat cards + 4 CTAs) and the page needs to scroll to reach
+        // stat cards + chips + CTAs) and the page needs to scroll to reach
         // the bottom CTAs. Pin the Canvas to the viewport with
         // position: fixed so the 3D background stays put while the
         // overlay scrolls over it.
@@ -229,7 +234,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
       {/* Foreground HTML overlay. On desktop it's absolutely positioned
           and centred over the locked viewport. On mobile it flows in
           normal layout so the outer wrapper can scroll it vertically
-          when the stacked content (title + 5 cards + CTAs) exceeds
+          when the stacked content (title + cards + chips + CTAs) exceeds
           the viewport height. */}
       <div className="relative sm:absolute sm:inset-0 z-10 flex flex-col items-center justify-center px-6 py-12 sm:py-0 min-h-screen sm:min-h-0 pointer-events-auto sm:pointer-events-none">
         <motion.div
@@ -245,11 +250,11 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
             SENIOR DEVOPS / SRE ENGINEER
           </div>
           <div className="mt-2 font-mono text-[10px] sm:text-[11px] tracking-[0.24em] sm:tracking-[0.32em] text-slate-500 uppercase">
-            building ai agents for ops · open to remote senior roles
+            ai agents for ops · open to remote senior roles
           </div>
           <div className="mt-2 font-mono text-[10px] sm:text-[11px] tracking-[0.24em] sm:tracking-[0.32em] text-slate-500 uppercase">
-            <span className="sm:hidden">tap a tool to read the real story behind it</span>
-            <span className="hidden sm:inline">click any tool below to see a real story behind it</span>
+            <span className="sm:hidden">tap a tool for its story</span>
+            <span className="hidden sm:inline">click a tool in orbit for its story</span>
           </div>
         </motion.div>
 
@@ -257,9 +262,9 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-6 sm:mt-10 flex flex-wrap gap-3 justify-center max-w-3xl"
+          className="mt-8 sm:mt-12 flex flex-wrap gap-3 justify-center max-w-3xl"
         >
-          {STAT_CARDS.map((s) => (
+          {HERO_STATS.map((s) => (
             <div
               key={s.label}
               className="rounded border border-cyan-500/30 bg-slate-950/85 sm:bg-slate-950/65 sm:backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 font-mono min-w-[124px] sm:min-w-[150px]"
@@ -301,55 +306,69 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
           })}
         </motion.div>
 
+        {/* Two actions, four whispers: the primary pair stays full-size,
+            everything else collapses into compact icon links below. */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 sm:mt-10 flex flex-wrap gap-3 justify-center pointer-events-auto"
+          className="mt-6 sm:mt-8 flex flex-col items-center gap-3 pointer-events-auto"
         >
-          <button
-            onClick={onEnter}
-            className="px-5 py-2.5 min-h-[40px] sm:px-7 sm:py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-white bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 transition-colors shadow-lg shadow-cyan-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            See the work →
-          </button>
-          <a
-            href="/resume.pdf"
-            download
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-5 py-2.5 min-h-[40px] sm:px-7 sm:py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-emerald-300 border border-emerald-400/60 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors shadow-lg shadow-emerald-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            Resume
-          </a>
-          <a
-            href="https://github.com/sbmagar13"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-5 py-2.5 min-h-[40px] sm:px-7 sm:py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            GitHub
-          </a>
-          <a
-            href="https://linkedin.com/in/sbmagar13"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-5 py-2.5 min-h-[40px] sm:px-7 sm:py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-sky-300 border border-sky-500/40 hover:bg-sky-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            LinkedIn
-          </a>
-          <a
-            href="mailto:sagar@sagarbudhathoki.com"
-            className="px-5 py-2.5 min-h-[40px] sm:px-7 sm:py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-purple-300 border border-purple-500/40 hover:bg-purple-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            Email
-          </a>
-          <a
-            href="/terminal"
-            className="px-5 py-2.5 min-h-[40px] sm:px-7 sm:py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-slate-300 border border-slate-600/50 hover:bg-slate-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            Terminal view
-          </a>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <button
+              onClick={onEnter}
+              className="px-5 py-2.5 min-h-[40px] sm:px-7 sm:py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-white bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 transition-colors shadow-lg shadow-cyan-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            >
+              See the work →
+            </button>
+            <a
+              href="/resume.pdf"
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-2.5 min-h-[40px] sm:px-7 sm:py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-emerald-300 border border-emerald-400/60 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors shadow-lg shadow-emerald-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            >
+              Resume
+            </a>
+          </div>
+          <div className="flex gap-2 justify-center">
+            <a
+              href="https://github.com/sbmagar13"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+              title="GitHub"
+              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-700/60 text-slate-400 hover:border-cyan-400/60 hover:text-cyan-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            >
+              <FaGithub className="text-lg" />
+            </a>
+            <a
+              href="https://linkedin.com/in/sbmagar13"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+              title="LinkedIn"
+              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-700/60 text-slate-400 hover:border-sky-400/60 hover:text-sky-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            >
+              <FaLinkedin className="text-lg" />
+            </a>
+            <a
+              href="mailto:sagar@sagarbudhathoki.com"
+              aria-label="Email"
+              title="Email"
+              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-700/60 text-slate-400 hover:border-purple-400/60 hover:text-purple-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            >
+              <FaEnvelope className="text-lg" />
+            </a>
+            <a
+              href="/terminal"
+              aria-label="Terminal view"
+              title="Terminal view"
+              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-700/60 text-slate-400 hover:border-slate-400/60 hover:text-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            >
+              <FaTerminal className="text-lg" />
+            </a>
+          </div>
         </motion.div>
 
         {/* Dim footer line: plain-text escape hatch for anyone who
@@ -358,11 +377,11 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.0, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-4 text-center"
+          className="mt-6 text-center"
         >
           <a
             href="/work"
-            className="pointer-events-auto font-mono text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+            className="pointer-events-auto font-mono text-[10px] text-slate-600 hover:text-slate-400 transition-colors"
           >
             prefer plain text? /work
           </a>

@@ -23,6 +23,10 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   // go stale after the first render. Refs always read current.
   const historyRef = useRef<string[]>([]);
   const historyIndexRef = useRef(0);
+  // Guided tour state, in refs for the same reason as history: the
+  // xterm onKey closure is created once and must read current values.
+  const tourActiveRef = useRef(false);
+  const tourTimeoutsRef = useRef<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
 
@@ -46,10 +50,43 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       console.error('Error focusing terminal:', error);
     }
   };
-  
+
+  // Push a command into shell history and persist the tail.
+  // localStorage is this terminal's ~/.bash_history; private modes can
+  // throw on any storage access, and losing history is not worth
+  // crashing over.
+  const recordHistory = (command: string) => {
+    historyRef.current.push(command);
+    try {
+      window.localStorage.setItem(
+        'sb_term_history',
+        JSON.stringify(historyRef.current.slice(-100))
+      );
+    } catch {
+      // Best effort only.
+    }
+  };
+
   // Initialize terminal
   useEffect(() => {
     if (!terminalRef.current) return;
+
+    // Restore persisted history before the first prompt, so Up arrow
+    // works across visits like a real ~/.bash_history.
+    try {
+      const saved = window.localStorage.getItem('sb_term_history');
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          historyRef.current = parsed
+            .filter((entry): entry is string => typeof entry === 'string')
+            .slice(-100);
+          historyIndexRef.current = historyRef.current.length;
+        }
+      }
+    } catch {
+      // Storage unavailable (private mode): history starts empty.
+    }
 
     let cancelled = false;
     let teardown: (() => void) | null = null;
@@ -165,41 +202,66 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     
     window.addEventListener('resize', handleResize);
     
-    // Write welcome message with custom SAGAR ASCII art banner (centered)
+    // Write the welcome banner: 'sagar.sh' in slant figlet, matching the
+    // site header brand. Pure printable ASCII only; the old banner used
+    // Unicode block glyphs that Geist Mono doesn't ship, so each block
+    // fell back to a different font and the letters collided into a
+    // jumble. ASCII 0x20-0x7E renders identically in every mono font.
     term.writeln('');
-    
+
     // Get terminal width for centering
     const termWidth = term.cols || 80;
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    
-    if (isMobile) {
-      // Smaller ASCII art for mobile - simplified version
-      const mobileAsciiWidth = 24; // Width of the simplified SAGAR ASCII art
-      const mobilePadding = Math.max(0, Math.floor((termWidth - mobileAsciiWidth) / 2));
-      const mobileSpaces = ' '.repeat(mobilePadding);
-      
-      // Write centered mobile-friendly ASCII art - simplified version
-      term.writeln(mobileSpaces + '\x1b[1;32m  ____    _    ____    _    ____  \x1b[0m');
-      term.writeln(mobileSpaces + '\x1b[1;32m / ___|  / \\  / ___|  / \\  |  _ \\ \x1b[0m');
-      term.writeln(mobileSpaces + '\x1b[1;32m \\___ \\ / _ \\| |  _  / _ \\ | |_) |\x1b[0m');
-      term.writeln(mobileSpaces + '\x1b[1;32m  ___) / ___ \\ |_| |/ ___ \\|  _ < \x1b[0m');
-      term.writeln(mobileSpaces + '\x1b[1;32m |____/_/   \\_\\____/_/   \\_\\_| \\_\\\x1b[0m');
-    } else {
-      // Desktop ASCII art
-      const sagarAsciiWidth = 48; // Width of the SAGAR ASCII art
-      const padding = Math.max(0, Math.floor((termWidth - sagarAsciiWidth) / 2));
-      const spaces = ' '.repeat(padding);
-      
-      // Write centered ASCII art
-      term.writeln(spaces + '\x1b[1;32m███████╗ █████╗  ██████╗  █████╗ ██████╗ \x1b[0m');
-      term.writeln(spaces + '\x1b[1;32m██╔════╝██╔══██╗██╔════╝ ██╔══██╗██╔══██╗\x1b[0m');
-      term.writeln(spaces + '\x1b[1;32m███████╗███████║██║  ███╗███████║██████╔╝\x1b[0m');
-      term.writeln(spaces + '\x1b[1;32m╚════██║██╔══██║██║   ██║██╔══██║██╔══██╗\x1b[0m');
-      term.writeln(spaces + '\x1b[1;32m███████║██║  ██║╚██████╔╝██║  ██║██║  ██║\x1b[0m');
-      term.writeln(spaces + '\x1b[1;32m╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝\x1b[0m');
-    }
-    
+
+    // Green-to-cyan gradient, one 256-color step per banner line, the
+    // way modern CLI tools (bun, pnpm) draw their wordmarks.
+    const gradient = [40, 41, 42, 43, 44, 45];
+
+    const banner = isMobile
+      ? [
+          '                               __ ',
+          ' ___ ___ ____ ____ _____  ___ / / ',
+          '(_-</ _ `/ _ `/ _ `/ __/ (_-</ _ \\',
+          '/___/\\_,_/\\_, /\\_,_/_/ (_)___/_//_/',
+          '         /___/                     ',
+        ]
+      : [
+          '                                     __  ',
+          '   _________ _____ _____ ___________/ /_ ',
+          '  / ___/ __ `/ __ `/ __ `/ ___/ ___/ __ \\',
+          ' (__  ) /_/ / /_/ / /_/ / /  (__  ) / / /',
+          '/____/\\__,_/\\__, /\\__,_/_(_)/____/_/ /_/ ',
+          '           /____/                        ',
+        ];
+
+    const bannerWidth = Math.max(...banner.map((l) => l.length));
+    const bannerPad = ' '.repeat(Math.max(0, Math.floor((termWidth - bannerWidth) / 2)));
+    banner.forEach((line, i) => {
+      const color = gradient[Math.min(i, gradient.length - 1)];
+      term.writeln(bannerPad + `\x1b[38;5;${color}m` + line + '\x1b[0m');
+    });
+
     term.writeln('');
+
+    // Last login line, the way a real box greets you. The timestamp
+    // is the only honest fact available (this browser's previous
+    // visit, stored locally); no fake hostnames, no fake IPs.
+    try {
+      const previousLogin = window.localStorage.getItem('sb_term_last_login');
+      if (previousLogin) {
+        const when = new Date(Number(previousLogin));
+        if (!Number.isNaN(when.getTime())) {
+          // toLocaleString can emit non-ASCII separators (U+202F
+          // before AM/PM in newer ICU); keep the output pure ASCII.
+          const formatted = when.toLocaleString().replace(/[^\x20-\x7E]/g, ' ');
+          term.writeln(`\x1b[90mLast login: ${formatted} from your browser\x1b[0m`);
+          term.writeln('');
+        }
+      }
+      window.localStorage.setItem('sb_term_last_login', String(Date.now()));
+    } catch {
+      // Private mode: this box forgets you between visits. Fair.
+    }
 
     // A real shell greets minimally: one motd line, one dim hint, done.
     const subtitle = 'DevOps Brain Terminal v2.0.0';
@@ -221,6 +283,14 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     let currentLine = '';
     
     term.onKey(({ key, domEvent }) => {
+      // Any keydown cancels a running tour, exactly as promised when
+      // it started. The key is swallowed; it only acts as the brake.
+      if (tourActiveRef.current) {
+        domEvent.preventDefault();
+        stopTour();
+        return;
+      }
+
       const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
 
       if (domEvent.keyCode === 13) { // Enter
@@ -230,7 +300,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         term.writeln('');
         if (currentLine.trim()) {
           processCommand(currentLine.trim());
-          historyRef.current.push(currentLine.trim());
+          recordHistory(currentLine.trim());
         } else {
           writePrompt(term);
         }
@@ -327,7 +397,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         term.write(`${initialCommand}`);
         term.writeln('');
         processCommand(initialCommand);
-        historyRef.current.push(initialCommand);
+        recordHistory(initialCommand);
         historyIndexRef.current = historyRef.current.length;
       }, 300); // Reduced delay for faster startup
     }
@@ -339,6 +409,10 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     
     return () => {
       window.removeEventListener('resize', handleResize);
+      // A disposed terminal must not receive scheduled tour writes.
+      tourTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+      tourTimeoutsRef.current = [];
+      tourActiveRef.current = false;
       if (xtermRef.current) {
         xtermRef.current.dispose();
       }
@@ -413,7 +487,89 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   const writePrompt = (term: XTerm) => {
     term.write('\x1b[1;32m➜\x1b[0m ');
   };
-  
+
+  // Cancel a running tour: clear everything scheduled, say so, hand
+  // the prompt back. Output already in flight from the current command
+  // finishes on its own, like a real foreground process would.
+  const stopTour = () => {
+    tourTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+    tourTimeoutsRef.current = [];
+    tourActiveRef.current = false;
+    const term = xtermRef.current;
+    if (term) {
+      term.writeln('');
+      term.writeln('\x1b[1;33mTour stopped.\x1b[0m');
+      writePrompt(term);
+    }
+  };
+
+  // Guided tour. Lives here instead of the command registry because it
+  // needs the xterm instance and processCommand: it auto-types real
+  // commands and runs them through the exact same path a human
+  // keystroke would take, so history, navigation side effects and
+  // colors all behave.
+  const startTour = () => {
+    const term = xtermRef.current;
+    if (!term) return;
+    if (tourActiveRef.current) {
+      term.writeln('A tour is already running. Press any key to stop it.');
+      writePrompt(term);
+      return;
+    }
+    if (isVimActive()) {
+      term.writeln("\x1b[1;31mtour: not while you're stuck in vim.\x1b[0m Escape with ':q!' first.");
+      writePrompt(term);
+      return;
+    }
+
+    tourActiveRef.current = true;
+    const schedule = (fn: () => void, delay: number) => {
+      tourTimeoutsRef.current.push(window.setTimeout(fn, delay));
+    };
+
+    term.writeln('\x1b[1;32mStarting the guided tour. Press any key to stop.\x1b[0m');
+    term.writeln('');
+    writePrompt(term);
+
+    const script = ['about', 'skills', 'projects', 'incident'];
+    const typeDelayMs = 35; // per character, human-ish
+    const commandGapMs = 1800; // pause between commands
+
+    const runStep = (index: number) => {
+      if (!tourActiveRef.current) return;
+      if (index >= script.length) {
+        tourActiveRef.current = false;
+        tourTimeoutsRef.current = [];
+        term.writeln('');
+        term.writeln("\x1b[1;32mThat's the tour.\x1b[0m Type \x1b[1;36mhelp\x1b[0m for the full command list,");
+        term.writeln('or visit the 3D experience: \x1b[1;34mhttps://sagarbudhathoki.com/\x1b[0m');
+        writePrompt(term);
+        return;
+      }
+
+      const command = script[index];
+      let charIndex = 0;
+      const typeChar = () => {
+        if (!tourActiveRef.current) return;
+        if (charIndex < command.length) {
+          term.write(command[charIndex]);
+          charIndex += 1;
+          schedule(typeChar, typeDelayMs);
+          return;
+        }
+        // Fully typed: run it exactly like an Enter press would.
+        term.writeln('');
+        processCommand(command);
+        recordHistory(command);
+        historyIndexRef.current = historyRef.current.length;
+        schedule(() => runStep(index + 1), commandGapMs);
+      };
+      schedule(typeChar, typeDelayMs);
+    };
+
+    schedule(() => runStep(0), 600);
+  };
+
   // Process command
   const processCommand = (command: string) => {
     if (!xtermRef.current) return;
@@ -426,6 +582,15 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     if (isVimActive()) {
       const result = executeCommand(command);
       writeCommandResult(result);
+      return;
+    }
+
+    // 'tour' / 'demo' are handled here, not in the registry: the tour
+    // needs the terminal instance to auto-type. A piped form falls
+    // through, so 'tour | grep ...' still hits the registry fallback.
+    const baseCommand = command.split(' ')[0];
+    if (!command.includes('|') && (baseCommand === 'tour' || baseCommand === 'demo')) {
+      startTour();
       return;
     }
 
@@ -621,7 +786,9 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     if (!isLoading || !xtermRef.current) return;
     
     const term = xtermRef.current;
-    const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    // Classic ASCII spinner: braille frames need glyphs Geist Mono may
+    // not ship, and a fallback-font frame flickers a different width.
+    const frames = ['|', '/', '-', '\\'];
     let frameIndex = 0;
     
     term.writeln('');
@@ -700,6 +867,13 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     
     // Handle special keys
     textArea.addEventListener('keydown', (e) => {
+      // The mobile keyboard can stop a running tour too
+      if (tourActiveRef.current) {
+        e.preventDefault();
+        stopTour();
+        return;
+      }
+
       if (e.key === 'Enter') {
         e.preventDefault();
         
@@ -718,7 +892,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           processCommand(commandToExecute);
 
           // Add to history
-          historyRef.current.push(commandToExecute);
+          recordHistory(commandToExecute);
           historyIndexRef.current = historyRef.current.length;
         } else if (xtermRef.current) {
           // Just write a new prompt if the command is empty

@@ -82,6 +82,25 @@ function konamiPrefixLength(buffer: string[]): number {
   return 0;
 }
 
+// Autopilot tour: a self-driving loop through every scene, ending back
+// on the hero. Each hop goes through navigate(), so hash history, the
+// explored set, achievements and the warp behave exactly like manual
+// navigation. User-initiated only; any key or nav click cancels it.
+const TOUR_ROUTE: Section[] = ['hero', 'avatar', 'journey', 'projects', 'skills'];
+const TOUR_STEP_MS = 9000;
+const TOUR_DONE_MS = 4000;
+
+const TOUR_CAPTIONS: Record<Section, string> = {
+  hero: 'Sagar Budhathoki. Senior DevOps / SRE Engineer, 5+ years in production.',
+  avatar: 'The operator: sole owner of a multi-tenant SaaS platform on AWS.',
+  journey: 'The road: internship to senior, milestone by milestone.',
+  projects: 'The racks: cross-region DR, tenant orchestration, observability that survives outages.',
+  skills: 'The toolbox: every tool here has real production hours behind it.',
+};
+
+const TOUR_DONE_CAPTION =
+  'Tour complete. Explore freely, or press the terminal link for the shell version.';
+
 export default function Experience3DPage() {
   const tier = usePerfTier();
   const isLow = tier === 'low';
@@ -113,6 +132,14 @@ export default function Experience3DPage() {
   // Konami code easter egg.
   const [konami, setKonami] = useState(false);
   const konamiBuffer = useRef<string[]>([]);
+  // Autopilot tour. tourStep indexes TOUR_ROUTE; tourDone keeps the
+  // goodbye caption up briefly after the loop completes. Timer ids live
+  // in refs so cancellation never chases stale state.
+  const [autopilot, setAutopilot] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+  const [tourDone, setTourDone] = useState(false);
+  const tourTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tourDoneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Lightweight achievement tracker. A badge unlocks when its condition
   // first becomes true; the toast in <Achievements /> shows for a few
   // seconds and the id stays in the unlocked set so we don't fire it
@@ -172,6 +199,78 @@ export default function Experience3DPage() {
     [section, markExplored],
   );
 
+  const stopAutopilot = useCallback(() => {
+    if (tourTimerRef.current !== null) {
+      clearTimeout(tourTimerRef.current);
+      tourTimerRef.current = null;
+    }
+    setAutopilot(false);
+  }, []);
+
+  const startAutopilot = useCallback(() => {
+    if (tourDoneTimerRef.current !== null) {
+      clearTimeout(tourDoneTimerRef.current);
+      tourDoneTimerRef.current = null;
+    }
+    setTourDone(false);
+    setTourStep(0);
+    setAutopilot(true);
+    navigate('hero');
+  }, [navigate]);
+
+  // Manual navigation cancels the tour BEFORE applying the click, so
+  // the tour never fights the visitor. Every clickable nav (brand,
+  // header tabs, dots, Hero CTA) goes through this wrapper; the
+  // keyboard handler cancels at the top of onKey instead.
+  const userNavigate = useCallback(
+    (id: Section) => {
+      stopAutopilot();
+      navigate(id);
+    },
+    [stopAutopilot, navigate],
+  );
+
+  // While the tour runs, hop to the next scene every TOUR_STEP_MS. The
+  // effect re-arms after each hop (tourStep and navigate both change),
+  // so the timer always starts fresh per step; the cleanup covers both
+  // cancellation and unmount.
+  useEffect(() => {
+    if (!autopilot) return;
+    tourTimerRef.current = setTimeout(() => {
+      tourTimerRef.current = null;
+      const next = tourStep + 1;
+      if (next < TOUR_ROUTE.length) {
+        setTourStep(next);
+        navigate(TOUR_ROUTE[next]);
+        return;
+      }
+      // Full loop done: land back on the hero, end the tour, and leave
+      // a short goodbye caption.
+      setAutopilot(false);
+      navigate('hero');
+      setTourDone(true);
+      tourDoneTimerRef.current = setTimeout(() => {
+        tourDoneTimerRef.current = null;
+        setTourDone(false);
+      }, TOUR_DONE_MS);
+    }, TOUR_STEP_MS);
+    return () => {
+      if (tourTimerRef.current !== null) {
+        clearTimeout(tourTimerRef.current);
+        tourTimerRef.current = null;
+      }
+    };
+  }, [autopilot, tourStep, navigate]);
+
+  // The goodbye caption timer outlives the effect above; make sure it
+  // can't fire after unmount.
+  useEffect(
+    () => () => {
+      if (tourDoneTimerRef.current !== null) clearTimeout(tourDoneTimerRef.current);
+    },
+    [],
+  );
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     // Deep-link arrivals skip the intro entirely: someone following a
@@ -201,13 +300,16 @@ export default function Experience3DPage() {
   // entry on top of the one the browser just restored (feedback loop).
   useEffect(() => {
     const onPop = () => {
+      // Back / forward is manual navigation too: cancel the tour before
+      // restoring the section the visitor asked for.
+      stopAutopilot();
       const id = sectionFromHash(window.location.hash) ?? 'hero';
       setSection(id);
       markExplored(id);
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, [markExplored]);
+  }, [markExplored, stopAutopilot]);
 
   const dismissIntro = () => {
     setShowIntro(false);
@@ -293,6 +395,10 @@ export default function Experience3DPage() {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
+      // Any keypress ends the autopilot tour: the visitor has taken
+      // over, and the cancel lands before whatever the key does next.
+      stopAutopilot();
+
       // Track the last 10 keys for the Konami sequence. We check before
       // consuming the event so the regular shortcuts still work.
       const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
@@ -333,7 +439,7 @@ export default function Experience3DPage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [section, navigate]);
+  }, [section, navigate, stopAutopilot]);
 
   return (
     <div className="w-full h-screen overflow-hidden bg-black relative">
@@ -350,13 +456,13 @@ export default function Experience3DPage() {
             {/* Brand hidden on mobile so the nav has room. The home dot
                 on the left edge replaces it. */}
             <button
-              onClick={() => navigate('hero')}
+              onClick={() => userNavigate('hero')}
               className="hidden sm:inline-block font-mono text-sm tracking-[0.3em] text-cyan-300/90 hover:text-white transition-colors pointer-events-auto"
             >
               SAGAR BUDHATHOKI
             </button>
             <button
-              onClick={() => navigate('hero')}
+              onClick={() => userNavigate('hero')}
               className="sm:hidden font-mono text-base tracking-widest text-cyan-300 hover:text-white transition-colors pointer-events-auto"
               aria-label="Home"
             >
@@ -366,7 +472,7 @@ export default function Experience3DPage() {
               {SECTIONS.filter((s) => s.id !== 'hero').map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => navigate(s.id)}
+                  onClick={() => userNavigate(s.id)}
                   className={`relative px-2 sm:px-4 py-2 font-mono text-[10px] sm:text-xs tracking-widest transition-colors ${
                     section === s.id ? 'text-cyan-300' : 'text-slate-400 hover:text-white'
                   }`}
@@ -414,7 +520,7 @@ export default function Experience3DPage() {
             {SECTIONS.filter((s) => s.id !== 'hero').map((s) => (
               <button
                 key={s.id}
-                onClick={() => navigate(s.id)}
+                onClick={() => userNavigate(s.id)}
                 className="group flex items-center gap-3"
                 aria-label={`Go to ${s.label}`}
               >
@@ -442,6 +548,67 @@ export default function Experience3DPage() {
           <div>esc · home</div>
         </div>
       ) : null}
+
+      {/* Autopilot tour pill (bottom-right). Hidden while the intro
+          plays; never auto-starts. While the tour runs it becomes a
+          stop button with a step counter. Sits above the HUD (z-30)
+          and clear of the Hero's centered CTA row on phones. */}
+      {!showIntro ? (
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 font-mono">
+          {autopilot ? (
+            <button
+              type="button"
+              onClick={stopAutopilot}
+              aria-label={`Stop autopilot tour, step ${tourStep + 1} of ${TOUR_ROUTE.length}`}
+              className="flex items-center gap-2 rounded-full border border-cyan-500/40 bg-slate-950/80 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs tracking-widest text-cyan-300 hover:text-white hover:border-cyan-400/70 hover:bg-cyan-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            >
+              <span>STOP TOUR</span>
+              <span className="text-cyan-500/80 tabular-nums">
+                {tourStep + 1}/{TOUR_ROUTE.length}
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={startAutopilot}
+              aria-label="Start autopilot tour"
+              className="rounded-full border border-cyan-500/40 bg-slate-950/80 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs tracking-widest text-cyan-300 hover:text-white hover:border-cyan-400/70 hover:bg-cyan-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            >
+              {'>'} AUTOPILOT TOUR
+            </button>
+          )}
+        </div>
+      ) : null}
+
+      {/* Autopilot caption (bottom-center): crossfades per scene while
+          the tour drives, plus a short goodbye once the loop completes.
+          Grid stacking keeps the outgoing and incoming cards overlapped
+          for a true crossfade. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-20 sm:bottom-24 z-[60] grid place-items-center px-4 font-mono">
+        <AnimatePresence>
+          {autopilot || tourDone ? (
+            <motion.div
+              key={tourDone ? 'tour-done' : TOUR_ROUTE[tourStep]}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="col-start-1 row-start-1 relative max-w-xl rounded-md border border-cyan-500/40 bg-slate-950/90 backdrop-blur-md px-5 py-3 text-center shadow-[0_0_30px_rgba(34,211,238,0.18)]"
+            >
+              <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-300" />
+              <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-300" />
+              <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-300" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-300" />
+              <div className="text-[10px] tracking-[0.4em] uppercase text-cyan-400/80">
+                {tourDone ? 'autopilot ended' : `autopilot · ${tourStep + 1}/${TOUR_ROUTE.length}`}
+              </div>
+              <div className="mt-1 text-xs sm:text-sm text-slate-200 tracking-wide">
+                {tourDone ? TOUR_DONE_CAPTION : TOUR_CAPTIONS[TOUR_ROUTE[tourStep]]}
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
 
       {/* Scenes are kept mounted once visited. Switching tabs no longer
           tears down a Canvas and rebuilds it, which is what caused the
@@ -474,7 +641,7 @@ export default function Experience3DPage() {
             }}
           >
             <Suspense fallback={<SceneFallback />}>
-              {id === 'hero' && <Hero active={isActive} onEnter={() => navigate('avatar')} />}
+              {id === 'hero' && <Hero active={isActive} onEnter={() => userNavigate('avatar')} />}
               {id === 'avatar' && <Avatar active={isActive} />}
               {id === 'journey' && <Journey active={isActive} />}
               {id === 'projects' && <DataCenter active={isActive} />}

@@ -13,7 +13,7 @@ featured: false
 What’s up, guys!!
 
 Today, I’ll talk about how to install and configure Postfix on Ubuntu, so that you can use it to send mail using [Gmail](https://gmail.com/). If you’re using a Linux system, you probably heard of Postfix. Postfix is one of the most popular **Mail Transfer Agent** (MTA) that is used to route and deliver email on a Linux system. Also, it’s open-source and widely used by approx. 33% of internet mail servers.
-cp
+
 ## Prerequisites
 
 Before installing and configuring postfix, you need to have some pre-requirements:
@@ -28,16 +28,8 @@ First, before proceeding to set up Postfix, you need to set up your google accou
 - Open a web browser and log into your [google account](https://myaccount.google.com/).
 - Navigate to ***Security*** from the sidebar menu and scroll down and click on ***App passwords.***
 - You have to enable two-factor authentication if you haven’t already.
-
-![Selection_357.png](Configure%20Postfix%20on%20Ubuntu%20(24%2004%2022%2004%2020%2004)%2029208bba09f644d7abda262465e424a4/Selection_357.png)
-
 - Now **generate** a new password. *(Log in with Gmail password if prompted.)*
-
-![Selection_359.png](Configure%20Postfix%20on%20Ubuntu%20(24%2004%2022%2004%2020%2004)%2029208bba09f644d7abda262465e424a4/Selection_359.png)
-
 - Save the password for your newly created app.
-
-![Selection_362.png](Configure%20Postfix%20on%20Ubuntu%20(24%2004%2022%2004%2020%2004)%2029208bba09f644d7abda262465e424a4/Selection_362.png)
 
 ## Postfix - Installation
 
@@ -63,7 +55,7 @@ $ sudo nano /etc/postfix/sasl_passwd
 And add this line:
 
 ```bash
-[smtp.gmail.com]:587   sagar.exclamation@cloudyfox.com:uhpyqdiozquddfmc
+[smtp.gmail.com]:587   your-email@gmail.com:your-app-password
 ```
 
 Save and exit the file. Now, make the file accessible only by root to be safer.

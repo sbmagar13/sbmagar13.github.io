@@ -15,125 +15,8 @@ import LabelPlate from './LabelPlate';
 import Typewriter from './Typewriter';
 import { usePerfTier } from './usePerfTier';
 import { PALETTE } from './Materials';
-
-type Category =
-  | 'infrastructure'
-  | 'cicd'
-  | 'cloud'
-  | 'database'
-  | 'monitoring'
-  | 'development'
-  | 'security'
-  | 'ai-ml'
-  | 'os'
-  | 'misc';
-
-interface SkillData {
-  id: string;
-  name: string;
-  category: Category;
-  years: number;
-  highlight?: boolean;
-  blurb?: string;
-}
-
-// Real skills inventory pulled from the Senior DevOps / SRE resume.
-// Highlighted ones are where Sagar has owned production end to end.
-const SKILLS: SkillData[] = [
-  // Cloud and infrastructure (heavy AWS)
-  { id: 'aws', name: 'AWS', category: 'cloud', years: 4, highlight: true, blurb: 'Sole owner of multi-tenant SaaS on AWS. 15+ services in production.' },
-  { id: 'ecs-fargate', name: 'ECS Fargate', category: 'cloud', years: 3, highlight: true, blurb: 'Serverless container orchestration. EventLogic runs here.' },
-  { id: 'lambda', name: 'AWS Lambda', category: 'cloud', years: 4, blurb: 'Serverless functions wired into pipelines and event flows.' },
-  { id: 'aurora', name: 'Aurora PostgreSQL', category: 'database', years: 3, highlight: true, blurb: 'Schema-per-tenant, multi-region Global Database.' },
-  { id: 'elasticache', name: 'ElastiCache (Redis)', category: 'database', years: 3, blurb: 'Managed Redis. Connection-pool tuning saved a 19-min outage.' },
-  { id: 'amazon-mq', name: 'Amazon MQ', category: 'cloud', years: 2, blurb: 'Managed message broker for inter-service queues.' },
-  { id: 'dynamodb', name: 'DynamoDB', category: 'database', years: 3, blurb: 'Tenant registry, key-value lookups, hot paths.' },
-  { id: 'cloudfront', name: 'CloudFront', category: 'cloud', years: 4, blurb: 'CDN + edge for tenant distribution.' },
-  { id: 's3', name: 'S3', category: 'cloud', years: 4, blurb: 'Object storage. Static assets, backups, logs.' },
-  { id: 'api-gateway', name: 'API Gateway', category: 'cloud', years: 3, blurb: 'Managed API frontends for Lambda and ECS.' },
-  { id: 'route53', name: 'Route 53', category: 'infrastructure', years: 4, blurb: 'DNS for multi-tenant routing.' },
-  { id: 'vpc', name: 'VPC Networking', category: 'infrastructure', years: 4, blurb: 'Subnets, peering, endpoints, NAT, security groups.' },
-  { id: 'efs', name: 'EFS', category: 'cloud', years: 2, blurb: 'Cross-region replication for stateful workloads.' },
-  { id: 'ecr', name: 'ECR', category: 'cloud', years: 4, blurb: 'Container registry with cross-region replication.' },
-
-  // IaC and configuration
-  { id: 'terraform', name: 'Terraform', category: 'infrastructure', years: 4, highlight: true, blurb: 'Primary IaC. Modules, remote state, drift detection.' },
-  { id: 'terragrunt', name: 'Terragrunt', category: 'infrastructure', years: 3, highlight: true, blurb: 'DRY Terraform across environments.' },
-  { id: 'cloudformation', name: 'CloudFormation', category: 'infrastructure', years: 3, blurb: 'AWS-native IaC for legacy stacks.' },
-  { id: 'cdk', name: 'AWS CDK', category: 'infrastructure', years: 2, blurb: 'Code-first IaC for AWS.' },
-  { id: 'ansible', name: 'Ansible', category: 'infrastructure', years: 4, blurb: 'Config management. Split-restart playbooks for Elasticsearch.' },
-
-  // Containers and orchestration
-  { id: 'docker', name: 'Docker', category: 'infrastructure', years: 4, highlight: true, blurb: 'Multi-stage builds. Image hygiene. Daily driver.' },
-  { id: 'kubernetes', name: 'Kubernetes (K3s)', category: 'infrastructure', years: 3, highlight: true, blurb: 'Self-hosted K3s in eu-central-1 for OneUptime.' },
-
-  // CI/CD
-  { id: 'gitlab-ci', name: 'GitLab CI', category: 'cicd', years: 4, highlight: true, blurb: 'Primary pipeline platform for app and infra deploys.' },
-  { id: 'jenkins', name: 'Jenkins', category: 'cicd', years: 4, blurb: 'Long-running automation. ECS, Lambda, EC2 deploys.' },
-  { id: 'aws-codepipeline', name: 'CodePipeline', category: 'cicd', years: 3, blurb: 'AWS-native release pipelines with CodeBuild.' },
-  { id: 'github-actions', name: 'GitHub Actions', category: 'cicd', years: 3, blurb: 'Workflows close to the code.' },
-
-  // Observability
-  { id: 'prometheus', name: 'Prometheus', category: 'monitoring', years: 3, highlight: true, blurb: 'Metrics + PromQL + alerting.' },
-  { id: 'grafana', name: 'Grafana', category: 'monitoring', years: 3, highlight: true, blurb: 'Dashboards across Prometheus, Loki, CloudWatch.' },
-  { id: 'loki', name: 'Loki', category: 'monitoring', years: 2, blurb: 'Log aggregation. Dual-export target with OneUptime.' },
-  { id: 'opentelemetry', name: 'OpenTelemetry', category: 'monitoring', years: 2, highlight: true, blurb: 'Unified collector. Dual-export to OneUptime + Loki.' },
-  { id: 'cloudwatch', name: 'AWS CloudWatch', category: 'monitoring', years: 4, blurb: 'Metrics, logs, alarms, dashboards.' },
-  { id: 'oneuptime', name: 'OneUptime', category: 'monitoring', years: 1, blurb: 'Self-hosted SRE platform. Status pages + on-call.' },
-  { id: 'elk', name: 'ELK Stack', category: 'monitoring', years: 4, blurb: '3-node self-managed Elasticsearch cluster.' },
-  { id: 'elasticsearch', name: 'Elasticsearch', category: 'monitoring', years: 4, blurb: 'Self-managed cluster with split-restart safety.' },
-
-  // Databases (continued)
-  { id: 'postgresql', name: 'PostgreSQL', category: 'database', years: 4, blurb: 'EXPLAIN, indexes, replication.' },
-  { id: 'redis', name: 'Redis', category: 'database', years: 3, blurb: 'Cache, rate limits, ephemeral state.' },
-
-  // Security
-  { id: 'aws-iam', name: 'AWS IAM', category: 'security', years: 4, highlight: true, blurb: 'Roles, fine-grained policies, cross-account.' },
-  { id: 'kms', name: 'AWS KMS', category: 'security', years: 4, blurb: 'Shared KMS keys for cross-region DR.' },
-  { id: 'secrets-manager', name: 'Secrets Manager', category: 'security', years: 3, blurb: 'Rotation, secure injection into ECS.' },
-  { id: 'aws-inspector', name: 'AWS Inspector', category: 'security', years: 2, blurb: 'Continuous vulnerability scanning.' },
-  { id: 'cloudtrail', name: 'CloudTrail', category: 'security', years: 4, blurb: 'API audit trail. Multi-account aggregation.' },
-  { id: 'openvpn', name: 'OpenVPN', category: 'security', years: 3, blurb: 'Production access. User and route management.' },
-
-  // Programming
-  { id: 'python', name: 'Python', category: 'development', years: 5, highlight: true, blurb: 'FastAPI, Django, Flask. Tenant orchestrator. Default tool.' },
-  { id: 'fastapi', name: 'FastAPI', category: 'development', years: 3, blurb: 'Typed async APIs.' },
-  { id: 'django', name: 'Django', category: 'development', years: 3, blurb: 'Admin-heavy CRUD services.' },
-  { id: 'flask', name: 'Flask', category: 'development', years: 3, blurb: 'Small standalone services.' },
-  { id: 'bash', name: 'Bash', category: 'development', years: 5, blurb: 'Shell scripting, deploy automation, runbooks.' },
-  { id: 'javascript', name: 'JavaScript', category: 'development', years: 4, blurb: 'Light frontend, Node tooling, infra glue.' },
-
-  // AI/ML and tooling
-  { id: 'mcp', name: 'Anthropic MCP', category: 'ai-ml', years: 1, highlight: true, blurb: 'Built Hashnode MCP server. Tool integration for Claude.' },
-  { id: 'langgraph', name: 'LangGraph', category: 'ai-ml', years: 1, blurb: 'Agent orchestration graphs.' },
-  { id: 'langchain', name: 'LangChain', category: 'ai-ml', years: 1, blurb: 'LLM-powered workflows.' },
-  { id: 'local-llm', name: 'Local LLM Inference', category: 'ai-ml', years: 1, blurb: 'Self-hosted models for private inference.' },
-  { id: 'pytorch', name: 'PyTorch', category: 'ai-ml', years: 2, blurb: 'VQGAN + CLIP. Deep learning prototypes.' },
-  { id: 'rasa', name: 'RASA', category: 'ai-ml', years: 2, blurb: 'Conversational AI / NLP chatbots.' },
-
-  // Data pipelines
-  { id: 'airflow', name: 'Apache Airflow', category: 'misc', years: 2, blurb: 'DAG-based scheduling.' },
-  { id: 'airbyte', name: 'Airbyte', category: 'misc', years: 1, blurb: 'ELT connectors.' },
-  { id: 'celery', name: 'Celery + RabbitMQ', category: 'misc', years: 3, blurb: 'Async task processing.' },
-  { id: 'ffmpeg', name: 'FFmpeg', category: 'misc', years: 2, blurb: 'RTSP / NVR / video pipelines.' },
-
-  // OS
-  { id: 'arch', name: 'Arch Linux', category: 'os', years: 5, highlight: true, blurb: 'Daily driver. KISS. Rolling release.' },
-  { id: 'ubuntu', name: 'Ubuntu', category: 'os', years: 6, blurb: 'Production servers, default base image.' },
-];
-
-const CATEGORY_COLORS: Record<Category, string> = {
-  infrastructure: PALETTE.neonCyan,
-  cicd: PALETTE.neonBlue,
-  cloud: '#0ea5e9',
-  database: PALETTE.ledGreen,
-  monitoring: PALETTE.ledAmber,
-  development: PALETTE.neonMagenta,
-  security: PALETTE.ledRed,
-  'ai-ml': PALETTE.neonPurple,
-  os: PALETTE.ledWhite,
-  misc: '#94a3b8',
-};
+// Career facts live in one place; this scene only renders them.
+import { SKILLS, CATEGORY_COLORS, type Category, type SkillData } from '@/data/career';
 
 // Each category gets a distinct geometric shape so the hall has visual
 // rhythm without needing per-skill 3D models.
@@ -228,6 +111,126 @@ function CategoryShape({ category, color }: { category: Category; color: string 
   }
 }
 
+// ---------------------------------------------------------------------------
+// Layout: category islands on a ring, column height by years
+// ---------------------------------------------------------------------------
+
+// Floor plane height. Columns grow up from here so height-by-years reads
+// against a common baseline instead of floating.
+const FLOOR_Y = -0.4;
+
+// Pedestal-to-pedestal spacing inside an island. Matches the old grid
+// spacing so the billboarded labels keep the same breathing room.
+const SKILL_SPACING = 1.85;
+// Clearance between an island's outermost pedestal and its floor ring.
+const ISLAND_MARGIN = 0.8;
+// Floor gap between neighbouring island rings along the hall ring.
+const ISLAND_GAP = 0.5;
+
+// Column height from years of experience: 1 year => 0.5, 6 years => 1.6.
+// Taller pedestal = more years; the logo rides on top.
+function heightForYears(years: number): number {
+  const t = (Math.min(6, Math.max(1, years)) - 1) / 5;
+  return 0.5 + t * 1.1;
+}
+
+interface Island {
+  category: Category;
+  color: string;
+  /** x/z of the island centre on the floor. */
+  center: [number, number];
+  /** Radius of the island's floor ring. */
+  radius: number;
+  /** Height of the island label, clears the tallest column + its label. */
+  labelY: number;
+  skills: SkillData[];
+  /** World position per skill, same order as `skills`. */
+  positions: [number, number, number][];
+}
+
+// Compact disc arrangement for one island: up to six skills sit on a
+// single ring, larger islands put one pedestal in the middle and ring
+// the rest. Chord math keeps neighbours at least SKILL_SPACING apart so
+// labels stay clear. `phase` staggers each island's ring start so the
+// hall doesn't read as copy-pasted clusters.
+function arrangeDisc(count: number, phase: number): { points: [number, number][]; radius: number } {
+  if (count === 1) return { points: [[0, 0]], radius: 1.3 };
+  if (count === 2) {
+    const x = Math.cos(phase) * 0.95;
+    const z = Math.sin(phase) * 0.95;
+    return { points: [[x, z], [-x, -z]], radius: 0.95 + ISLAND_MARGIN };
+  }
+  const hasCenter = count > 6;
+  const ringCount = hasCenter ? count - 1 : count;
+  const r = Math.max(1.35, SKILL_SPACING / (2 * Math.sin(Math.PI / ringCount)));
+  const points: [number, number][] = hasCenter ? [[0, 0]] : [];
+  for (let i = 0; i < ringCount; i++) {
+    const a = (i / ringCount) * Math.PI * 2 + phase;
+    points.push([Math.cos(a) * r, Math.sin(a) * r]);
+  }
+  return { points, radius: r + ISLAND_MARGIN };
+}
+
+// Group skills into category islands and arrange the islands around the
+// hall. The biggest island (cloud/infra territory) sits front centre
+// toward the default camera, the rest alternate left/right so size
+// tapers around the ring. A single-category filter collapses to one
+// island recentred at the origin, which is the existing recenter
+// behavior the legend filter already had.
+function buildIslands(skills: SkillData[]): Island[] {
+  const order = Object.keys(CATEGORY_COLORS) as Category[];
+  const groups = order
+    .map((category) => ({ category, members: skills.filter((s) => s.category === category) }))
+    .filter((g) => g.members.length > 0)
+    .sort((a, b) => b.members.length - a.members.length);
+
+  const islands: Island[] = groups.map((g, i) => {
+    const disc = arrangeDisc(g.members.length, i * 0.8);
+    const maxH = g.members.reduce((m, s) => Math.max(m, heightForYears(s.years)), 0);
+    return {
+      category: g.category,
+      color: CATEGORY_COLORS[g.category],
+      center: [0, 0],
+      radius: disc.radius,
+      labelY: FLOOR_Y + maxH + 2.1,
+      skills: g.members,
+      positions: disc.points.map(([x, z]) => [x, 0, z] as [number, number, number]),
+    };
+  });
+
+  if (islands.length > 1) {
+    // Ring order: biggest in the middle, then alternate sides so the
+    // neighbours of the front island are the next-biggest clusters.
+    const ringOrder: Island[] = [];
+    islands.forEach((isl, i) => {
+      if (i % 2 === 0) ringOrder.push(isl);
+      else ringOrder.unshift(isl);
+    });
+    // Each island claims an arc proportional to its footprint; the ring
+    // radius is whatever circumference fits them all.
+    const arcs = ringOrder.map((isl) => isl.radius * 2 + ISLAND_GAP);
+    const total = arcs.reduce((a, b) => a + b, 0);
+    const ringR = total / (2 * Math.PI);
+    let acc = 0;
+    const angles = arcs.map((arc) => {
+      const mid = acc + arc / 2;
+      acc += arc;
+      return (mid / total) * Math.PI * 2;
+    });
+    // Rotate the ring so the biggest island faces +z (the camera side).
+    const shift = Math.PI / 2 - angles[ringOrder.indexOf(islands[0])];
+    ringOrder.forEach((isl, i) => {
+      const a = angles[i] + shift;
+      isl.center = [Math.cos(a) * ringR, Math.sin(a) * ringR];
+    });
+  }
+
+  for (const isl of islands) {
+    isl.positions = isl.positions.map(([x, y, z]) => [x + isl.center[0], y, z + isl.center[1]]);
+  }
+  return islands;
+}
+
 interface PedestalProps {
   position: [number, number, number];
   skill: SkillData;
@@ -241,6 +244,8 @@ interface PedestalProps {
 function Pedestal({ position, skill, highlighted, hovered, isLow, onHover, onClick }: PedestalProps) {
   const hasLogo = hasCustomLogo(skill.id);
   const color = hasLogo ? logoTint(skill.id) : CATEGORY_COLORS[skill.category];
+  const h = heightForYears(skill.years);
+  const topY = FLOOR_Y + h;
   return (
     <group
       position={position}
@@ -255,18 +260,18 @@ function Pedestal({ position, skill, highlighted, hovered, isLow, onHover, onCli
         document.body.style.cursor = '';
       }}
     >
-      {/* Pedestal base */}
-      <mesh position={[0, 0, 0]} receiveShadow castShadow>
-        <cylinderGeometry args={[0.42, 0.5, 0.18, 24]} />
+      {/* Column, grounded on the floor. Height encodes years. */}
+      <mesh position={[0, FLOOR_Y + h / 2, 0]} receiveShadow castShadow>
+        <cylinderGeometry args={[0.42, 0.5, h, 24]} />
         <meshStandardMaterial color={PALETTE.steelDark} metalness={0.7} roughness={0.5} />
       </mesh>
-      <mesh position={[0, 0.11, 0]}>
+      <mesh position={[0, topY + 0.03, 0]}>
         <cylinderGeometry args={[0.36, 0.42, 0.06, 24]} />
         <meshStandardMaterial color={PALETTE.steel} metalness={0.9} roughness={0.3} />
       </mesh>
 
-      {/* Glow ring on top of pedestal */}
-      <mesh position={[0, 0.155, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      {/* Glow ring on top of the column, facing up */}
+      <mesh position={[0, topY + 0.065, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.3, 0.36, 36]} />
         <meshBasicMaterial color={color} transparent opacity={highlighted || hovered ? 0.9 : 0.5} />
       </mesh>
@@ -274,7 +279,7 @@ function Pedestal({ position, skill, highlighted, hovered, isLow, onHover, onCli
       {/* Floating shape, custom 3D logo for highlight skills, generic
           category shape for the rest */}
       <Float speed={1.3} floatIntensity={0.25} rotationIntensity={hasLogo ? 0.25 : 0.6}>
-        <group position={[0, 0.6, 0]} scale={highlighted ? 1.25 : hovered ? 1.12 : 1}>
+        <group position={[0, topY + 0.62, 0]} scale={highlighted ? 1.25 : hovered ? 1.12 : 1}>
           {hasLogo ? (
             <SkillLogo id={skill.id} scale={0.85} />
           ) : (
@@ -284,18 +289,17 @@ function Pedestal({ position, skill, highlighted, hovered, isLow, onHover, onCli
       </Float>
 
       {/* Name label, billboarded so it always faces the camera as you
-          orbit the hall, with a dark plate behind for legibility. Bigger
-          text now so the info is readable across the whole hall. On the
-          low tier the years/category subline is dropped (every subline
-          is its own troika Text draw, and there are dozens of pedestals);
-          the selected pedestal keeps its full label so the detail you
-          asked for stays labeled. */}
+          orbit the hall. It rides above the logo so a tall column never
+          hides its own label, and the label altitude itself tracks the
+          years encoding. The category moved to the island label, so the
+          subline is just the years. On the low tier the subline is
+          dropped (every subline is its own troika Text draw, and there
+          are dozens of pedestals); the selected pedestal keeps its full
+          label so the detail you asked for stays labeled. */}
       <LabelPlate
-        position={[0, -0.2, 0.55]}
+        position={[0, topY + 1.42, 0]}
         text={skill.name}
-        subtext={
-          isLow && !highlighted ? undefined : `${skill.years}Y · ${skill.category.toUpperCase()}`
-        }
+        subtext={isLow && !highlighted ? undefined : `${skill.years}Y`}
         size={0.17}
         subSize={0.08}
         color="#f1f5f9"
@@ -308,9 +312,9 @@ function Pedestal({ position, skill, highlighted, hovered, isLow, onHover, onCli
         borderColor={color}
       />
 
-      {/* Highlight star on the corner of the pedestal */}
+      {/* Highlight star on the rim of the column cap */}
       {skill.highlight ? (
-        <mesh position={[0.32, 0.16, 0.3]}>
+        <mesh position={[0.32, topY + 0.05, 0.3]}>
           <sphereGeometry args={[0.04, 12, 12]} />
           <meshStandardMaterial
             color={PALETTE.ledWhite}
@@ -322,17 +326,6 @@ function Pedestal({ position, skill, highlighted, hovered, isLow, onHover, onCli
       ) : null}
     </group>
   );
-}
-
-function arrangeGrid(items: SkillData[], cols: number, spacing: number): [number, number, number][] {
-  const rows = Math.ceil(items.length / cols);
-  const xOff = -(cols - 1) * spacing * 0.5;
-  const zOff = -(rows - 1) * spacing * 0.5;
-  return items.map((_, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    return [xOff + col * spacing, 0, zOff + row * spacing] as [number, number, number];
-  });
 }
 
 function Scene({
@@ -350,14 +343,14 @@ function Scene({
   setHovered: (id: string | null) => void;
   isLow: boolean;
 }) {
-  const positions = useMemo(() => arrangeGrid(skills, 8, 1.85), [skills]);
+  const islands = useMemo(() => buildIslands(skills), [skills]);
 
   return (
     <>
       <ambientLight intensity={0.18} color="#1e293b" />
-      <pointLight position={[0, 8, 6]} intensity={1} color={PALETTE.ledWhite} distance={20} />
-      <pointLight position={[-8, 4, -2]} intensity={0.8} color={PALETTE.neonMagenta} distance={20} />
-      <pointLight position={[8, 4, -2]} intensity={0.8} color={PALETTE.neonCyan} distance={20} />
+      <pointLight position={[0, 8, 6]} intensity={1} color={PALETTE.ledWhite} distance={26} />
+      <pointLight position={[-8, 4, -2]} intensity={0.8} color={PALETTE.neonMagenta} distance={26} />
+      <pointLight position={[8, 4, -2]} intensity={0.8} color={PALETTE.neonCyan} distance={26} />
 
       {/* Reflective floor. On low tier, fall back to a plain matte floor;
           MeshReflectorMaterial re-renders the whole hall from below into
@@ -384,26 +377,55 @@ function Scene({
         )}
       </mesh>
 
-      {/* Pedestals */}
-      {skills.map((s, i) => (
-        <Pedestal
-          key={s.id}
-          position={positions[i]}
-          skill={s}
-          highlighted={selectedId === s.id}
-          hovered={hoveredId === s.id}
-          isLow={isLow}
-          onHover={(h) => setHovered(h ? s.id : null)}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(selectedId === s.id ? null : s.id);
-          }}
-        />
+      {/* Category islands: one floor ring + one label per island, then
+          that island's pedestals. The ring and label are a handful of
+          cheap static draws per category, and the island label stays on
+          even on the low tier because there are only ~10 of them; the
+          per-pedestal sublabels are what get thinned there. */}
+      {islands.map((isl) => (
+        <group key={isl.category}>
+          <mesh rotation-x={-Math.PI / 2} position={[isl.center[0], FLOOR_Y + 0.01, isl.center[1]]}>
+            <ringGeometry args={[isl.radius - 0.09, isl.radius, 48]} />
+            <meshBasicMaterial
+              color={isl.color}
+              transparent
+              opacity={0.38}
+              depthWrite={false}
+              toneMapped={false}
+            />
+          </mesh>
+          <LabelPlate
+            position={[isl.center[0], isl.labelY, isl.center[1]]}
+            text={isl.category.toUpperCase()}
+            size={0.26}
+            color={isl.color}
+            letterSpacing={0.12}
+            billboard
+            plate
+            plateOpacity={0.82}
+            padding={[0.24, 0.13]}
+          />
+          {isl.skills.map((s, i) => (
+            <Pedestal
+              key={s.id}
+              position={isl.positions[i]}
+              skill={s}
+              highlighted={selectedId === s.id}
+              hovered={hoveredId === s.id}
+              isLow={isLow}
+              onHover={(h) => setHovered(h ? s.id : null)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(selectedId === s.id ? null : s.id);
+              }}
+            />
+          ))}
+        </group>
       ))}
 
-      {/* Aisle neon strips */}
-      <NeonStrip start={[-6, -0.39, -3.6]} end={[6, -0.39, -3.6]} color={PALETTE.neonCyan} />
-      <NeonStrip start={[-6, -0.39, 3.6]} end={[6, -0.39, 3.6]} color={PALETTE.neonMagenta} />
+      {/* Plaza cross at the hall centre; the islands ring around it */}
+      <NeonStrip start={[-4.6, -0.39, 0]} end={[4.6, -0.39, 0]} color={PALETTE.neonCyan} />
+      <NeonStrip start={[0, -0.39, -4.6]} end={[0, -0.39, 4.6]} color={PALETTE.neonMagenta} />
 
       <ParticleStorm
         count={isLow ? 350 : 1500}
@@ -420,11 +442,11 @@ function Scene({
       <LensFlare position={[8, 4, -2]} color={PALETTE.neonCyan} size={1.8} intensity={0.3} />
 
       <OrbitControls
-        target={[0, 0.5, 0]}
+        target={[0, 0.6, 0]}
         enablePan={false}
         enableZoom
         minDistance={6}
-        maxDistance={22}
+        maxDistance={26}
         minPolarAngle={Math.PI / 7}
         maxPolarAngle={Math.PI / 2.1}
         autoRotate={selectedId === null}
@@ -474,14 +496,14 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
       <Canvas
         key={glGen}
         shadows={!isLow}
-        camera={{ position: [0, 5.5, 12], fov: 52 }}
+        camera={{ position: [0, 7, 15], fov: 52 }}
         gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
         dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
       >
         <ContextGuard onLost={() => setGlGen((g) => g + 1)} />
         <color attach="background" args={[PALETTE.voidA]} />
-        <fog attach="fog" args={['#020617', 8, 24]} />
+        <fog attach="fog" args={['#020617', 10, 34]} />
         <Suspense fallback={null}>
           <Scene
             skills={visibleSkills}
@@ -510,7 +532,7 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
           <Typewriter text="SKILLS HALL" speed={60} caret />
         </div>
         <div className="mt-1.5 font-mono text-xs text-slate-300">
-          {SKILLS.length} skills · category-coded by shape · click for details
+          {SKILLS.length} skills · islands by category · taller = more years · click for details
         </div>
       </div>
 
@@ -567,12 +589,12 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
             animate={{ x: 0, opacity: 1, scale: 1 }}
             exit={{ x: 60, opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-1/2 -translate-y-1/2 right-6 w-[380px] bg-slate-950/95 sm:bg-slate-950/92 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 shadow-2xl shadow-cyan-500/20"
+            className="absolute top-1/2 -translate-y-1/2 right-6 w-[380px] bg-slate-950/95 sm:bg-slate-950/92 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/20"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div
-                  className="inline-block font-mono text-[11px] tracking-[0.3em] uppercase border rounded px-2 py-1"
+                  className="inline-block font-mono text-[10px] sm:text-[11px] tracking-[0.3em] uppercase border rounded px-2 py-1"
                   style={{
                     color: CATEGORY_COLORS[selected.category],
                     borderColor: `${CATEGORY_COLORS[selected.category]}66`,
@@ -581,7 +603,7 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
                 >
                   {selected.category}
                 </div>
-                <div className="mt-3 font-mono text-2xl font-semibold text-white">{selected.name}</div>
+                <div className="mt-3 font-mono text-xl sm:text-2xl font-semibold text-white">{selected.name}</div>
               </div>
               <button
                 onClick={() => setSelectedId(null)}
@@ -593,19 +615,19 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
             <div className="mt-4 grid grid-cols-2 gap-2.5">
               <div className="rounded-md border border-cyan-500/25 bg-slate-900/70 px-3.5 py-2.5">
                 <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">Years</div>
-                <div className="mt-0.5 font-mono text-xl font-semibold text-cyan-200">{selected.years}</div>
+                <div className="mt-0.5 font-mono text-lg sm:text-xl font-semibold text-cyan-200">{selected.years}</div>
               </div>
               {/* Only owned-in-production skills carry the highlight flag;
                   skip the card entirely for the rest. */}
               {selected.highlight ? (
                 <div className="rounded-md border border-cyan-500/25 bg-slate-900/70 px-3.5 py-2.5">
                   <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">Highlight</div>
-                  <div className="mt-0.5 font-mono text-xl font-semibold text-cyan-200">Yes</div>
+                  <div className="mt-0.5 font-mono text-lg sm:text-xl font-semibold text-cyan-200">Yes</div>
                 </div>
               ) : null}
             </div>
             {selected.blurb ? (
-              <p className="mt-4 text-[15px] text-slate-200 leading-relaxed">{selected.blurb}</p>
+              <p className="mt-4 text-[14px] sm:text-[15px] text-slate-200 leading-relaxed">{selected.blurb}</p>
             ) : null}
           </motion.aside>
         ) : null}

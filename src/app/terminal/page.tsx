@@ -45,6 +45,13 @@ export default function Home() {
 
   const [theme, setTheme] = useState<Theme>('dark');
   const [visualEffect, setVisualEffect] = useState<VisualEffect>('neural');
+  // Touch capability, not screen width: the 980px layout viewport on this
+  // route makes window.innerWidth report ~980 on phones, so every
+  // touch-specific affordance must key off this instead of width.
+  const [isTouch, setIsTouch] = useState(false);
+  // Set once the visitor picks an effect themselves, so the touch default
+  // below never stomps an explicit choice.
+  const effectChosenRef = useRef(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [uptime, setUptime] = useState({
     hours: 0,
@@ -362,6 +369,19 @@ export default function Home() {
     const interval = setInterval(calculateUptime, 60000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Detect touch devices. With the 980px layout viewport, the animated
+  // canvas backgrounds would paint a desktop-sized framebuffer on phone
+  // GPUs, so touch devices boot with effects off ('none' renders the cheap
+  // classic particles). The selector stays fully functional; we only skip
+  // the default when the visitor has already picked an effect.
+  useEffect(() => {
+    const touch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    setIsTouch(touch);
+    if (touch && !effectChosenRef.current) {
+      setVisualEffect('none');
+    }
   }, []);
 
   return (
@@ -760,7 +780,10 @@ export default function Home() {
             </div>
             <select
               value={visualEffect}
-              onChange={(e) => setVisualEffect(e.target.value as VisualEffect)}
+              onChange={(e) => {
+                effectChosenRef.current = true;
+                setVisualEffect(e.target.value as VisualEffect);
+              }}
               className="bg-gray-800/80 text-green-400 text-xs py-1 px-2 rounded border border-green-500/30 backdrop-blur-sm cursor-pointer hover:bg-gray-700/80 transition-colors"
             >
               <option value="neural">Neural Network</option>
@@ -769,6 +792,15 @@ export default function Home() {
               <option value="none">Classic</option>
             </select>
           </motion.div>
+
+          {/* The terminal's on-screen-keyboard helper (Terminal.tsx) hides
+              itself with md:hidden, which now matches on phones because the
+              layout viewport is 980px. Touch devices still need it to summon
+              the soft keyboard, so force it visible by id when touch is
+              available. */}
+          {isTouch && (
+            <style>{`#mobile-keyboard-button { display: flex !important; }`}</style>
+          )}
 
           {/* Performance Monitor */}
           <PerformanceMonitor />

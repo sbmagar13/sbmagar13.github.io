@@ -13,74 +13,7 @@ import LabelPlate from './LabelPlate';
 import Typewriter from './Typewriter';
 import { usePerfTier } from './usePerfTier';
 import { PALETTE } from './Materials';
-
-interface Milestone {
-  year: string;
-  title: string;
-  description: string;
-  // Which monument shape to draw (procedural, no models needed).
-  shape: 'tower' | 'cluster' | 'orb' | 'cube' | 'helix' | 'book';
-  color: string;
-}
-
-const MILESTONES: Milestone[] = [
-  {
-    year: '2020',
-    title: 'AI / ML beginnings',
-    description:
-      'VolgAI, Genese Cloud Academy, IBZ Networks. Built AI chatbots with RASA (NLP), backend APIs with Django and Flask, RTSP/FFmpeg pipelines for CCTV image processing. Async work via Celery and RabbitMQ. AWS AI/ML Internship at Genese.',
-    shape: 'book',
-    color: PALETTE.ledWhite,
-  },
-  {
-    year: '2021',
-    title: 'Bachelor + first DevOps role',
-    description:
-      'Graduated Bachelor in Computer Engineering from Tribhuvan University (IOE, Pokhara). Joined Cloudyfox Technology in September as DevOps Engineer. First Terraform / Terragrunt at scale across AWS.',
-    shape: 'tower',
-    color: PALETTE.neonCyan,
-  },
-  {
-    year: '2022',
-    title: 'Containers and pipelines',
-    description:
-      'Ran Kubernetes for containerized workloads at Cloudyfox. Built CI/CD on GitLab CI and Jenkins for both app and infra deploys. SysOps, Linux admin, OpenVPN, centralized logging with CloudWatch, ELK, Grafana.',
-    shape: 'cluster',
-    color: PALETTE.neonBlue,
-  },
-  {
-    year: '2023',
-    title: 'Sole owner of a production platform',
-    description:
-      'Joined Threadcode Technologies as DevOps / SRE for EventLogic, a Swedish multi-tenant event-management SaaS. Owner of the entire AWS platform end to end: ECS Fargate, Aurora PostgreSQL, ElastiCache Redis, Amazon MQ in eu-north-1. Technical Reviewer for Python for DevOps (Packt).',
-    shape: 'cube',
-    color: PALETTE.neonMagenta,
-  },
-  {
-    year: '2024',
-    title: 'Reliability + multi-region DR',
-    description:
-      'Diagnosed and resolved a 19-minute platform outage caused by blocking Redis KEYS calls exhausting the JDBC thread pool. Drove a 68-task reliability program across 11 epics and 7 sprints. Built cross-region DR from eu-north-1 to eu-west-1 with Aurora Global Database, EFS replication, and shared KMS keys.',
-    shape: 'orb',
-    color: PALETTE.ledAmber,
-  },
-  {
-    year: '2025',
-    title: 'Observability + first MCP work',
-    description:
-      'Deployed self-hosted OneUptime on K3s in eu-central-1 for status pages, uptime monitoring, and on-call. OpenTelemetry collector dual-exports to OneUptime and Loki so observability survives a primary-region outage. Shipped an open-source Hashnode MCP server for Claude (later shelved when Hashnode terminated their public API).',
-    shape: 'helix',
-    color: PALETTE.neonPurple,
-  },
-  {
-    year: '2026',
-    title: 'Agentic DevOps + platform hardening',
-    description:
-      'Still running the production platform end to end. Hardening the multi-region story, sharpening SLOs, and going deep on AI agents for DevOps work: MCP, LangGraph, local LLM inference, self-learning side projects that wrap real ops tasks. Shipped this 3D portfolio as the public face of the practice. Open to remote senior DevOps / SRE roles.',
-    shape: 'orb',
-    color: PALETTE.neonCyan,
-  },
-];
+import { MILESTONES, type Milestone } from '@/data/career';
 
 function Monument({ shape, color }: { shape: Milestone['shape']; color: string }) {
   const ref = useRef<THREE.Group>(null);
@@ -450,12 +383,12 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
             animate={{ x: 0, opacity: 1, scale: 1 }}
             exit={{ x: 60, opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-1/2 -translate-y-1/2 right-6 w-[400px] bg-slate-950 sm:bg-slate-950/92 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 shadow-2xl shadow-cyan-500/20"
+            className="absolute top-1/2 -translate-y-1/2 right-6 w-[400px] bg-slate-950 sm:bg-slate-950/92 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/20"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div
-                  className="inline-block font-mono text-[11px] tracking-[0.3em] uppercase border rounded px-2 py-1"
+                  className="inline-block font-mono text-[10px] sm:text-[11px] tracking-[0.3em] uppercase border rounded px-2 py-1"
                   style={{
                     color: selected.color,
                     borderColor: `${selected.color}66`,
@@ -464,7 +397,7 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
                 >
                   Milestone · {selected.year}
                 </div>
-                <div className="mt-3 font-mono text-4xl font-semibold text-white tracking-wider">{selected.year}</div>
+                <div className="mt-3 font-mono text-3xl sm:text-4xl font-semibold text-white tracking-wider">{selected.year}</div>
               </div>
               <button
                 onClick={() => setSelectedIdx(null)}
@@ -473,8 +406,8 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
                 ×
               </button>
             </div>
-            <div className="mt-3 font-mono text-base text-cyan-200 leading-snug">{selected.title}</div>
-            <p className="mt-4 text-[15px] text-slate-200 leading-relaxed">{selected.description}</p>
+            <div className="mt-3 font-mono text-sm sm:text-base text-cyan-200 leading-snug">{selected.title}</div>
+            <p className="mt-4 text-[14px] sm:text-[15px] text-slate-200 leading-relaxed">{selected.description}</p>
           </motion.aside>
         ) : null}
       </AnimatePresence>

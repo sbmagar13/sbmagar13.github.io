@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaServer, FaDatabase, FaDocker, FaLock, FaUserFriends, FaChartArea, FaPython, FaAws, FaDharmachakra, FaGithub, FaLinkedin } from 'react-icons/fa';
+import { SKILLS, STORIES } from '@/data/career';
 import SocialConnections from './SocialConnections';
 import SkillRadar from './SkillRadar';
 import LiveMetrics from './LiveMetrics';
 
-// Years of production use per tool, same inventory as the 3D Skills Hall
-// (src/components/Experience3D/SkillsHall.tsx). No invented percentages.
+// Years of production use per tool, pulled from the shared SKILLS
+// inventory in src/data/career.ts (the same data the 3D Skills Hall
+// renders). No invented percentages.
 interface SkillMetric {
   name: string;
   years: number;
@@ -16,57 +18,74 @@ interface SkillMetric {
   color: string;
 }
 
-const MAX_YEARS = 5;
+// Years for one skill id, straight from the shared inventory.
+const skillYears = (id: string): number =>
+  SKILLS.find((skill) => skill.id === id)?.years ?? 0;
+
+// Combined entries ('IAM & KMS', 'Prometheus & Grafana') claim the
+// years both tools have been in production, so take the smaller.
+const combinedYears = (...ids: string[]): number =>
+  Math.min(...ids.map(skillYears));
+
+const skillMetrics: SkillMetric[] = [
+  { name: 'Python', years: skillYears('python'), icon: <FaPython />, color: 'bg-purple-500' },
+  { name: 'AWS', years: skillYears('aws'), icon: <FaAws />, color: 'bg-blue-500' },
+  { name: 'Terraform', years: skillYears('terraform'), icon: <FaServer />, color: 'bg-blue-600' },
+  { name: 'Docker', years: skillYears('docker'), icon: <FaDocker />, color: 'bg-blue-400' },
+  { name: 'PostgreSQL', years: skillYears('postgresql'), icon: <FaDatabase />, color: 'bg-blue-700' },
+  { name: 'IAM & KMS', years: combinedYears('aws-iam', 'kms'), icon: <FaLock />, color: 'bg-blue-800' },
+  { name: 'Kubernetes (K3s)', years: skillYears('kubernetes'), icon: <FaDharmachakra />, color: 'bg-blue-300' },
+  { name: 'Prometheus & Grafana', years: combinedYears('prometheus', 'grafana'), icon: <FaChartArea />, color: 'bg-purple-600' },
+];
+
+// Chart scale: the longest bar sets 100% width and the radar's outer
+// ring (Python at 5 years today). Year bumps in career.ts flow through.
+const MAX_YEARS = Math.max(...skillMetrics.map((metric) => metric.years));
+
+const radarSkills = [
+  { name: 'Python', years: skillYears('python') },
+  { name: 'AWS', years: skillYears('aws') },
+  { name: 'Terraform', years: skillYears('terraform') },
+  { name: 'Docker', years: skillYears('docker') },
+  { name: 'Kubernetes', years: skillYears('kubernetes') },
+  { name: 'Observability', years: combinedYears('prometheus', 'grafana') },
+];
+
+// Real war stories, the same verified set as STORIES in
+// src/data/career.ts. `sources` pins each incident to its STORIES
+// entries so the link is checked at compile time; resolution and
+// learnings are this view's condensed retelling of those same facts,
+// no new claims.
+const incidents = [
+  {
+    id: 'INC-001',
+    sources: [STORIES.aws],
+    title: '19-Minute Full-Platform Outage',
+    severity: 'Critical',
+    resolution: 'Traced to blocking Redis KEYS calls exhausting the Tomcat/JDBC thread pool. Added connection-pool checkout timeouts and tuned RDS parameters.',
+    learnings: 'Turned the postmortem into a 68-task reliability program across 11 epics and 7 sprints.'
+  },
+  {
+    id: 'INC-002',
+    sources: [STORIES.aurora],
+    title: 'No Disaster Recovery Existed',
+    severity: 'Major',
+    resolution: 'Built cross-region DR from eu-north-1 to eu-west-1: Aurora Global Database, EFS and ECR replication, shared KMS keys, documented promotion runbook.',
+    learnings: 'A DR plan you have not written down and rehearsed is not a DR plan.'
+  },
+  {
+    id: 'INC-003',
+    sources: [STORIES.grafana, STORIES.opentelemetry],
+    title: 'Fragmented Monitoring',
+    severity: 'Minor',
+    resolution: 'Consolidated into one OpenTelemetry pipeline dual-exporting to self-hosted OneUptime and Loki, with Grafana on top.',
+    learnings: 'Observability has to live outside the blast radius. OneUptime runs in a separate region.'
+  }
+];
 
 const About = () => {
   const [activeTab, setActiveTab] = useState('live-metrics');
   const [showConnectionsHint, setShowConnectionsHint] = useState(true);
-
-  const skillMetrics: SkillMetric[] = [
-    { name: 'Python', years: 5, icon: <FaPython />, color: 'bg-purple-500' },
-    { name: 'AWS', years: 4, icon: <FaAws />, color: 'bg-blue-500' },
-    { name: 'Terraform', years: 4, icon: <FaServer />, color: 'bg-blue-600' },
-    { name: 'Docker', years: 4, icon: <FaDocker />, color: 'bg-blue-400' },
-    { name: 'PostgreSQL', years: 4, icon: <FaDatabase />, color: 'bg-blue-700' },
-    { name: 'IAM & KMS', years: 4, icon: <FaLock />, color: 'bg-blue-800' },
-    { name: 'Kubernetes (K3s)', years: 3, icon: <FaDharmachakra />, color: 'bg-blue-300' },
-    { name: 'Prometheus & Grafana', years: 3, icon: <FaChartArea />, color: 'bg-purple-600' },
-  ];
-
-  const radarSkills = [
-    { name: 'Python', years: 5 },
-    { name: 'AWS', years: 4 },
-    { name: 'Terraform', years: 4 },
-    { name: 'Docker', years: 4 },
-    { name: 'Kubernetes', years: 3 },
-    { name: 'Observability', years: 3 },
-  ];
-
-  // Real war stories, same verified set as the 3D data center
-  // (src/components/Experience3D/DataCenter.tsx).
-  const incidents = [
-    {
-      id: 'INC-001',
-      title: '19-Minute Full-Platform Outage',
-      severity: 'Critical',
-      resolution: 'Traced to blocking Redis KEYS calls exhausting the Tomcat/JDBC thread pool. Added connection-pool checkout timeouts and tuned RDS parameters.',
-      learnings: 'Turned the postmortem into a 68-task reliability program across 11 epics and 7 sprints.'
-    },
-    {
-      id: 'INC-002',
-      title: 'No Disaster Recovery Existed',
-      severity: 'Major',
-      resolution: 'Built cross-region DR from eu-north-1 to eu-west-1: Aurora Global Database, EFS and ECR replication, shared KMS keys, documented promotion runbook.',
-      learnings: 'A DR plan you have not written down and rehearsed is not a DR plan.'
-    },
-    {
-      id: 'INC-003',
-      title: 'Fragmented Monitoring',
-      severity: 'Minor',
-      resolution: 'Consolidated into one OpenTelemetry pipeline dual-exporting to self-hosted OneUptime and Loki, with Grafana on top.',
-      learnings: 'Observability has to live outside the blast radius. OneUptime runs in a separate region.'
-    }
-  ];
 
   return (
     <div className="bg-gray-900 text-gray-100 p-6 rounded-lg border border-green-500 shadow-lg shadow-green-500/20">

@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaDocker, FaGithub, FaServer, FaChartLine, FaBook } from 'react-icons/fa';
+import { RACKS } from '@/data/career';
 import CiCdPipeline from './CiCdPipeline';
 import DockerContainers from './DockerContainers';
 import ProjectsGraph from './ProjectsGraph';
 
-// The same verified project set as the 3D data center
-// (src/components/Experience3D/DataCenter.tsx). No invented uptimes,
-// no fake performance scores. Facts are real, sourced from the resume.
+// The same verified project set as the 3D data center, derived from
+// RACKS in src/data/career.ts (the single source of truth for career
+// facts). No invented uptimes, no fake performance scores.
 interface Project {
   id: string;
   name: string;
@@ -26,269 +27,191 @@ interface Project {
   logs: string[];
 }
 
+// Presentation extras this cluster view layers on top of the shared
+// rack data: a kubectl-style namespace, the role line, and a condensed
+// log history per project. `facts` and `sublabel` override the rack
+// where this view words things differently or the rack defines no
+// metrics. Every rack id in RACKS needs an entry here.
+interface ProjectExtras {
+  namespace: string;
+  role: string;
+  logs: string[];
+  sublabel?: string;
+  facts?: { label: string; value: string }[];
+}
+
+const PROJECT_EXTRAS: Record<string, ProjectExtras> = {
+  eventlogic: {
+    namespace: 'production',
+    role: 'Sole platform owner',
+    logs: [
+      '[INFO] ECS Fargate services healthy behind the ALB',
+      '[INFO] Aurora schema-per-tenant routing active',
+      '[INFO] Tenant lookup served from the DynamoDB registry',
+      '[INFO] CloudFront serving tenant assets at the edge',
+      '[INFO] Amazon MQ broker connections stable',
+    ],
+  },
+  'multi-region-dr': {
+    namespace: 'production',
+    role: 'Designed and built solo',
+    logs: [
+      '[INFO] Aurora Global Database replication nominal',
+      '[INFO] EFS replication to eu-west-1 active',
+      '[INFO] ECR cross-region image sync complete',
+      '[INFO] KMS keys shared across both regions',
+      '[INFO] Promotion runbook reviewed and versioned',
+    ],
+  },
+  'tenant-orchestrator': {
+    namespace: 'platform',
+    role: 'Author and operator',
+    // The rack abbreviates this to 'provisioning service'.
+    sublabel: 'tenant provisioning service',
+    logs: [
+      '[INFO] Tenant schema created on Aurora',
+      '[INFO] SQS and EventBridge wiring applied',
+      '[INFO] ALB listener rule registered',
+      '[INFO] CloudFront / S3 distribution provisioned',
+      '[INFO] Route 53 record set, tenant registered in DynamoDB',
+    ],
+  },
+  'reliability-program': {
+    namespace: 'sre',
+    role: 'Incident lead, program driver',
+    logs: [
+      '[WARN] Blocking Redis KEYS call found in a hot path',
+      '[INFO] Postmortem: KEYS calls exhausted the JDBC thread pool',
+      '[INFO] Connection-pool checkout timeouts added',
+      '[INFO] RDS parameter group tuned',
+      '[INFO] Reliability program: 68 tasks, 11 epics, 7 sprints',
+    ],
+  },
+  oneuptime: {
+    namespace: 'observability',
+    role: 'Built and operated solo',
+    logs: [
+      '[INFO] K3s cluster healthy in eu-central-1',
+      '[INFO] Status pages serving',
+      '[INFO] On-call schedule synced',
+      '[INFO] Incident workflows tested',
+      '[INFO] Runs outside the primary-region blast radius by design',
+    ],
+  },
+  'otel-pipeline': {
+    namespace: 'observability',
+    role: 'Designed and built solo',
+    // The rack defines no metrics; these chips are this view's own.
+    facts: [
+      { label: 'Exports', value: 'OneUptime + Loki' },
+      { label: 'Signals', value: 'metrics / logs / traces' },
+    ],
+    logs: [
+      '[INFO] Collector dual-exporting to OneUptime and Loki',
+      '[INFO] Metrics, logs, and traces on one pipeline',
+      '[INFO] Grafana dashboards reading unified data',
+      '[INFO] Fragmented monitoring agents decommissioned',
+      '[INFO] Prometheus scrape targets consolidated',
+    ],
+  },
+  'es-cluster': {
+    namespace: 'platform',
+    role: 'Built and operated solo',
+    logs: [
+      '[INFO] Three-node cluster status green',
+      '[INFO] Split-restart playbook executed, no cascade',
+      '[INFO] Terraform plan clean, no drift',
+      '[WARN] One node restarts at a time, by design',
+      '[INFO] Ansible inventory verified',
+    ],
+  },
+  'ci-cd-platform': {
+    namespace: 'devops',
+    role: 'Pipeline owner',
+    // The rack metric abbreviates Lambda as a lambda glyph; this view
+    // spells it out.
+    facts: [
+      { label: 'Platforms', value: '3' },
+      { label: 'Targets', value: 'ECS · Lambda · CF · EC2' },
+    ],
+    logs: [
+      '[INFO] GitLab CI pipeline green',
+      '[INFO] Jenkins job deployed to ECS',
+      '[INFO] CodePipeline release promoted',
+      '[INFO] Lambda and CloudFront targets updated',
+      '[INFO] Shared pipeline patterns applied to infra repos',
+    ],
+  },
+  'aws-finops': {
+    namespace: 'devops',
+    role: 'Cost owner',
+    facts: [
+      { label: 'Levers', value: 'NAT / endpoints / retention' },
+      { label: 'Cadence', value: 'ongoing' },
+    ],
+    logs: [
+      '[INFO] Orphaned NAT Gateways removed',
+      '[INFO] S3 and DynamoDB gateway endpoints added',
+      '[INFO] CloudWatch log-retention policies set',
+      '[INFO] EBS volumes right-sized',
+      '[INFO] Monthly AWS bill reviewed',
+    ],
+  },
+  'hashnode-mcp': {
+    namespace: 'ai',
+    role: 'Open-source author',
+    facts: [
+      { label: 'License', value: 'open source' },
+      { label: 'State', value: 'shelved' },
+    ],
+    logs: [
+      '[INFO] MCP server released as open source',
+      '[INFO] Claude wired into the Hashnode content API',
+      '[WARN] Hashnode terminated public API access',
+      '[INFO] Project shelved, repo stays public',
+      '[INFO] Pattern reused in agentic-DevOps work',
+    ],
+  },
+  'vqgan-clip': {
+    namespace: 'ai',
+    role: 'Personal research project',
+    facts: [
+      { label: 'Era', value: '2021' },
+      { label: 'State', value: 'archived' },
+    ],
+    logs: [
+      '[INFO] VQGAN + CLIP pipeline built in PyTorch',
+      '[INFO] Text prompts rendered to images',
+      '[INFO] Artifact from the AI/ML era, 2021',
+      '[INFO] Repo public on GitHub',
+      '[INFO] Archived, kept for the record',
+    ],
+  },
+};
+
+// One card per rack, in RACKS order. The career facts (name, sublabel,
+// description, tech, status, metrics, GitHub link) come straight from
+// career.ts, so an edit there shows up here too.
+const projects: Project[] = RACKS.map((rack) => {
+  const extras = PROJECT_EXTRAS[rack.id];
+  return {
+    id: rack.id,
+    name: rack.label,
+    namespace: extras.namespace,
+    sublabel: extras.sublabel ?? rack.sublabel,
+    description: rack.description,
+    role: extras.role,
+    tech: rack.tech,
+    status: rack.status as Project['status'],
+    facts: extras.facts ?? rack.metrics ?? [],
+    links: { github: rack.github },
+    logs: extras.logs,
+  };
+});
+
 const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState<'logs' | 'metrics' | 'docs'>('metrics');
-
-  const projects: Project[] = [
-    {
-      id: 'eventlogic',
-      name: 'eventlogic',
-      namespace: 'production',
-      sublabel: 'multi-tenant SaaS · eu-north-1',
-      description:
-        'Swedish multi-tenant event-management SaaS. Sole platform owner. ECS Fargate services behind ALB, Aurora PostgreSQL with schema-per-tenant, ElastiCache Redis, Amazon MQ. Tenant routing via DynamoDB registry. Customers across Europe.',
-      role: 'Sole platform owner',
-      tech: ['ECS Fargate', 'Aurora PostgreSQL', 'ElastiCache', 'Amazon MQ', 'DynamoDB', 'CloudFront'],
-      status: 'Running',
-      facts: [
-        { label: 'Region', value: 'eu-north-1' },
-        { label: 'Tenancy', value: 'schema-per-tenant' },
-      ],
-      links: {},
-      logs: [
-        '[INFO] ECS Fargate services healthy behind the ALB',
-        '[INFO] Aurora schema-per-tenant routing active',
-        '[INFO] Tenant lookup served from the DynamoDB registry',
-        '[INFO] CloudFront serving tenant assets at the edge',
-        '[INFO] Amazon MQ broker connections stable',
-      ],
-    },
-    {
-      id: 'multi-region-dr',
-      name: 'dr-failover',
-      namespace: 'production',
-      sublabel: 'cross-region disaster recovery',
-      description:
-        'Cross-region disaster recovery from eu-north-1 to eu-west-1. Built where none existed. Aurora Global Database for sub-second cross-region replication, EFS and ECR replication, shared KMS keys across regions. Documented runbook for promotion.',
-      role: 'Designed and built solo',
-      tech: ['Aurora Global DB', 'EFS', 'ECR', 'KMS', 'Route 53'],
-      status: 'Running',
-      facts: [
-        { label: 'Primary', value: 'eu-north-1' },
-        { label: 'Failover', value: 'eu-west-1' },
-      ],
-      links: {},
-      logs: [
-        '[INFO] Aurora Global Database replication nominal',
-        '[INFO] EFS replication to eu-west-1 active',
-        '[INFO] ECR cross-region image sync complete',
-        '[INFO] KMS keys shared across both regions',
-        '[INFO] Promotion runbook reviewed and versioned',
-      ],
-    },
-    {
-      id: 'tenant-orchestrator',
-      name: 'tenant-orch',
-      namespace: 'platform',
-      sublabel: 'tenant provisioning service',
-      description:
-        'Python tenant-provisioning orchestrator. One API call sets up schema-per-tenant on Aurora, wires SQS and EventBridge, creates ALB listener rules, provisions a CloudFront / S3 distribution, configures Route 53 records, and registers the tenant in DynamoDB.',
-      role: 'Author and operator',
-      tech: ['Python', 'FastAPI', 'Aurora', 'SQS', 'EventBridge', 'Route 53'],
-      status: 'Running',
-      facts: [
-        { label: 'Per tenant', value: 'one call' },
-        { label: 'Steps', value: '6+' },
-      ],
-      links: {},
-      logs: [
-        '[INFO] Tenant schema created on Aurora',
-        '[INFO] SQS and EventBridge wiring applied',
-        '[INFO] ALB listener rule registered',
-        '[INFO] CloudFront / S3 distribution provisioned',
-        '[INFO] Route 53 record set, tenant registered in DynamoDB',
-      ],
-    },
-    {
-      id: 'reliability-program',
-      name: 'reliability',
-      namespace: 'sre',
-      sublabel: 'incident · 19m outage fix',
-      description:
-        'Diagnosed a 19-minute full-platform outage caused by blocking Redis KEYS calls exhausting the Tomcat/JDBC thread pool. Added connection-pool checkout timeouts, tuned RDS parameters, and drove a 68-task reliability program across 11 epics and 7 sprints to prevent recurrence.',
-      role: 'Incident lead, program driver',
-      tech: ['Aurora', 'Redis', 'JDBC', 'Postmortem', 'SLOs'],
-      status: 'Running',
-      facts: [
-        { label: 'Outage', value: '19 min' },
-        { label: 'Tasks', value: '68 / 11 epics' },
-      ],
-      links: {},
-      logs: [
-        '[WARN] Blocking Redis KEYS call found in a hot path',
-        '[INFO] Postmortem: KEYS calls exhausted the JDBC thread pool',
-        '[INFO] Connection-pool checkout timeouts added',
-        '[INFO] RDS parameter group tuned',
-        '[INFO] Reliability program: 68 tasks, 11 epics, 7 sprints',
-      ],
-    },
-    {
-      id: 'oneuptime',
-      name: 'oneuptime',
-      namespace: 'observability',
-      sublabel: 'self-hosted SRE platform',
-      description:
-        'Self-hosted OneUptime on K3s in eu-central-1 (separate region from primary). Status pages, uptime monitoring, on-call scheduling, incident management. Designed so observability survives a primary-region outage.',
-      role: 'Built and operated solo',
-      tech: ['K3s', 'OneUptime', 'OpenTelemetry', 'Loki'],
-      status: 'Running',
-      facts: [
-        { label: 'Region', value: 'eu-central-1' },
-        { label: 'Surface', value: 'status / on-call' },
-      ],
-      links: {},
-      logs: [
-        '[INFO] K3s cluster healthy in eu-central-1',
-        '[INFO] Status pages serving',
-        '[INFO] On-call schedule synced',
-        '[INFO] Incident workflows tested',
-        '[INFO] Runs outside the primary-region blast radius by design',
-      ],
-    },
-    {
-      id: 'otel-pipeline',
-      name: 'otel',
-      namespace: 'observability',
-      sublabel: 'observability pipeline',
-      description:
-        'OpenTelemetry collector dual-exports metrics, logs, and traces to OneUptime and Loki at the same time. Consolidated fragmented monitoring into one observability stack. Grafana sits on top.',
-      role: 'Designed and built solo',
-      tech: ['OpenTelemetry', 'Loki', 'Grafana', 'Prometheus'],
-      status: 'Running',
-      facts: [
-        { label: 'Exports', value: 'OneUptime + Loki' },
-        { label: 'Signals', value: 'metrics / logs / traces' },
-      ],
-      links: {},
-      logs: [
-        '[INFO] Collector dual-exporting to OneUptime and Loki',
-        '[INFO] Metrics, logs, and traces on one pipeline',
-        '[INFO] Grafana dashboards reading unified data',
-        '[INFO] Fragmented monitoring agents decommissioned',
-        '[INFO] Prometheus scrape targets consolidated',
-      ],
-    },
-    {
-      id: 'es-cluster',
-      name: 'es-cluster',
-      namespace: 'platform',
-      sublabel: '3-node Elasticsearch',
-      description:
-        'Self-managed three-node Elasticsearch cluster managed with Terraform and Ansible. Split deploy and split-restart playbooks so a single config change cannot cascade across the cluster.',
-      role: 'Built and operated solo',
-      tech: ['Elasticsearch', 'Terraform', 'Ansible'],
-      status: 'Maintenance',
-      facts: [
-        { label: 'Nodes', value: '3' },
-        { label: 'Deploy', value: 'split-restart' },
-      ],
-      links: {},
-      logs: [
-        '[INFO] Three-node cluster status green',
-        '[INFO] Split-restart playbook executed, no cascade',
-        '[INFO] Terraform plan clean, no drift',
-        '[WARN] One node restarts at a time, by design',
-        '[INFO] Ansible inventory verified',
-      ],
-    },
-    {
-      id: 'ci-cd-platform',
-      name: 'ci-cd',
-      namespace: 'devops',
-      sublabel: 'pipelines · 3 platforms',
-      description:
-        'CI/CD pipelines spanning Jenkins, GitLab CI, and AWS CodePipeline / CodeBuild. Targets include ECS, Lambda, CloudFront, and EC2 deployments. App and infra share pipeline patterns.',
-      role: 'Pipeline owner',
-      tech: ['Jenkins', 'GitLab CI', 'CodePipeline', 'CodeBuild', 'Docker'],
-      status: 'Running',
-      facts: [
-        { label: 'Platforms', value: '3' },
-        { label: 'Targets', value: 'ECS · Lambda · CF · EC2' },
-      ],
-      links: {},
-      logs: [
-        '[INFO] GitLab CI pipeline green',
-        '[INFO] Jenkins job deployed to ECS',
-        '[INFO] CodePipeline release promoted',
-        '[INFO] Lambda and CloudFront targets updated',
-        '[INFO] Shared pipeline patterns applied to infra repos',
-      ],
-    },
-    {
-      id: 'aws-finops',
-      name: 'finops',
-      namespace: 'devops',
-      sublabel: 'AWS cost optimization',
-      description:
-        'Cut monthly AWS spend by removing orphaned NAT Gateways, adding S3 and DynamoDB gateway endpoints to drop data-transfer cost, setting log-retention policies on CloudWatch, and right-sizing EBS volumes.',
-      role: 'Cost owner',
-      tech: ['VPC Endpoints', 'CloudWatch Logs', 'EBS', 'NAT'],
-      status: 'Maintenance',
-      facts: [
-        { label: 'Levers', value: 'NAT / endpoints / retention' },
-        { label: 'Cadence', value: 'ongoing' },
-      ],
-      links: {},
-      logs: [
-        '[INFO] Orphaned NAT Gateways removed',
-        '[INFO] S3 and DynamoDB gateway endpoints added',
-        '[INFO] CloudWatch log-retention policies set',
-        '[INFO] EBS volumes right-sized',
-        '[INFO] Monthly AWS bill reviewed',
-      ],
-    },
-    {
-      id: 'hashnode-mcp',
-      name: 'hashnode-mcp',
-      namespace: 'ai',
-      sublabel: 'shelved · API terminated',
-      description:
-        'Open-source Model Context Protocol server that wired AI assistants like Claude into the Hashnode content API. Shelved after Hashnode terminated public API access. The pattern lives on in the broader agentic-DevOps work.',
-      role: 'Open-source author',
-      tech: ['Python', 'MCP', 'Hashnode API'],
-      status: 'Completed',
-      facts: [
-        { label: 'License', value: 'open source' },
-        { label: 'State', value: 'shelved' },
-      ],
-      links: {
-        github: 'https://github.com/sbmagar13/hashnode-mcp-server',
-      },
-      logs: [
-        '[INFO] MCP server released as open source',
-        '[INFO] Claude wired into the Hashnode content API',
-        '[WARN] Hashnode terminated public API access',
-        '[INFO] Project shelved, repo stays public',
-        '[INFO] Pattern reused in agentic-DevOps work',
-      ],
-    },
-    {
-      id: 'vqgan-clip',
-      name: 'vqgan-clip',
-      namespace: 'ai',
-      sublabel: 'text-to-image · 2021',
-      description:
-        'Multimodal text-to-image generation using VQGAN + CLIP architectures in PyTorch. From the AI/ML era of the career, kept here as an artifact.',
-      role: 'Personal research project',
-      tech: ['PyTorch', 'CLIP', 'VQGAN', 'Python'],
-      status: 'Completed',
-      facts: [
-        { label: 'Era', value: '2021' },
-        { label: 'State', value: 'archived' },
-      ],
-      links: {
-        github: 'https://github.com/sbmagar13/VQGAN-CLIP-Text-to-Image',
-      },
-      logs: [
-        '[INFO] VQGAN + CLIP pipeline built in PyTorch',
-        '[INFO] Text prompts rendered to images',
-        '[INFO] Artifact from the AI/ML era, 2021',
-        '[INFO] Repo public on GitHub',
-        '[INFO] Archived, kept for the record',
-      ],
-    },
-  ];
 
   const handleProjectClick = (project: Project) => {
     setSelectedProject(project);

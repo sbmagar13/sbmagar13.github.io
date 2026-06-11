@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -42,19 +43,19 @@ export const metadata: Metadata = {
     title: "Sagar Budhathoki | Senior DevOps / SRE Engineer",
     description:
       "Interactive 3D DevOps portfolio. Kubernetes, Terraform, CI/CD, observability, AI agents for ops, real production war stories.",
-    images: [{ url: "/sagar-mountains.jpg", width: 1200, height: 630, alt: "Sagar Budhathoki" }],
+    images: [{ url: "/og-card.png", width: 1200, height: 630, alt: "Sagar Budhathoki, Senior DevOps / SRE Engineer" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Sagar Budhathoki | Senior DevOps / SRE Engineer",
     description:
       "Interactive 3D DevOps portfolio. Kubernetes, Terraform, CI/CD, observability, AI agents for ops, real production war stories.",
-    images: ["/sagar-mountains.jpg"],
+    images: ["/og-card.png"],
   },
   robots: { index: true, follow: true },
   icons: {
     icon: "/favicon_logo.ico",
-    apple: "/favicon.png",
+    apple: "/apple-icon.png",
   },
 };
 
@@ -78,6 +79,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        {/* Privacy-light page counter (GoatCounter: no cookies, no PII).
+            Register the code 'sbmagar13' at goatcounter.com to activate;
+            until then the beacon 404s harmlessly. */}
+        <Script
+          data-goatcounter="https://sbmagar13.goatcounter.com/count"
+          src="https://gc.zgo.at/count.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

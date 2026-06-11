@@ -37,7 +37,9 @@ function generateBar(percentage: number): string {
   // Ensure percentage is between 0 and 100
   const clampedPercentage = Math.max(0, Math.min(100, percentage));
   const filledChars = Math.floor((clampedPercentage / 100) * width);
-  return '█'.repeat(filledChars) + '-'.repeat(width - filledChars);
+  // Pure ASCII bar: the block glyph isn't in Geist Mono and falls back
+  // to a mismatched font, which is what garbled the old banner.
+  return '#'.repeat(filledChars) + '-'.repeat(width - filledChars);
 }
 
 // Available commands
@@ -77,7 +79,12 @@ const commands: Record<string, (args: string[]) => string> = {
   \x1b[1;36mhelp\x1b[0m                 Show this help message
   \x1b[1;36mclear\x1b[0m                Clear the terminal (Ctrl+L works too)
   \x1b[1;36mhistory\x1b[0m              Show command history
+  \x1b[1;36mtour\x1b[0m                 Guided tour, auto-runs the good commands (alias: demo)
   \x1b[1;36mexit\x1b[0m                 Exit terminal mode (switch to GUI)
+
+\x1b[1;33mFilesystem:\x1b[0m
+  \x1b[1;36mls\x1b[0m                   List the files here ('ls -la' works too)
+  \x1b[1;36mcat [file]\x1b[0m           Read a file, e.g. 'cat about.txt'
 
 \x1b[1;33mProfile Commands:\x1b[0m
   \x1b[1;36mabout\x1b[0m                Show information about me
@@ -107,14 +114,53 @@ const commands: Record<string, (args: string[]) => string> = {
   \x1b[1;36mfortune\x1b[0m              Get a random DevOps fortune
   \x1b[1;36m404\x1b[0m                  Show a not found page
 
-\x1b[90mTab completes. Up arrow recalls. There are more commands than this list admits.\x1b[0m
+\x1b[90mTab completes. Up arrow recalls. Pipe to filter: 'skills | grep aws'.\x1b[0m
+\x1b[90mThere are more commands than this list admits.\x1b[0m
 `;
   },
   
   clear: () => {
     return '\x1b[2J\x1b[3J\x1b[H';
   },
-  
+
+  ls: () => {
+    // ls -la theatre: the perms and owner are set dressing, but the
+    // size column is real, it is the exact length of what 'cat'
+    // prints for that file. Flags are accepted and ignored, so plain
+    // 'ls' and 'ls -la' both land here.
+    const names = Object.keys(FILES).sort();
+    const sizes = names.map((name) => FILES[name]().length);
+    const sizeWidth = Math.max(...sizes.map((size) => String(size).length));
+    const rows = names.map(
+      (name, i) =>
+        `-rw-r--r--  1 sagar  sagar  ${String(sizes[i]).padStart(sizeWidth)} \x1b[1;36m${name}\x1b[0m`
+    );
+
+    return `
+total ${names.length}
+${rows.join('\n')}
+
+\x1b[90mcat <file> to read\x1b[0m
+`;
+  },
+
+  cat: (args: string[]) => {
+    if (args.length === 0 || !args[0]) {
+      return `
+usage: cat <file>
+\x1b[90mTry 'ls' to see what is readable here.\x1b[0m
+`;
+    }
+
+    // './about.txt' and 'about.txt' both resolve, like a real shell
+    const name = args[0].replace(/^\.\//, '');
+    if (!(name in FILES)) {
+      return `cat: ${args[0]}: No such file or directory`;
+    }
+
+    return FILES[name]();
+  },
+
   about: () => {
     return `
 \x1b[1;32m=== SYSTEM INFORMATION ===\x1b[0m
@@ -254,7 +300,7 @@ Type 'connect' for more detailed social connection options.
   \x1b[1;36mWebsite:      \x1b[0m https://sagarbudhathoki.com
 
 \x1b[1;33mConnection Status:\x1b[0m
-  \x1b[1;32m● ONLINE\x1b[0m - All endpoints available and ready for connection
+  \x1b[1;32m* ONLINE\x1b[0m - All endpoints available and ready for connection
   \x1b[1;36mResponse Time:\x1b[0m < 24 hours
   \x1b[1;36mPreferred Protocols:\x1b[0m Email, LinkedIn
 
@@ -510,13 +556,13 @@ GitHub Pages already scales this site harder than any replica count I could type
 \x1b[1;32m=== THE PLATFORM I RUN (simplified, real) ===\x1b[0m
 
 \x1b[1;36m  Internet\x1b[0m
-\x1b[1;36m     │\x1b[0m
-\x1b[1;36m  Route 53 ── CloudFront ── ALB\x1b[0m
-\x1b[1;36m     │\x1b[0m
-\x1b[1;36m  ECS Fargate services · eu-north-1\x1b[0m
-\x1b[1;36m     ├── Aurora PostgreSQL ── Global DB replica · eu-west-1 (DR)\x1b[0m
-\x1b[1;36m     ├── ElastiCache Redis\x1b[0m
-\x1b[1;36m     └── Amazon MQ\x1b[0m
+\x1b[1;36m     |\x1b[0m
+\x1b[1;36m  Route 53 --- CloudFront --- ALB\x1b[0m
+\x1b[1;36m     |\x1b[0m
+\x1b[1;36m  ECS Fargate services (eu-north-1)\x1b[0m
+\x1b[1;36m     +-- Aurora PostgreSQL --- Global DB replica, eu-west-1 (DR)\x1b[0m
+\x1b[1;36m     +-- ElastiCache Redis\x1b[0m
+\x1b[1;36m     \`-- Amazon MQ\x1b[0m
 
 \x1b[1;33mObservability:\x1b[0m
   OTEL collector dual-exports to OneUptime (K3s, eu-central-1) and Loki.
@@ -611,7 +657,7 @@ __/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__
  |/-=|___|=    ||    ||    ||    |_____/~\\___/
   \\_/      \\_O=====O=====O=====O_/      \\_/\x1b[0m
 
-\x1b[90mNo brakes on the typo train. (There is no 'ls' here either; try 'help'.)\x1b[0m
+\x1b[90mNo brakes on the typo train. ('ls' does exist here; you just missed it.)\x1b[0m
 `;
   },
   
@@ -932,7 +978,80 @@ least privilege, and an offer letter. Type 'contact' to begin auth.
     return `
 git: this portfolio is already committed. Try 'git log'.
 `;
+  },
+
+  tour: () => {
+    // The real tour lives in the Terminal component, because it needs
+    // the terminal instance to auto-type. This fallback only appears
+    // if the registry is invoked directly (e.g. through a grep pipe).
+    return `
+tour: a guided walkthrough (about, skills, projects, incident), auto-typed.
+Run it at the interactive prompt.
+`;
+  },
+
+  demo: (args: string[]) => commands['tour'](args)
+};
+
+// Strip ANSI color escapes so grep matching and the YAML rendering
+// operate on the text a human actually sees.
+function stripAnsi(text: string): string {
+  return text.replace(/\x1b\[[0-9;]*m/g, '');
+}
+
+// Re-render the canonical 'skills' output as YAML-ish text. Derived
+// from the command itself, so the file and the command can never
+// drift apart. Section headers become keys, wrapped lines fold.
+function skillsAsYaml(): string {
+  const lines = stripAnsi(commands['skills']([])).split('\n');
+  const out: string[] = [
+    '# skills.yaml',
+    '# Same data as the skills command. If it is not here, it is not claimed.',
+    '',
+  ];
+  let key: string | null = null;
+  let values: string[] = [];
+
+  const flush = () => {
+    if (key && values.length === 1) {
+      out.push(`${key}: ${values[0]}`);
+    } else if (key && values.length > 1) {
+      out.push(`${key}: >-`);
+      values.forEach((value) => out.push(`  ${value}`));
+    }
+    key = null;
+    values = [];
+  };
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    if (!/^\s/.test(line) && line.trimEnd().endsWith(':')) {
+      flush();
+      key = line
+        .trimEnd()
+        .slice(0, -1)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    } else if (key && /^\s/.test(line)) {
+      values.push(line.trim());
+    }
   }
+  flush();
+
+  return `\n${out.join('\n')}\n`;
+}
+
+// Virtual filesystem backing 'ls' and 'cat'. Every file reuses the
+// honest command outputs above; nothing here is a second copy that
+// could rot out of sync.
+const FILES: Record<string, () => string> = {
+  'about.txt': () => commands['about']([]),
+  'skills.yaml': () => skillsAsYaml(),
+  'projects.md': () => commands['projects']([]),
+  'incident-2024.md': () => commands['incident']([]),
+  'infra.txt': () => commands['infra']([]),
+  'contact.txt': () => commands['contact']([]),
 };
 
 // Levenshtein distance, used for 'did you mean' suggestions
@@ -968,7 +1087,7 @@ export function getCommandNames(): string[] {
 
 // Execute a command and return the output
 export function executeCommand(input: string): string {
-  // Add to history
+  // Add to history (the full line, pipe and all, like a real shell)
   commandHistory.push(input);
 
   // Vim trap: once inside, only a proper quit gets you out
@@ -987,6 +1106,44 @@ Back in the shell. Type 'help' to continue.
 `;
   }
 
+  // One pipe stage: '<command> | grep [-i] <pattern>'. The left side
+  // runs through the normal dispatch (runCommand, so it is not pushed
+  // into history a second time); a line survives the filter when its
+  // ANSI-stripped text contains the pattern case-insensitively, and
+  // matched lines keep their original coloring.
+  const pipeIndex = input.indexOf('|');
+  if (pipeIndex !== -1) {
+    const left = input.slice(0, pipeIndex).trim();
+    const right = input.slice(pipeIndex + 1).trim();
+    const grepMatch = right.match(/^grep\s+(?:-i\s+)?(.+)$/);
+
+    if (input.indexOf('|', pipeIndex + 1) !== -1 || !grepMatch) {
+      return "\nonly '| grep <pattern>' is supported in this shell\n";
+    }
+
+    let pattern = grepMatch[1].trim();
+    // Tolerate quotes: grep "redis" and grep redis both work
+    if (
+      pattern.length >= 2 &&
+      ((pattern.startsWith('"') && pattern.endsWith('"')) ||
+        (pattern.startsWith("'") && pattern.endsWith("'")))
+    ) {
+      pattern = pattern.slice(1, -1);
+    }
+    const needle = pattern.toLowerCase();
+
+    // No matches means empty output, exactly like real grep.
+    return runCommand(left)
+      .split('\n')
+      .filter((line) => stripAnsi(line).toLowerCase().includes(needle))
+      .join('\n');
+  }
+
+  return runCommand(input);
+}
+
+// Dispatch a single plain command: no pipe handling, no history push.
+function runCommand(input: string): string {
   // Parse command and arguments
   const [command, ...args] = input.trim().split(' ');
 

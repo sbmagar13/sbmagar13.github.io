@@ -1,24 +1,39 @@
 'use client';
 
 import Blog from '@/components/Blog/Blog';
-import BlogPosts from './blog-posts';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { BlogPost } from '@/utils/blog';
 
-// This is a client component that uses the hardcoded blog posts
+// Client component that loads posts from the static JSON endpoint.
+// /api/blog is a force-static route handler, so the static export
+// ships it as a plain JSON file generated from content/blog/*.md.
 export default function BlogPostsWrapper() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
-  
-  useEffect(() => {
-    // Get the hardcoded blog posts
-    const fetchPosts = async () => {
-      const result = await BlogPosts();
-      setPosts(result.posts);
-    };
-    
-    fetchPosts();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/blog');
+      if (!response.ok) {
+        throw new Error(`Failed to load blog posts (status ${response.status})`);
+      }
+
+      const data: BlogPost[] = await response.json();
+      setPosts(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load blog posts');
+    } finally {
+      setLoading(false);
+    }
   }, []);
-  
-  // Pass the posts to the Blog component
-  return <Blog initialPosts={posts} />;
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  return <Blog posts={posts} loading={loading} error={error} onRetry={fetchPosts} />;
 }

@@ -16,184 +16,7 @@ import ClickBurst, { useBurstQueue } from './ClickBurst';
 import Typewriter from './Typewriter';
 import { usePerfTier } from './usePerfTier';
 import { PALETTE, statusColor } from './Materials';
-import type { ScreenMode } from './AnimatedScreen';
-
-// 11 racks = 11 projects. Real names, real statuses. Edit at will.
-interface RackData {
-  id: string;
-  label: string;
-  sublabel: string;
-  status: string;
-  description: string;
-  tech: string[];
-  metrics?: { label: string; value: string }[];
-  github?: string;
-  position: [number, number, number];
-  rotation?: [number, number, number];
-  screen?: ScreenMode;
-}
-
-const RACKS: RackData[] = [
-  // ROW 1 (back row, eu-north-1 production stack)
-  {
-    id: 'eventlogic',
-    label: 'eventlogic',
-    sublabel: 'multi-tenant SaaS · eu-north-1',
-    status: 'Running',
-    description:
-      'Swedish multi-tenant event-management SaaS. Sole platform owner. ECS Fargate services behind ALB, Aurora PostgreSQL with schema-per-tenant, ElastiCache Redis, Amazon MQ. Tenant routing via DynamoDB registry. Customers across Europe.',
-    tech: ['ECS Fargate', 'Aurora PostgreSQL', 'ElastiCache', 'Amazon MQ', 'DynamoDB', 'CloudFront'],
-    metrics: [
-      { label: 'Region', value: 'eu-north-1' },
-      { label: 'Tenancy', value: 'schema-per-tenant' },
-    ],
-    position: [-4.5, 0, -2.5],
-    screen: 'graph',
-  },
-  {
-    id: 'multi-region-dr',
-    label: 'dr-failover',
-    sublabel: 'cross-region disaster recovery',
-    status: 'Running',
-    description:
-      'Cross-region disaster recovery from eu-north-1 to eu-west-1. Built where none existed. Aurora Global Database for sub-second cross-region replication, EFS and ECR replication, shared KMS keys across regions. Documented runbook for promotion.',
-    tech: ['Aurora Global DB', 'EFS', 'ECR', 'KMS', 'Route 53'],
-    metrics: [
-      { label: 'Primary', value: 'eu-north-1' },
-      { label: 'Failover', value: 'eu-west-1' },
-    ],
-    position: [-2.7, 0, -2.5],
-    screen: 'pulse',
-  },
-  {
-    id: 'tenant-orchestrator',
-    label: 'tenant-orch',
-    sublabel: 'provisioning service',
-    status: 'Running',
-    description:
-      'Python tenant-provisioning orchestrator. One API call sets up schema-per-tenant on Aurora, wires SQS and EventBridge, creates ALB listener rules, provisions a CloudFront / S3 distribution, configures Route 53 records, and registers the tenant in DynamoDB.',
-    tech: ['Python', 'FastAPI', 'Aurora', 'SQS', 'EventBridge', 'Route 53'],
-    metrics: [
-      { label: 'Per tenant', value: 'one call' },
-      { label: 'Steps', value: '6+' },
-    ],
-    position: [-0.9, 0, -2.5],
-    screen: 'terminal',
-  },
-  {
-    id: 'reliability-program',
-    label: 'reliability',
-    sublabel: 'incident · 19m outage fix',
-    status: 'Running',
-    description:
-      'Diagnosed a 19-minute full-platform outage caused by blocking Redis KEYS calls exhausting the Tomcat/JDBC thread pool. Added connection-pool checkout timeouts, tuned RDS parameters, and drove a 68-task reliability program across 11 epics and 7 sprints to prevent recurrence.',
-    tech: ['Aurora', 'Redis', 'JDBC', 'Postmortem', 'SLOs'],
-    metrics: [
-      { label: 'Outage', value: '19 min' },
-      { label: 'Tasks', value: '68 / 11 epics' },
-    ],
-    position: [0.9, 0, -2.5],
-    screen: 'pulse',
-  },
-  {
-    id: 'oneuptime',
-    label: 'oneuptime',
-    sublabel: 'self-hosted SRE platform',
-    status: 'Running',
-    description:
-      'Self-hosted OneUptime on K3s in eu-central-1 (separate region from primary). Status pages, uptime monitoring, on-call scheduling, incident management. Designed so observability survives a primary-region outage.',
-    tech: ['K3s', 'OneUptime', 'OpenTelemetry', 'Loki'],
-    metrics: [
-      { label: 'Region', value: 'eu-central-1' },
-      { label: 'Surface', value: 'status / on-call' },
-    ],
-    position: [2.7, 0, -2.5],
-    screen: 'htop',
-  },
-  {
-    id: 'otel-pipeline',
-    label: 'otel',
-    sublabel: 'observability pipeline',
-    status: 'Running',
-    description:
-      'OpenTelemetry collector dual-exports metrics, logs, and traces to OneUptime and Loki at the same time. Consolidated fragmented monitoring into one observability stack. Grafana sits on top.',
-    tech: ['OpenTelemetry', 'Loki', 'Grafana', 'Prometheus'],
-    position: [4.5, 0, -2.5],
-    screen: 'logs',
-  },
-
-  // ROW 2 (front row, platform tooling + AI side projects)
-  {
-    id: 'es-cluster',
-    label: 'es-cluster',
-    sublabel: '3-node Elasticsearch',
-    status: 'Maintenance',
-    description:
-      'Self-managed three-node Elasticsearch cluster managed with Terraform and Ansible. Split deploy and split-restart playbooks so a single config change cannot cascade across the cluster.',
-    tech: ['Elasticsearch', 'Terraform', 'Ansible'],
-    metrics: [
-      { label: 'Nodes', value: '3' },
-      { label: 'Deploy', value: 'split-restart' },
-    ],
-    position: [-4.5, 0, 2.5],
-    rotation: [0, Math.PI, 0],
-    screen: 'graph',
-  },
-  {
-    id: 'ci-cd-platform',
-    label: 'ci-cd',
-    sublabel: 'pipelines · 3 platforms',
-    status: 'Running',
-    description:
-      'CI/CD pipelines spanning Jenkins, GitLab CI, and AWS CodePipeline / CodeBuild. Targets include ECS, Lambda, CloudFront, and EC2 deployments. App and infra share pipeline patterns.',
-    tech: ['Jenkins', 'GitLab CI', 'CodePipeline', 'CodeBuild', 'Docker'],
-    metrics: [
-      { label: 'Platforms', value: '3' },
-      { label: 'Targets', value: 'ECS · λ · CF · EC2' },
-    ],
-    position: [-2.7, 0, 2.5],
-    rotation: [0, Math.PI, 0],
-    screen: 'terminal',
-  },
-  {
-    id: 'aws-finops',
-    label: 'finops',
-    sublabel: 'AWS cost optimization',
-    status: 'Maintenance',
-    description:
-      'Cut monthly AWS spend by removing orphaned NAT Gateways, adding S3 and DynamoDB gateway endpoints to drop data-transfer cost, setting log-retention policies on CloudWatch, and right-sizing EBS volumes.',
-    tech: ['VPC Endpoints', 'CloudWatch Logs', 'EBS', 'NAT'],
-    position: [-0.9, 0, 2.5],
-    rotation: [0, Math.PI, 0],
-    screen: 'graph',
-  },
-  {
-    id: 'hashnode-mcp',
-    label: 'hashnode-mcp',
-    sublabel: 'shelved · API terminated',
-    status: 'Completed',
-    description:
-      'Open-source Model Context Protocol server that wired AI assistants like Claude into the Hashnode content API. Shelved after Hashnode terminated public API access. The pattern lives on in the broader agentic-DevOps work.',
-    tech: ['Python', 'MCP', 'Hashnode API'],
-    github: 'https://github.com/sbmagar13/hashnode-mcp-server',
-    position: [0.9, 0, 2.5],
-    rotation: [0, Math.PI, 0],
-    screen: 'matrix',
-  },
-  {
-    id: 'vqgan-clip',
-    label: 'vqgan-clip',
-    sublabel: 'text-to-image · 2021',
-    status: 'Completed',
-    description:
-      'Multimodal text-to-image generation using VQGAN + CLIP architectures in PyTorch. From the AI/ML era of the career, kept here as an artifact.',
-    tech: ['PyTorch', 'CLIP', 'VQGAN', 'Python'],
-    github: 'https://github.com/sbmagar13/VQGAN-CLIP-Text-to-Image',
-    position: [2.7, 0, 2.5],
-    rotation: [0, Math.PI, 0],
-    screen: 'matrix',
-  },
-];
+import { RACKS } from '@/data/career';
 
 // Connections between racks rendered as fiber cables. Each line traces
 // a real data path: EventLogic feeds the DR side, the tenant orchestrator
@@ -572,22 +395,22 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
             animate={{ x: 0, opacity: 1, scale: 1 }}
             exit={{ x: 60, opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-1/2 -translate-y-1/2 right-6 w-[460px] max-w-[42vw] bg-slate-950 sm:bg-slate-950/92 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-7 shadow-2xl shadow-cyan-500/20"
+            className="absolute top-1/2 -translate-y-1/2 right-6 w-[460px] max-w-[42vw] bg-slate-950 sm:bg-slate-950/92 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 sm:p-7 shadow-2xl shadow-cyan-500/20"
           >
             {/* Status row */}
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.3em] uppercase text-cyan-300 bg-cyan-500/10 border border-cyan-400/40 rounded px-2 py-1">
+                <div className="inline-flex items-center gap-2 font-mono text-[10px] sm:text-[11px] tracking-[0.3em] uppercase text-cyan-300 bg-cyan-500/10 border border-cyan-400/40 rounded px-2 py-1">
                   <span
                     className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse"
                     aria-hidden
                   />
                   {activeRack.status}
                 </div>
-                <div className="mt-3 font-mono text-2xl font-semibold text-white tracking-wide leading-tight">
+                <div className="mt-3 font-mono text-xl sm:text-2xl font-semibold text-white tracking-wide leading-tight">
                   {activeRack.sublabel}
                 </div>
-                <div className="mt-1 font-mono text-[11px] text-slate-400 tracking-wider">
+                <div className="mt-1 font-mono text-[10px] sm:text-[11px] text-slate-400 tracking-wider">
                   rack-{activeRack.label}
                 </div>
               </div>
@@ -601,7 +424,7 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
             </div>
 
             {/* Description */}
-            <p className="mt-5 text-slate-200 text-[15px] leading-relaxed">{activeRack.description}</p>
+            <p className="mt-5 text-slate-200 text-[14px] sm:text-[15px] leading-relaxed">{activeRack.description}</p>
 
             {/* Metrics */}
             {activeRack.metrics && activeRack.metrics.length > 0 ? (
@@ -614,7 +437,7 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
                     <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
                       {m.label}
                     </div>
-                    <div className="mt-0.5 font-mono text-xl font-semibold text-cyan-200">{m.value}</div>
+                    <div className="mt-0.5 font-mono text-lg sm:text-xl font-semibold text-cyan-200">{m.value}</div>
                   </div>
                 ))}
               </div>
@@ -629,7 +452,7 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
                 {activeRack.tech.map((t) => (
                   <span
                     key={t}
-                    className="px-2.5 py-1 text-[11px] font-mono text-cyan-100 bg-cyan-500/5 border border-cyan-500/30 rounded"
+                    className="px-2.5 py-1 text-[10px] sm:text-[11px] font-mono text-cyan-100 bg-cyan-500/5 border border-cyan-500/30 rounded"
                   >
                     {t}
                   </span>
@@ -643,13 +466,13 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
                 href={activeRack.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-5 inline-flex items-center gap-2 px-3.5 py-2 rounded-md font-mono text-[11px] tracking-widest uppercase text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                className="mt-5 inline-flex items-center gap-2 px-3.5 py-2 rounded-md font-mono text-[10px] sm:text-[11px] tracking-widest uppercase text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
               >
                 View source on GitHub ↗
               </a>
             ) : null}
 
-            <div className="mt-6 text-[11px] font-mono text-slate-500">
+            <div className="mt-6 text-[10px] sm:text-[11px] font-mono text-slate-500">
               Press <span className="text-cyan-300">esc</span> or click anywhere to deselect
             </div>
           </motion.aside>

@@ -16,6 +16,7 @@ import Typewriter from './Typewriter';
 import useMouseParallax from './useMouseParallax';
 import { usePerfTier } from './usePerfTier';
 import { PALETTE } from './Materials';
+import { AVATAR_STATS } from '@/data/career';
 
 // Particles that rise through the projection beam.
 function RisingMotes({ count = 200 }: { count?: number }) {
@@ -66,76 +67,6 @@ function RisingMotes({ count = 200 }: { count?: number }) {
     </points>
   );
 }
-
-// Stat panel data. Each chip is a specific fact from the resume so the
-// page reads as Sagar's actual story rather than a template. `detail`
-// is what the DOM overlay shows on click; it only expands on what the
-// chip itself claims, no new facts.
-interface Stat {
-  id: string;
-  label: string;
-  value: string;
-  color: string;
-  position: [number, number, number];
-  detail: string;
-}
-
-const STATS: Stat[] = [
-  {
-    id: 'role',
-    label: 'Role',
-    value: 'Senior DevOps · SRE',
-    color: PALETTE.neonCyan,
-    position: [2.3, 1.4, 0.2],
-    detail:
-      'Senior DevOps / SRE Engineer, the same title the identity card above carries. Platform operations and reliability are the day job, not a side interest.',
-  },
-  {
-    id: 'specialty',
-    label: 'Specialty',
-    value: 'Sole platform owner',
-    color: PALETTE.neonMagenta,
-    position: [2.4, 0.3, 0.4],
-    detail:
-      'One person owns the production platform end to end, rather than one seat on a larger infra team. Build it, run it, fix it.',
-  },
-  {
-    id: 'built',
-    label: 'Built',
-    value: 'Cross-region DR',
-    color: PALETTE.neonPurple,
-    position: [2.2, -0.7, 0.1],
-    detail:
-      'Built disaster recovery across two regions, so the platform has somewhere real to fail over to when the primary region goes down.',
-  },
-  {
-    id: 'forte',
-    label: 'Forte',
-    value: 'Python + AI Agents',
-    color: PALETTE.neonCyan,
-    position: [-2.3, 1.4, 0.2],
-    detail:
-      'Python is the primary language, and AI agents are where it gets pointed lately. The forte is the overlap: agents written in Python that do useful work.',
-  },
-  {
-    id: 'lately',
-    label: 'Lately',
-    value: 'AI agents for DevOps',
-    color: PALETTE.neonMagenta,
-    position: [-2.4, 0.3, 0.4],
-    detail:
-      'Recent focus is bringing AI agents into DevOps work itself: agents that handle real operational tasks, not chat demos.',
-  },
-  {
-    id: 'based',
-    label: 'Based in',
-    value: 'Kathmandu · remote',
-    color: PALETTE.neonPurple,
-    position: [-2.2, -0.7, 0.1],
-    detail:
-      'Based in Kathmandu, Nepal, and set up to work remote, same as the identity card says. Open to remote roles.',
-  },
-];
 
 // Floating info chips around the avatar. Uses LabelPlate so the text
 // reads clearly against the holographic glow. Clickable: each opens a
@@ -264,7 +195,7 @@ function Scene({
       />
 
       {/* Stat panels. Click one to open its detail overlay. */}
-      {STATS.map((s) => (
+      {AVATAR_STATS.map((s) => (
         <StatPanel
           key={s.id}
           position={s.position}
@@ -319,7 +250,7 @@ export default function Avatar({
   // the GPU context); keying the Canvas on it rebuilds the scene instead
   // of leaving a permanently black rectangle. See ContextGuard.
   const [glGen, setGlGen] = useState(0);
-  const stat = pickedStat ? STATS.find((s) => s.id === pickedStat) ?? null : null;
+  const stat = pickedStat ? AVATAR_STATS.find((s) => s.id === pickedStat) ?? null : null;
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   // The overlay opens from a raycast click on the WebGL canvas, which
@@ -384,7 +315,7 @@ export default function Avatar({
       {/* Heading. Bolder backdrop + corner brackets so it reads against
           the bright halo of the holographic plate behind it. */}
       <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2">
-        <div className="relative px-8 py-4 rounded-lg bg-slate-950/95 sm:bg-slate-950/85 sm:backdrop-blur-md border border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.18)]">
+        <div className="relative px-5 py-3 sm:px-8 sm:py-4 rounded-lg bg-slate-950/95 sm:bg-slate-950/85 sm:backdrop-blur-md border border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.18)]">
           {/* Decorative corner brackets */}
           <span aria-hidden className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-300 rounded-tl-sm" />
           <span aria-hidden className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-300 rounded-tr-sm" />
@@ -392,20 +323,20 @@ export default function Avatar({
           <span aria-hidden className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-300 rounded-br-sm" />
 
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.32em] text-cyan-200 uppercase">
+            <div className="inline-flex items-center gap-2 font-mono text-[10px] sm:text-[11px] tracking-[0.32em] text-cyan-200 uppercase">
               <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse" />
               Identity holograph
               <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse" />
             </div>
-            <div className="mt-2 font-mono text-3xl font-bold text-white tracking-[0.18em] drop-shadow-[0_0_8px_rgba(0,0,0,0.9)]">
+            <div className="mt-2 font-mono text-2xl sm:text-3xl font-bold text-white tracking-[0.18em] drop-shadow-[0_0_8px_rgba(0,0,0,0.9)]">
               <Typewriter text="SAGAR BUDHATHOKI" speed={48} caret />
             </div>
-            <div className="mt-1.5 font-mono text-xs text-slate-200">
+            <div className="mt-1.5 font-mono text-[11px] sm:text-xs text-slate-200">
               Senior DevOps / SRE Engineer
               <span className="mx-2 text-slate-500">·</span>
               <span className="text-cyan-200">sagar@sagarbudhathoki.com</span>
             </div>
-            <div className="mt-0.5 font-mono text-xs">
+            <div className="mt-0.5 font-mono text-[11px] sm:text-xs">
               <a
                 href="https://linkedin.com/in/sbmagar13"
                 target="_blank"
@@ -415,7 +346,7 @@ export default function Avatar({
                 linkedin.com/in/sbmagar13
               </a>
             </div>
-            <div className="mt-0.5 font-mono text-[10px] text-slate-400 tracking-wider">
+            <div className="mt-0.5 font-mono text-[9px] sm:text-[10px] text-slate-400 tracking-wider">
               Kathmandu, Nepal · open to remote
             </div>
           </div>
@@ -433,7 +364,7 @@ export default function Avatar({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 30, opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed z-30 bg-slate-950 sm:bg-slate-950/95 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto bottom-4 inset-x-4 sm:inset-x-auto sm:bottom-8 sm:right-6 sm:w-[360px] sm:max-w-[44vw]"
+            className="fixed z-30 bg-slate-950 sm:bg-slate-950/95 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-4 sm:p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto bottom-4 inset-x-4 sm:inset-x-auto sm:bottom-8 sm:right-6 sm:w-[360px] sm:max-w-[44vw]"
             role="dialog"
             aria-label={`Detail: ${stat.value}`}
           >
@@ -456,7 +387,7 @@ export default function Avatar({
                 ×
               </button>
             </div>
-            <p className="mt-4 text-[14px] text-slate-200 leading-relaxed">{stat.detail}</p>
+            <p className="mt-4 text-[13px] sm:text-[14px] text-slate-200 leading-relaxed">{stat.detail}</p>
             <div className="mt-4 text-[10px] font-mono text-slate-500">
               <span className="sm:hidden">Tap × to close · tap another panel to switch</span>
               <span className="hidden sm:inline">

@@ -10,7 +10,8 @@
     "export": "next build --no-lint && touch out/.nojekyll",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d out",
-    "serve": "npx serve out"
+    "serve": "npx serve out",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -1,0 +1,27 @@
+# Sagar Budhathoki
+
+> Senior DevOps / SRE Engineer, 5+ years running cloud platforms in production. Based in Kathmandu, Nepal, working remote. Sole platform owner of a multi-tenant event-management SaaS on AWS (ECS Fargate, Aurora PostgreSQL, Terraform, Terragrunt). Currently building AI agents for DevOps work (Anthropic MCP, LangGraph, local LLM inference).
+
+This site is a static Next.js export. The homepage is an interactive 3D experience (React Three Fiber); a terminal version lives at /terminal. Plain-text surfaces below are the best sources for crawlers and assistants.
+
+## Career
+
+- [Work and war stories](https://sagarbudhathoki.com/work/): every real project, production war story, milestone, and skill with years of use
+- [Resume](https://sagarbudhathoki.com/resume/): one-page resume (PDF at /resume.pdf)
+- [Redis KEYS outage postmortem](https://sagarbudhathoki.com/writing/redis-keys-outage/): real 2024 incident, 19 minutes of downtime, root cause and follow-through
+
+## Site
+
+- [Colophon](https://sagarbudhathoki.com/colophon/): how this site is built and the honesty rules it follows
+- [Blog feed](https://sagarbudhathoki.com/feed.xml)
+
+## Elsewhere
+
+- GitHub: https://github.com/sbmagar13
+- LinkedIn: https://linkedin.com/in/sbmagar13
+- Blog: https://blog.budhathokisagar.com.np
+- Email: sagar@sagarbudhathoki.com
+
+## Notes for assistants
+
+All facts on this site are real; anything playful is clearly labeled parody. No fabricated metrics. A Model Context Protocol server exposing this career data is at https://github.com/sbmagar13/portfolio-mcp.

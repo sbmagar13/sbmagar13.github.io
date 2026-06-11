@@ -1,36 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaCalendarAlt, FaClock, FaTags, FaChevronRight, FaSearch, FaFilter, FaCode, FaServer, FaCloud, FaDocker, FaRocket } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaTags, FaChevronRight, FaSearch, FaFilter, FaCode, FaServer, FaCloud, FaDocker, FaRocket, FaExternalLinkAlt } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import { BlogPost } from '@/utils/blog';
 
 interface BlogProps {
-  initialPosts?: BlogPost[];
+  posts?: BlogPost[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
-const Blog = ({ initialPosts = [] }: BlogProps) => {
+const Blog = ({ posts = [], loading = false, error = null, onRetry }: BlogProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(initialPosts);
-  const [loading, setLoading] = useState(initialPosts.length === 0);
-  const [error] = useState<string | null>(null);
-  
-  // Initialize blog posts from props
-  useEffect(() => {
-    if (initialPosts.length > 0) {
-      setBlogPosts(initialPosts);
-      setLoading(false);
-    }
-  }, [initialPosts]);
-  
+
   // Get all unique tags
-  const allTags = Array.from(new Set(blogPosts.flatMap(post => post.tags)));
-  
+  const allTags = Array.from(new Set(posts.flatMap(post => post.tags)));
+
   // Filter posts based on search query and selected tag
-  const filteredPosts = blogPosts.filter(post => {
+  const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -72,11 +64,22 @@ const Blog = ({ initialPosts = [] }: BlogProps) => {
   
   return (
     <div className="bg-gray-900 text-gray-100 p-6 rounded-lg border border-green-500 shadow-lg shadow-green-500/20">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-green-500 mb-2">DevOps Runbooks & Insights</h2>
-        <p className="text-gray-400">
-          Technical articles, guides, and thoughts on DevOps, infrastructure, and software development.
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-green-500 mb-2">DevOps Runbooks & Insights</h2>
+          <p className="text-gray-400">
+            Technical articles, guides, and thoughts on DevOps, infrastructure, and software development.
+          </p>
+        </div>
+        <a
+          href="https://blog.budhathokisagar.com.np"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors whitespace-nowrap"
+        >
+          Visit my blog
+          <FaExternalLinkAlt className="ml-2" />
+        </a>
       </div>
       
       {/* Search and Filter */}
@@ -303,9 +306,9 @@ const Blog = ({ initialPosts = [] }: BlogProps) => {
           ) : error ? (
             <div className="text-center py-10">
               <div className="text-red-400 mb-4">Error: {error}</div>
-              <button 
+              <button
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                onClick={() => window.location.reload()}
+                onClick={() => (onRetry ? onRetry() : window.location.reload())}
               >
                 Try Again
               </button>

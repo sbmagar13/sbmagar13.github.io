@@ -32,6 +32,12 @@ jobs:
       - name: Build 🔧
         run: npm run build
 
+      - name: Install Playwright Chromium 🎭
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke tests against the build 🧪
+        run: npm run test:e2e
+
       - name: Ensure CNAME 📌
         run: echo "sagarbudhathoki.com" > out/CNAME
 

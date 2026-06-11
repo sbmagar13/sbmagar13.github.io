@@ -502,7 +502,7 @@ export default function Experience3DPage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -80, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-0 left-0 right-0 z-40 px-6 py-4 flex items-center justify-between bg-gradient-to-b from-slate-950/90 to-transparent sm:from-slate-950/80 sm:backdrop-blur-sm pointer-events-none"
+            className="fixed top-0 left-0 right-0 z-40 px-4 pr-28 sm:px-6 py-4 flex items-center justify-between bg-gradient-to-b from-slate-950/90 to-transparent sm:from-slate-950/80 sm:backdrop-blur-sm pointer-events-none"
           >
             {/* Brand hidden on mobile so the nav has room. The home dot
                 on the left edge replaces it. */}
@@ -524,7 +524,7 @@ export default function Experience3DPage() {
                 <button
                   key={s.id}
                   onClick={() => userNavigate(s.id)}
-                  className={`relative px-2 sm:px-4 py-2 font-mono text-[10px] sm:text-xs tracking-widest transition-colors ${
+                  className={`relative px-1.5 sm:px-4 py-2 font-mono text-[10px] sm:text-xs tracking-widest transition-colors ${
                     section === s.id ? 'text-cyan-300' : 'text-slate-400 hover:text-white'
                   }`}
                 >

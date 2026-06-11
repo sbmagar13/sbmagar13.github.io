@@ -95,18 +95,21 @@ function ToolOrbit({ radius = 4.8, onPick, picked }: OrbitProps) {
   );
 }
 
-function CenterOrb() {
+function CenterOrb({ isLow = false }: { isLow?: boolean }) {
   return (
     <Float speed={0.7} floatIntensity={0.22} rotationIntensity={0.14}>
-      <mesh position={[0, 0.4, -1.5]}>
-        <sphereGeometry args={[1.25, 64, 64]} />
+      {/* On phones the orb is the only 3D element behind the overlay, so it
+          sits further back and dimmer to read as a soft backdrop glow
+          rather than a bright disc colliding with the foreground cards. */}
+      <mesh position={[0, 0.4, isLow ? -3.4 : -1.5]} scale={isLow ? 0.8 : 1}>
+        <sphereGeometry args={[1.25, isLow ? 32 : 64, isLow ? 32 : 64]} />
         <MeshDistortMaterial
           color={PALETTE.neonPurple}
           emissive={PALETTE.neonMagenta}
-          emissiveIntensity={0.28}
+          emissiveIntensity={isLow ? 0.14 : 0.28}
           metalness={0.88}
           roughness={0.14}
-          distort={0.24}
+          distort={isLow ? 0.18 : 0.24}
           speed={0.9}
         />
       </mesh>
@@ -132,11 +135,15 @@ function Scene({ onPick, picked, tier }: SceneProps) {
         <pointLight position={[0, 8, 0]} intensity={0.6} color={PALETTE.ledWhite} distance={14} />
       ) : null}
 
-      <CenterOrb />
-      <ToolOrbit radius={isLow ? 3.8 : 4.8} onPick={onPick} picked={picked} />
+      <CenterOrb isLow={isLow} />
+      {/* The orbiting, labeled tool logos are desktop-only. On phones they
+          collided with the foreground cards and cost a pile of draw calls
+          (9 logos + 9 troika labels); the tappable chip row in the overlay
+          already covers the tool stories there. */}
+      {!isLow ? <ToolOrbit radius={4.8} onPick={onPick} picked={picked} /> : null}
 
       {/* Heavy decorative passes only fire on the high tier. Mobile keeps
-          the orb + orbit + sparse particles and skips the rest. */}
+          a calm orb + sparse particles and skips the rest. */}
       {!isLow ? (
         <>
           <ContactShadows position={[0, -2.0, 0]} opacity={0.4} blur={2.5} far={8} color="#000000" />
@@ -215,7 +222,9 @@ function AskPrompt({ isLow }: { isLow: boolean }) {
     runAsk(q);
   }
 
-  const placeholder = query || focused ? '> ask me anything' : `> ${SAMPLE_QUESTIONS[hint]}`;
+  // No leading '> ' here: the prompt caret is a separate span before the
+  // input, so prefixing the placeholder too rendered a doubled '> >'.
+  const placeholder = query || focused ? 'ask me anything' : SAMPLE_QUESTIONS[hint];
 
   return (
     <motion.div

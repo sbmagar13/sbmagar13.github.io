@@ -7,34 +7,6 @@
     <language>en</language>
     <atom:link href="https://sagarbudhathoki.com/feed.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>AI Agents in DevOps: Current State and Future</title>
-      <link>https://sagarbudhathoki.com/</link>
-      <description>Exploring how AI agents are transforming DevOps practices and what the future holds.</description>
-      <pubDate>Thu, 20 Mar 2025 00:00:00 GMT</pubDate>
-      <guid isPermaLink="false">ai-agents-in-devops</guid>
-    </item>
-    <item>
-      <title>Kubernetes Troubleshooting Patterns</title>
-      <link>https://sagarbudhathoki.com/</link>
-      <description>A comprehensive guide to diagnosing and resolving common Kubernetes issues in production environments.</description>
-      <pubDate>Sat, 15 Mar 2025 00:00:00 GMT</pubDate>
-      <guid isPermaLink="false">kubernetes-troubleshooting-patterns</guid>
-    </item>
-    <item>
-      <title>The Art of Blameless Postmortems</title>
-      <link>https://sagarbudhathoki.com/</link>
-      <description>How to conduct effective postmortems that focus on learning rather than blame, improving team culture and system reliability.</description>
-      <pubDate>Fri, 28 Feb 2025 00:00:00 GMT</pubDate>
-      <guid isPermaLink="false">blameless-postmortems</guid>
-    </item>
-    <item>
-      <title>Terraform at Scale: Lessons Learned</title>
-      <link>https://sagarbudhathoki.com/</link>
-      <description>Scaling infrastructure as code across large organizations: patterns, pitfalls, and practical solutions.</description>
-      <pubDate>Fri, 10 Jan 2025 00:00:00 GMT</pubDate>
-      <guid isPermaLink="false">terraform-at-scale</guid>
-    </item>
-    <item>
       <title>Configure Postfix on Ubuntu</title>
       <link>https://sagarbudhathoki.com/</link>
       <description>Mail service self hosted.</description>

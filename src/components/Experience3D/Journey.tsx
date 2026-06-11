@@ -1,10 +1,11 @@
 'use client';
 
-import { Suspense, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Float } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
+import ContextGuard from './ContextGuard';
 import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
@@ -365,16 +366,48 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
   const isLow = tier === 'low';
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  // Bumped when the WebGL context is lost for good (iOS Safari evicting
+  // the GPU context); keying the Canvas on it rebuilds the scene instead
+  // of leaving a permanently black rectangle. See ContextGuard.
+  const [glGen, setGlGen] = useState(0);
   const selected = selectedIdx !== null ? MILESTONES[selectedIdx] : null;
+
+  // Escape clears the selected milestone. Capture phase + stopPropagation
+  // so the page-level Escape handler (which jumps the whole app back to
+  // the Hero) never sees the keypress while a milestone is open. Gated
+  // on active too: on desktop this scene stays mounted after you leave
+  // it, and a hidden scene's listener must not swallow Escapes meant
+  // for the page.
+  useEffect(() => {
+    if (selectedIdx === null || !active) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setSelectedIdx(null);
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [selectedIdx, active]);
+
+  // Leaving the scene clears any selection so it never lingers
+  // invisibly on a hidden scene.
+  useEffect(() => {
+    if (!active) setSelectedIdx(null);
+  }, [active]);
 
   return (
     <div className="w-full h-screen relative bg-black">
       <Canvas
+        key={glGen}
         camera={{ position: [0, 4, 11], fov: 50 }}
         gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
         dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
+        // Clicking empty space (not a monument) clears the selection.
+        onPointerMissed={() => setSelectedIdx(null)}
       >
+        <ContextGuard onLost={() => setGlGen((g) => g + 1)} />
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 8, 24]} />
         <Suspense fallback={null}>
@@ -396,7 +429,7 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
       </Canvas>
 
       {/* Heading */}
-      <div className="hidden sm:block pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/45 backdrop-blur-sm border border-cyan-500/20">
+      <div className="hidden sm:block pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/65 sm:bg-slate-950/45 sm:backdrop-blur-sm border border-cyan-500/20">
         <div className="font-mono text-[11px] tracking-[0.32em] text-cyan-300 uppercase">
           Career arc
         </div>
@@ -417,7 +450,7 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
             animate={{ x: 0, opacity: 1, scale: 1 }}
             exit={{ x: 60, opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-1/2 -translate-y-1/2 right-6 w-[400px] bg-slate-950/92 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 shadow-2xl shadow-cyan-500/20"
+            className="absolute top-1/2 -translate-y-1/2 right-6 w-[400px] bg-slate-950 sm:bg-slate-950/92 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 shadow-2xl shadow-cyan-500/20"
           >
             <div className="flex items-start justify-between gap-3">
               <div>

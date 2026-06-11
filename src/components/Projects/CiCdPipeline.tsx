@@ -335,7 +335,12 @@ const CiCdPipeline: React.FC<CiCdPipelineProps> = ({ initialActiveStage = 0 }) =
         className={`relative ${isFullscreen ? 'fixed inset-0 z-50 p-6' : 'p-6'} bg-gray-800 rounded-lg border border-gray-700 ${isFullscreen ? 'rounded-none' : ''}`}
       >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-          <h3 className="text-lg font-semibold text-green-400">Pipeline Status</h3>
+          <h3 className="text-lg font-semibold text-green-400">
+            Pipeline Status
+            <span className="ml-2 text-[10px] font-mono uppercase tracking-wider text-gray-500 border border-gray-600 rounded px-1.5 py-0.5 align-middle">
+              demo animation
+            </span>
+          </h3>
           <div className="flex items-center mt-2 sm:mt-0 space-x-4">
             <div>
               <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>

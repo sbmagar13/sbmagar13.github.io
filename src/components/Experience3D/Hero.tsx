@@ -6,6 +6,7 @@ import { Float, OrbitControls, MeshDistortMaterial, ContactShadows } from '@reac
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import { VolumetricBeam, NeonStrip } from './Atmosphere';
+import ContextGuard from './ContextGuard';
 import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
@@ -270,6 +271,10 @@ const STAT_CARDS: { label: string; value: string; sub?: string; color: string }[
 
 export default function Hero({ onEnter, active = true }: { onEnter?: () => void; active?: boolean }) {
   const [picked, setPicked] = useState<ToolId | null>(null);
+  // Bumped when the WebGL context is lost for good (iOS Safari evicting
+  // the GPU context); keying the Canvas on it rebuilds the scene instead
+  // of leaving a permanently black rectangle. See ContextGuard.
+  const [glGen, setGlGen] = useState(0);
   const tier = usePerfTier();
   const isLow = tier === 'low';
   const story = picked ? STORIES[picked] : null;
@@ -300,6 +305,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
   return (
     <div className="relative w-full h-full sm:h-screen bg-black overflow-y-auto sm:overflow-hidden">
       <Canvas
+        key={glGen}
         camera={{ position: [0, 1.2, 8.5], fov: isLow ? 50 : 45 }}
         gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
         dpr={isLow ? [1, 1] : [1, 1.75]}
@@ -317,6 +323,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
             : undefined
         }
       >
+        <ContextGuard onLost={() => setGlGen((g) => g + 1)} />
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 7, 22]} />
         <Suspense fallback={null}>
@@ -370,7 +377,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
           {STAT_CARDS.map((s) => (
             <div
               key={s.label}
-              className="rounded border border-cyan-500/30 bg-slate-950/65 backdrop-blur-sm px-4 py-2 font-mono min-w-[150px]"
+              className="rounded border border-cyan-500/30 bg-slate-950/85 sm:bg-slate-950/65 sm:backdrop-blur-sm px-4 py-2 font-mono min-w-[150px]"
             >
               <div className="text-[10px] text-slate-400 uppercase tracking-widest">{s.label}</div>
               <div className={`text-base sm:text-lg ${s.color}`}>{s.value}</div>
@@ -397,10 +404,10 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
                 key={id}
                 onClick={() => setPicked((prev) => (prev === id ? null : id))}
                 aria-pressed={isOpen}
-                className={`px-3 py-2 min-h-[40px] rounded-full font-mono text-[11px] tracking-wide border backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
+                className={`px-3 py-2 min-h-[40px] rounded-full font-mono text-[11px] tracking-wide border sm:backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
                   isOpen
-                    ? 'border-cyan-300 bg-cyan-500/20 text-cyan-200'
-                    : 'border-cyan-500/30 bg-slate-950/65 text-slate-300 active:bg-cyan-500/10'
+                    ? 'border-cyan-300 bg-cyan-500/30 sm:bg-cyan-500/20 text-cyan-200'
+                    : 'border-cyan-500/30 bg-slate-950/85 sm:bg-slate-950/65 text-slate-300 active:bg-cyan-500/10'
                 }`}
               >
                 {CHIP_LABELS[id]}
@@ -462,7 +469,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 30, opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed z-30 bg-slate-950/95 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto bottom-4 inset-x-4 max-h-[45vh] overflow-y-auto sm:max-h-none sm:overflow-visible sm:inset-x-auto sm:bottom-8 sm:right-6 sm:w-[400px] sm:max-w-[44vw]"
+            className="fixed z-30 bg-slate-950 sm:bg-slate-950/95 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto bottom-4 inset-x-4 max-h-[45vh] overflow-y-auto sm:max-h-none sm:overflow-visible sm:inset-x-auto sm:bottom-8 sm:right-6 sm:w-[400px] sm:max-w-[44vw]"
             role="dialog"
             aria-label={`Story: ${story.title}`}
           >

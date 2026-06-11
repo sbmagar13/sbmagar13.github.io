@@ -228,12 +228,18 @@ export default function Experience3DPage() {
   }, [section]);
 
   // Kick off background module loading for every scene immediately so
-  // the JS chunks are in the browser cache before they're needed.
+  // the JS chunks are in the browser cache before they're needed. The
+  // Avatar's photo texture is warmed the same way (plain Image, not
+  // drei preload, so three.js stays out of the initial bundle): the
+  // network fetch happens now and the scene only pays for GPU decode
+  // when it mounts.
   useEffect(() => {
     void import('@/components/Experience3D/Avatar');
     void import('@/components/Experience3D/Journey');
     void import('@/components/Experience3D/DataCenter');
     void import('@/components/Experience3D/SkillsHall');
+    const photo = new Image();
+    photo.src = '/sagar-mountains.jpg';
   }, []);
 
   // After the Hero has settled, silently pre-mount the other scenes with
@@ -339,7 +345,7 @@ export default function Experience3DPage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -80, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-0 left-0 right-0 z-40 px-6 py-4 flex items-center justify-between bg-gradient-to-b from-slate-950/80 to-transparent backdrop-blur-sm pointer-events-none"
+            className="fixed top-0 left-0 right-0 z-40 px-6 py-4 flex items-center justify-between bg-gradient-to-b from-slate-950/90 to-transparent sm:from-slate-950/80 sm:backdrop-blur-sm pointer-events-none"
           >
             {/* Brand hidden on mobile so the nav has room. The home dot
                 on the left edge replaces it. */}

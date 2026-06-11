@@ -2,28 +2,26 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaDocker, FaGithub, FaExternalLinkAlt, FaServer, FaChartLine, FaBook } from 'react-icons/fa';
+import { FaDocker, FaGithub, FaServer, FaChartLine, FaBook } from 'react-icons/fa';
 import CiCdPipeline from './CiCdPipeline';
 import DockerContainers from './DockerContainers';
 import ProjectsGraph from './ProjectsGraph';
-import ProjectMetrics from './ProjectMetrics';
 
+// The same verified project set as the 3D data center
+// (src/components/Experience3D/DataCenter.tsx). No invented uptimes,
+// no fake performance scores. Facts are real, sourced from the resume.
 interface Project {
-  id: number;
+  id: string;
   name: string;
   namespace: string;
+  sublabel: string;
   description: string;
+  role: string;
   tech: string[];
-  status: 'Running' | 'Completed' | 'Maintenance' | 'In Progress';
-  metrics: {
-    uptime: string;
-    performance: number;
-    reliability: number;
-  };
+  status: 'Running' | 'Completed' | 'Maintenance';
+  facts: { label: string; value: string }[];
   links: {
     github?: string;
-    live?: string;
-    docs?: string;
   };
   logs: string[];
 }
@@ -31,315 +29,284 @@ interface Project {
 const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState<'logs' | 'metrics' | 'docs'>('metrics');
-  
+
   const projects: Project[] = [
     {
-      id: 10,
-      name: 'kubernetes-cluster-planner',
-      namespace: 'infrastructure',
-      description: 'Planning tool for Kubernetes cluster architecture, resource allocation, and scaling strategies. Currently in design phase.',
-      tech: ['Kubernetes', 'Infrastructure Planning', 'Resource Optimization', 'Go'],
-      status: 'In Progress',
-      metrics: {
-        uptime: 'N/A',
-        performance: 60,
-        reliability: 65,
-      },
-      links: {
-        github: '#',
-      },
-      logs: [
-        '2025-03-28T16:30:10Z [INFO] Initial architecture design completed',
-        '2025-03-28T14:15:22Z [INFO] Resource calculation algorithm drafted',
-        '2025-03-28T11:40:05Z [INFO] Started research on auto-scaling strategies',
-        '2025-03-28T09:20:45Z [INFO] Project kickoff meeting',
-        '2025-03-27T17:30:15Z [INFO] Requirements gathering completed'
-      ]
-    },
-    {
-      id: 11,
-      name: 'mcp-agent-framework',
-      namespace: 'ai',
-      description: 'Framework for building specialized MCP agents with domain-specific knowledge and capabilities. Focused on DevOps and infrastructure management.',
-      tech: ['TypeScript', 'MCP', 'AI Agents', 'Node.js'],
-      status: 'In Progress',
-      metrics: {
-        uptime: 'N/A',
-        performance: 55,
-        reliability: 60,
-      },
-      links: {
-        github: '#',
-      },
-      logs: [
-        '2025-03-28T15:50:10Z [INFO] Core agent interface defined',
-        '2025-03-28T13:25:22Z [INFO] Started implementing MCP server integration',
-        '2025-03-28T10:45:05Z [INFO] Researching agent orchestration patterns',
-        '2025-03-28T08:30:45Z [INFO] Project structure initialized',
-        '2025-03-27T16:15:15Z [INFO] Initial planning completed'
-      ]
-    },
-    {
-      id: 12,
-      name: 'llm-infra-analyzer',
-      namespace: 'ai',
-      description: 'AI-powered tool that analyzes infrastructure configurations, identifies optimization opportunities, and suggests improvements based on best practices.',
-      tech: ['Python', 'LLMs', 'Infrastructure Analysis', 'Terraform'],
-      status: 'In Progress',
-      metrics: {
-        uptime: 'N/A',
-        performance: 50,
-        reliability: 55,
-      },
-      links: {
-        github: '#',
-      },
-      logs: [
-        '2025-03-28T16:40:10Z [INFO] Started building training dataset',
-        '2025-03-28T14:20:22Z [INFO] Defined infrastructure schema parser',
-        '2025-03-28T12:10:05Z [INFO] Researching LLM fine-tuning approaches',
-        '2025-03-28T09:45:45Z [INFO] Project initialization',
-        '2025-03-27T18:20:15Z [INFO] Concept validation completed'
-      ]
-    },
-    {
-      id: 2,
-      name: 'devops-ai-assistant',
-      namespace: 'ai',
-      description: 'Personal AI assistant for automating routine DevOps tasks using LLMs and MCP frameworks. A learning project to explore AI agent capabilities.',
-      tech: ['Python', 'AI Agents', 'MCP', 'LLMs', 'Automation'],
-      status: 'In Progress',
-      metrics: {
-        uptime: 'N/A',
-        performance: 85,
-        reliability: 88,
-      },
-      links: {
-        github: '#',
-        docs: '#',
-      },
-      logs: [
-        '2025-03-28T15:45:10Z [INFO] Agent task completed successfully',
-        '2025-03-28T14:30:22Z [INFO] New agent capability deployed',
-        '2025-03-28T12:15:05Z [INFO] MCP server connection established',
-        '2025-03-28T10:20:45Z [WARN] Model context limit reached',
-        '2025-03-27T18:30:15Z [INFO] System health check passed'
-      ]
-    },
-    {
-      id: 7,
-      name: 'llm-powered-documentation',
-      namespace: 'ai',
-      description: 'Documentation generator that uses LLMs to analyze codebases and create comprehensive, up-to-date technical documentation automatically.',
-      tech: ['Python', 'LLMs', 'NLP', 'Documentation', 'API'],
-      status: 'In Progress',
-      metrics: {
-        uptime: '97.2%',
-        performance: 82,
-        reliability: 85,
-      },
-      links: {
-        github: '#',
-        docs: '#',
-      },
-      logs: [
-        '2025-03-28T16:10:15Z [INFO] Documentation generated for project X',
-        '2025-03-28T14:22:30Z [INFO] New template added',
-        '2025-03-28T11:45:05Z [WARN] Token limit reached for large codebase',
-        '2025-03-28T09:30:45Z [INFO] API endpoint updated',
-        '2025-03-27T17:15:20Z [INFO] System health check passed'
-      ]
-    },
-    {
-      id: 8,
-      name: 'mcp-tools-explorer',
-      namespace: 'ai',
-      description: 'Experimental project to explore Model Context Protocol capabilities and build custom MCP servers for various DevOps automation tasks.',
-      tech: ['TypeScript', 'MCP', 'Node.js', 'API Integration', 'Automation'],
-      status: 'In Progress',
-      metrics: {
-        uptime: 'N/A',
-        performance: 78,
-        reliability: 80,
-      },
-      links: {
-        github: '#',
-      },
-      logs: [
-        '2025-03-28T15:30:20Z [INFO] New MCP server deployed',
-        '2025-03-28T13:45:10Z [WARN] API rate limit approaching',
-        '2025-03-28T11:20:05Z [INFO] Added weather service integration',
-        '2025-03-28T09:15:30Z [INFO] Fixed TypeScript type definitions',
-        '2025-03-27T16:40:15Z [INFO] Initial project setup completed'
-      ]
-    },
-    {
-      id: 3,
-      name: 'kubernetes-monitoring',
-      namespace: 'infrastructure',
-      description: 'Kubernetes monitoring solution with custom dashboards for visualizing cluster health, resource usage, and application performance.',
-      tech: ['Kubernetes', 'Prometheus', 'Grafana', 'Helm'],
-      status: 'Maintenance',
-      metrics: {
-        uptime: '98.5%',
-        performance: 90,
-        reliability: 92,
-      },
-      links: {
-        github: '#',
-        docs: '#',
-      },
-      logs: [
-        '2025-03-28T14:32:10Z [INFO] Dashboard update deployed',
-        '2025-03-28T12:15:22Z [INFO] Alert rules updated',
-        '2025-03-28T08:45:01Z [INFO] Added memory usage panels',
-        '2025-03-27T22:30:45Z [WARN] High CPU utilization detected',
-        '2025-03-27T16:20:33Z [INFO] Initial metrics collection configured'
-      ]
-    },
-    {
-      id: 4,
-      name: 'ci-cd-pipeline-overhaul',
-      namespace: 'devops',
-      description: 'Modernized CI/CD pipeline with parallel execution, caching, and comprehensive testing integration.',
-      tech: ['GitHub Actions', 'Jenkins', 'Docker', 'Python'],
+      id: 'eventlogic',
+      name: 'eventlogic',
+      namespace: 'production',
+      sublabel: 'multi-tenant SaaS · eu-north-1',
+      description:
+        'Swedish multi-tenant event-management SaaS. Sole platform owner. ECS Fargate services behind ALB, Aurora PostgreSQL with schema-per-tenant, ElastiCache Redis, Amazon MQ. Tenant routing via DynamoDB registry. Customers across Europe.',
+      role: 'Sole platform owner',
+      tech: ['ECS Fargate', 'Aurora PostgreSQL', 'ElastiCache', 'Amazon MQ', 'DynamoDB', 'CloudFront'],
       status: 'Running',
-      metrics: {
-        uptime: '98.5%',
-        performance: 92,
-        reliability: 94,
-      },
-      links: {
-        github: '#',
-        live: '#',
-        docs: '#',
-      },
+      facts: [
+        { label: 'Region', value: 'eu-north-1' },
+        { label: 'Tenancy', value: 'schema-per-tenant' },
+      ],
+      links: {},
       logs: [
-        '2025-03-28T15:10:22Z [INFO] Pipeline execution #1245 successful',
-        '2025-03-28T13:05:17Z [INFO] Deployed to staging environment',
-        '2025-03-28T13:00:05Z [INFO] All tests passed',
-        '2025-03-28T12:45:30Z [INFO] Build artifacts generated',
-        '2025-03-28T12:30:00Z [INFO] Pipeline triggered by commit a8f2e3d'
-      ]
+        '[INFO] ECS Fargate services healthy behind the ALB',
+        '[INFO] Aurora schema-per-tenant routing active',
+        '[INFO] Tenant lookup served from the DynamoDB registry',
+        '[INFO] CloudFront serving tenant assets at the edge',
+        '[INFO] Amazon MQ broker connections stable',
+      ],
     },
     {
-      id: 5,
-      name: 'monitoring-alerting-system',
+      id: 'multi-region-dr',
+      name: 'dr-failover',
+      namespace: 'production',
+      sublabel: 'cross-region disaster recovery',
+      description:
+        'Cross-region disaster recovery from eu-north-1 to eu-west-1. Built where none existed. Aurora Global Database for sub-second cross-region replication, EFS and ECR replication, shared KMS keys across regions. Documented runbook for promotion.',
+      role: 'Designed and built solo',
+      tech: ['Aurora Global DB', 'EFS', 'ECR', 'KMS', 'Route 53'],
+      status: 'Running',
+      facts: [
+        { label: 'Primary', value: 'eu-north-1' },
+        { label: 'Failover', value: 'eu-west-1' },
+      ],
+      links: {},
+      logs: [
+        '[INFO] Aurora Global Database replication nominal',
+        '[INFO] EFS replication to eu-west-1 active',
+        '[INFO] ECR cross-region image sync complete',
+        '[INFO] KMS keys shared across both regions',
+        '[INFO] Promotion runbook reviewed and versioned',
+      ],
+    },
+    {
+      id: 'tenant-orchestrator',
+      name: 'tenant-orch',
+      namespace: 'platform',
+      sublabel: 'tenant provisioning service',
+      description:
+        'Python tenant-provisioning orchestrator. One API call sets up schema-per-tenant on Aurora, wires SQS and EventBridge, creates ALB listener rules, provisions a CloudFront / S3 distribution, configures Route 53 records, and registers the tenant in DynamoDB.',
+      role: 'Author and operator',
+      tech: ['Python', 'FastAPI', 'Aurora', 'SQS', 'EventBridge', 'Route 53'],
+      status: 'Running',
+      facts: [
+        { label: 'Per tenant', value: 'one call' },
+        { label: 'Steps', value: '6+' },
+      ],
+      links: {},
+      logs: [
+        '[INFO] Tenant schema created on Aurora',
+        '[INFO] SQS and EventBridge wiring applied',
+        '[INFO] ALB listener rule registered',
+        '[INFO] CloudFront / S3 distribution provisioned',
+        '[INFO] Route 53 record set, tenant registered in DynamoDB',
+      ],
+    },
+    {
+      id: 'reliability-program',
+      name: 'reliability',
+      namespace: 'sre',
+      sublabel: 'incident · 19m outage fix',
+      description:
+        'Diagnosed a 19-minute full-platform outage caused by blocking Redis KEYS calls exhausting the Tomcat/JDBC thread pool. Added connection-pool checkout timeouts, tuned RDS parameters, and drove a 68-task reliability program across 11 epics and 7 sprints to prevent recurrence.',
+      role: 'Incident lead, program driver',
+      tech: ['Aurora', 'Redis', 'JDBC', 'Postmortem', 'SLOs'],
+      status: 'Running',
+      facts: [
+        { label: 'Outage', value: '19 min' },
+        { label: 'Tasks', value: '68 / 11 epics' },
+      ],
+      links: {},
+      logs: [
+        '[WARN] Blocking Redis KEYS call found in a hot path',
+        '[INFO] Postmortem: KEYS calls exhausted the JDBC thread pool',
+        '[INFO] Connection-pool checkout timeouts added',
+        '[INFO] RDS parameter group tuned',
+        '[INFO] Reliability program: 68 tasks, 11 epics, 7 sprints',
+      ],
+    },
+    {
+      id: 'oneuptime',
+      name: 'oneuptime',
       namespace: 'observability',
-      description: 'Comprehensive monitoring and alerting platform with custom dashboards and intelligent alert routing.',
-      tech: ['Prometheus', 'Grafana', 'AlertManager', 'Loki'],
+      sublabel: 'self-hosted SRE platform',
+      description:
+        'Self-hosted OneUptime on K3s in eu-central-1 (separate region from primary). Status pages, uptime monitoring, on-call scheduling, incident management. Designed so observability survives a primary-region outage.',
+      role: 'Built and operated solo',
+      tech: ['K3s', 'OneUptime', 'OpenTelemetry', 'Loki'],
       status: 'Running',
-      metrics: {
-        uptime: '99.95%',
-        performance: 97,
-        reliability: 99,
-      },
-      links: {
-        github: '#',
-        live: '#',
-      },
+      facts: [
+        { label: 'Region', value: 'eu-central-1' },
+        { label: 'Surface', value: 'status / on-call' },
+      ],
+      links: {},
       logs: [
-        '2025-03-28T14:55:00Z [INFO] Alert rules updated',
-        '2025-03-28T11:20:15Z [INFO] New dashboard created',
-        '2025-03-28T09:30:22Z [INFO] Metrics retention policy updated',
-        '2025-03-27T18:45:10Z [INFO] New data source connected',
-        '2025-03-27T14:10:05Z [INFO] System health check passed'
-      ]
+        '[INFO] K3s cluster healthy in eu-central-1',
+        '[INFO] Status pages serving',
+        '[INFO] On-call schedule synced',
+        '[INFO] Incident workflows tested',
+        '[INFO] Runs outside the primary-region blast radius by design',
+      ],
     },
     {
-      id: 6,
-      name: 'terraform-modules-library',
-      namespace: 'infrastructure',
-      description: 'Collection of reusable Terraform modules for AWS infrastructure with built-in security and compliance checks.',
-      tech: ['Terraform', 'AWS', 'IaC', 'Security'],
+      id: 'otel-pipeline',
+      name: 'otel',
+      namespace: 'observability',
+      sublabel: 'observability pipeline',
+      description:
+        'OpenTelemetry collector dual-exports metrics, logs, and traces to OneUptime and Loki at the same time. Consolidated fragmented monitoring into one observability stack. Grafana sits on top.',
+      role: 'Designed and built solo',
+      tech: ['OpenTelemetry', 'Loki', 'Grafana', 'Prometheus'],
+      status: 'Running',
+      facts: [
+        { label: 'Exports', value: 'OneUptime + Loki' },
+        { label: 'Signals', value: 'metrics / logs / traces' },
+      ],
+      links: {},
+      logs: [
+        '[INFO] Collector dual-exporting to OneUptime and Loki',
+        '[INFO] Metrics, logs, and traces on one pipeline',
+        '[INFO] Grafana dashboards reading unified data',
+        '[INFO] Fragmented monitoring agents decommissioned',
+        '[INFO] Prometheus scrape targets consolidated',
+      ],
+    },
+    {
+      id: 'es-cluster',
+      name: 'es-cluster',
+      namespace: 'platform',
+      sublabel: '3-node Elasticsearch',
+      description:
+        'Self-managed three-node Elasticsearch cluster managed with Terraform and Ansible. Split deploy and split-restart playbooks so a single config change cannot cascade across the cluster.',
+      role: 'Built and operated solo',
+      tech: ['Elasticsearch', 'Terraform', 'Ansible'],
       status: 'Maintenance',
-      metrics: {
-        uptime: '100%',
-        performance: 90,
-        reliability: 96,
-      },
-      links: {
-        github: '#',
-        docs: '#',
-      },
+      facts: [
+        { label: 'Nodes', value: '3' },
+        { label: 'Deploy', value: 'split-restart' },
+      ],
+      links: {},
       logs: [
-        '2025-03-28T13:40:30Z [INFO] Module version 2.3.0 released',
-        '2025-03-28T10:15:45Z [INFO] Security compliance check passed',
-        '2025-03-27T22:10:20Z [INFO] New AWS region support added',
-        '2025-03-27T16:30:15Z [INFO] Documentation updated',
-        '2025-03-27T11:45:00Z [INFO] Dependency versions updated'
-      ]
+        '[INFO] Three-node cluster status green',
+        '[INFO] Split-restart playbook executed, no cascade',
+        '[INFO] Terraform plan clean, no drift',
+        '[WARN] One node restarts at a time, by design',
+        '[INFO] Ansible inventory verified',
+      ],
     },
     {
-      id: 9,
-      name: 'llm-code-reviewer',
+      id: 'ci-cd-platform',
+      name: 'ci-cd',
+      namespace: 'devops',
+      sublabel: 'pipelines · 3 platforms',
+      description:
+        'CI/CD pipelines spanning Jenkins, GitLab CI, and AWS CodePipeline / CodeBuild. Targets include ECS, Lambda, CloudFront, and EC2 deployments. App and infra share pipeline patterns.',
+      role: 'Pipeline owner',
+      tech: ['Jenkins', 'GitLab CI', 'CodePipeline', 'CodeBuild', 'Docker'],
+      status: 'Running',
+      facts: [
+        { label: 'Platforms', value: '3' },
+        { label: 'Targets', value: 'ECS · Lambda · CF · EC2' },
+      ],
+      links: {},
+      logs: [
+        '[INFO] GitLab CI pipeline green',
+        '[INFO] Jenkins job deployed to ECS',
+        '[INFO] CodePipeline release promoted',
+        '[INFO] Lambda and CloudFront targets updated',
+        '[INFO] Shared pipeline patterns applied to infra repos',
+      ],
+    },
+    {
+      id: 'aws-finops',
+      name: 'finops',
+      namespace: 'devops',
+      sublabel: 'AWS cost optimization',
+      description:
+        'Cut monthly AWS spend by removing orphaned NAT Gateways, adding S3 and DynamoDB gateway endpoints to drop data-transfer cost, setting log-retention policies on CloudWatch, and right-sizing EBS volumes.',
+      role: 'Cost owner',
+      tech: ['VPC Endpoints', 'CloudWatch Logs', 'EBS', 'NAT'],
+      status: 'Maintenance',
+      facts: [
+        { label: 'Levers', value: 'NAT / endpoints / retention' },
+        { label: 'Cadence', value: 'ongoing' },
+      ],
+      links: {},
+      logs: [
+        '[INFO] Orphaned NAT Gateways removed',
+        '[INFO] S3 and DynamoDB gateway endpoints added',
+        '[INFO] CloudWatch log-retention policies set',
+        '[INFO] EBS volumes right-sized',
+        '[INFO] Monthly AWS bill reviewed',
+      ],
+    },
+    {
+      id: 'hashnode-mcp',
+      name: 'hashnode-mcp',
       namespace: 'ai',
-      description: 'Automated code review tool that uses LLMs to analyze pull requests, suggest improvements, and detect potential bugs or security issues.',
-      tech: ['Python', 'LLMs', 'GitHub API', 'Code Analysis'],
-      status: 'Running',
-      metrics: {
-        uptime: '94.3%',
-        performance: 80,
-        reliability: 83,
-      },
+      sublabel: 'shelved · API terminated',
+      description:
+        'Open-source Model Context Protocol server that wired AI assistants like Claude into the Hashnode content API. Shelved after Hashnode terminated public API access. The pattern lives on in the broader agentic-DevOps work.',
+      role: 'Open-source author',
+      tech: ['Python', 'MCP', 'Hashnode API'],
+      status: 'Completed',
+      facts: [
+        { label: 'License', value: 'open source' },
+        { label: 'State', value: 'shelved' },
+      ],
       links: {
-        github: '#',
+        github: 'https://github.com/sbmagar13/hashnode-mcp-server',
       },
       logs: [
-        '2025-03-28T16:05:10Z [INFO] Reviewed PR #142',
-        '2025-03-28T14:20:22Z [INFO] Updated language model',
-        '2025-03-28T11:35:05Z [INFO] Added security vulnerability detection',
-        '2025-03-28T09:50:45Z [WARN] Rate limit exceeded on GitHub API',
-        '2025-03-27T18:15:15Z [INFO] System health check passed'
-      ]
+        '[INFO] MCP server released as open source',
+        '[INFO] Claude wired into the Hashnode content API',
+        '[WARN] Hashnode terminated public API access',
+        '[INFO] Project shelved, repo stays public',
+        '[INFO] Pattern reused in agentic-DevOps work',
+      ],
     },
     {
-      id: 1,
-      name: 'python-web-platform',
-      namespace: 'web',
-      description: 'Modern web application platform built with Python frameworks (Django, FastAPI, Flask) with RESTful APIs and responsive frontend.',
-      tech: ['Python', 'Django', 'FastAPI', 'Flask', 'REST API'],
-      status: 'Running',
-      metrics: {
-        uptime: '99.8%',
-        performance: 94,
-        reliability: 97,
-      },
+      id: 'vqgan-clip',
+      name: 'vqgan-clip',
+      namespace: 'ai',
+      sublabel: 'text-to-image · 2021',
+      description:
+        'Multimodal text-to-image generation using VQGAN + CLIP architectures in PyTorch. From the AI/ML era of the career, kept here as an artifact.',
+      role: 'Personal research project',
+      tech: ['PyTorch', 'CLIP', 'VQGAN', 'Python'],
+      status: 'Completed',
+      facts: [
+        { label: 'Era', value: '2021' },
+        { label: 'State', value: 'archived' },
+      ],
       links: {
-        github: '#',
-        live: '#',
-        docs: '#',
+        github: 'https://github.com/sbmagar13/VQGAN-CLIP-Text-to-Image',
       },
       logs: [
-        '2025-03-28T16:20:10Z [INFO] API request processed successfully',
-        '2025-03-28T15:45:22Z [INFO] Database migration completed',
-        '2025-03-28T14:30:05Z [INFO] New endpoint deployed',
-        '2025-03-28T12:15:45Z [INFO] Authentication system updated',
-        '2025-03-27T18:30:15Z [INFO] System health check passed'
-      ]
-    }
+        '[INFO] VQGAN + CLIP pipeline built in PyTorch',
+        '[INFO] Text prompts rendered to images',
+        '[INFO] Artifact from the AI/ML era, 2021',
+        '[INFO] Repo public on GitHub',
+        '[INFO] Archived, kept for the record',
+      ],
+    },
   ];
-  
+
   const handleProjectClick = (project: Project) => {
     setSelectedProject(project);
     setActiveTab('metrics');
   };
-  
+
   const handleCloseDetails = () => {
     setSelectedProject(null);
   };
-  
+
   return (
     <div className="bg-gray-900 text-gray-100 p-6 rounded-lg border border-green-500 shadow-lg shadow-green-500/20">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-green-500 mb-2">The Production Environment</h2>
         <p className="text-gray-400">
-          Interactive project ecosystem with real-time metrics and cluster visualization.
+          The real production estate and side projects, rendered as a cluster. Click a workload to inspect.
         </p>
       </div>
-
-      {/* Project Metrics Dashboard */}
-      <ProjectMetrics />
 
       {/* Project Ecosystem Graph */}
       <ProjectsGraph />
@@ -349,7 +316,7 @@ const Projects = () => {
 
       {/* Docker Containers Visualization */}
       <DockerContainers />
-      
+
       {/* Cluster View */}
       {!selectedProject && (
         <div className="relative p-6 bg-gray-800 rounded-lg border border-gray-700">
@@ -364,19 +331,19 @@ const Projects = () => {
             </div>
             <div className="flex items-center text-xs text-blue-400">
               <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>
-              <span>In Progress</span>
+              <span>Completed</span>
             </div>
           </div>
-          
+
           <h3 className="text-lg font-semibold text-green-400 mb-6">Cluster Overview</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {projects.map((project) => (
               <motion.div
                 key={project.id}
                 className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                  project.status === 'Running' 
-                    ? 'border-green-600 bg-gray-800' 
+                  project.status === 'Running'
+                    ? 'border-green-600 bg-gray-800'
                     : project.status === 'Maintenance'
                     ? 'border-yellow-600 bg-gray-800'
                     : 'border-blue-600 bg-gray-800'
@@ -393,8 +360,8 @@ const Projects = () => {
                     <div className="text-xs text-gray-400 mt-1">namespace: {project.namespace}</div>
                   </div>
                   <div className={`px-2 py-1 text-xs rounded-full ${
-                    project.status === 'Running' 
-                      ? 'bg-green-900 text-green-400' 
+                    project.status === 'Running'
+                      ? 'bg-green-900 text-green-400'
                       : project.status === 'Maintenance'
                       ? 'bg-yellow-900 text-yellow-400'
                       : 'bg-blue-900 text-blue-400'
@@ -415,16 +382,13 @@ const Projects = () => {
                     </span>
                   )}
                 </div>
-                <div className="flex justify-between text-xs text-gray-400">
-                  <div>Uptime: {project.metrics.uptime}</div>
-                  <div>Reliability: {project.metrics.reliability}%</div>
-                </div>
+                <div className="text-xs text-gray-400 truncate">{project.sublabel}</div>
               </motion.div>
             ))}
           </div>
         </div>
       )}
-      
+
       {/* Project Details */}
       {selectedProject && (
         <motion.div
@@ -439,8 +403,8 @@ const Projects = () => {
               <h3 className="font-mono text-green-400 text-sm sm:text-base">{selectedProject.name}</h3>
               <span className="text-xs text-gray-400">namespace: {selectedProject.namespace}</span>
               <span className={`px-2 py-1 text-xs rounded-full ${
-                selectedProject.status === 'Running' 
-                  ? 'bg-green-900 text-green-400' 
+                selectedProject.status === 'Running'
+                  ? 'bg-green-900 text-green-400'
                   : selectedProject.status === 'Maintenance'
                   ? 'bg-yellow-900 text-yellow-400'
                   : 'bg-blue-900 text-blue-400'
@@ -448,17 +412,17 @@ const Projects = () => {
                 {selectedProject.status}
               </span>
             </div>
-            <button 
+            <button
               onClick={handleCloseDetails}
               className="text-gray-400 hover:text-gray-200"
             >
               ✕
             </button>
           </div>
-          
+
           <div className="p-4">
             <p className="text-gray-300 mb-4">{selectedProject.description}</p>
-            
+
             <div className="flex flex-wrap gap-2 mb-4">
               {selectedProject.tech.map((tech, i) => (
                 <span key={i} className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
@@ -466,41 +430,36 @@ const Projects = () => {
                 </span>
               ))}
             </div>
-            
-            <div className="flex flex-wrap gap-3 mb-4">
-              {selectedProject.links.github && (
-                <a href={selectedProject.links.github} className="flex items-center text-sm text-blue-400 hover:text-blue-300">
+
+            {selectedProject.links.github && (
+              <div className="flex flex-wrap gap-3 mb-4">
+                <a
+                  href={selectedProject.links.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-sm text-blue-400 hover:text-blue-300"
+                >
                   <FaGithub className="mr-1" /> Repository
                 </a>
-              )}
-              {selectedProject.links.live && (
-                <a href={selectedProject.links.live} className="flex items-center text-sm text-blue-400 hover:text-blue-300">
-                  <FaExternalLinkAlt className="mr-1" /> Live Demo
-                </a>
-              )}
-              {selectedProject.links.docs && (
-                <a href={selectedProject.links.docs} className="flex items-center text-sm text-blue-400 hover:text-blue-300">
-                  <FaBook className="mr-1" /> Documentation
-                </a>
-              )}
-            </div>
-            
+              </div>
+            )}
+
             {/* Tabs */}
             <div className="border-b border-gray-700 mb-4">
               <div className="flex flex-wrap gap-2 sm:space-x-4">
-                <button 
+                <button
                   className={`py-2 px-4 font-medium ${activeTab === 'metrics' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
                   onClick={() => setActiveTab('metrics')}
                 >
-                  <FaChartLine className="inline mr-1" /> Metrics
+                  <FaChartLine className="inline mr-1" /> Facts
                 </button>
-                <button 
+                <button
                   className={`py-2 px-4 font-medium ${activeTab === 'logs' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
                   onClick={() => setActiveTab('logs')}
                 >
                   <FaServer className="inline mr-1" /> Logs
                 </button>
-                <button 
+                <button
                   className={`py-2 px-4 font-medium ${activeTab === 'docs' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400 hover:text-gray-300'}`}
                   onClick={() => setActiveTab('docs')}
                 >
@@ -508,58 +467,44 @@ const Projects = () => {
                 </button>
               </div>
             </div>
-            
+
             {/* Tab Content */}
             <div className="min-h-[200px]">
               {activeTab === 'metrics' && (
                 <div>
-                  <h4 className="text-lg font-semibold text-green-400 mb-4">Performance Metrics</h4>
+                  <h4 className="text-lg font-semibold text-green-400 mb-4">Key Facts</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
                     <div className="bg-gray-700 p-3 rounded">
-                      <div className="text-xs text-gray-400">Uptime</div>
-                      <div className="text-xl font-mono">{selectedProject.metrics.uptime}</div>
+                      <div className="text-xs text-gray-400">Role</div>
+                      <div className="text-sm font-mono mt-1">{selectedProject.role}</div>
                     </div>
-                    <div className="bg-gray-700 p-3 rounded">
-                      <div className="text-xs text-gray-400">Performance</div>
-                      <div className="text-xl font-mono">{selectedProject.metrics.performance}%</div>
-                    </div>
-                    <div className="bg-gray-700 p-3 rounded">
-                      <div className="text-xs text-gray-400">Reliability</div>
-                      <div className="text-xl font-mono">{selectedProject.metrics.reliability}%</div>
-                    </div>
+                    {selectedProject.facts.map((fact, i) => (
+                      <div key={i} className="bg-gray-700 p-3 rounded">
+                        <div className="text-xs text-gray-400">{fact.label}</div>
+                        <div className="text-sm font-mono mt-1">{fact.value}</div>
+                      </div>
+                    ))}
                   </div>
-                  
-                  <div className="mb-4">
-                    <h5 className="text-sm font-semibold text-gray-300 mb-2">Performance Trend (30 days)</h5>
-                    <div className="h-16 sm:h-24 bg-gray-700 rounded-md flex items-end p-2">
-                      {Array.from({ length: 30 }).map((_, i) => {
-                        const height = Math.floor(Math.random() * 50) + 30;
-                        return (
-                          <div 
-                            key={i} 
-                            className="w-full bg-green-500 mx-0.5 rounded-t"
-                            style={{ height: `${height}%` }}
-                          ></div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  
+
+                  <p className="text-xs text-gray-400 mb-4">
+                    No invented uptimes or scores here. Same verified data as the 3D data center.
+                  </p>
+
                   <button className="mt-2 px-4 py-2 bg-green-700 text-green-100 rounded hover:bg-green-600 transition-colors">
                     Deploy to Your Brain
                   </button>
                 </div>
               )}
-              
+
               {activeTab === 'logs' && (
                 <div>
-                  <h4 className="text-lg font-semibold text-green-400 mb-4">Recent Logs</h4>
+                  <h4 className="text-lg font-semibold text-green-400 mb-4">Operational Log</h4>
                   <div className="bg-black rounded-md p-3 font-mono text-sm h-64 overflow-y-auto">
                     {selectedProject.logs.map((log, i) => {
                       const isError = log.includes('[ERROR]');
                       const isWarning = log.includes('[WARN]');
                       const logClass = isError ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-gray-300';
-                      
+
                       return (
                         <div key={i} className={`mb-1 ${logClass}`}>
                           {log}
@@ -567,34 +512,25 @@ const Projects = () => {
                       );
                     })}
                   </div>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Condensed history of the real work, not a live tail.
+                  </p>
                 </div>
               )}
-              
+
               {activeTab === 'docs' && (
                 <div>
                   <h4 className="text-lg font-semibold text-green-400 mb-4">Technical Documentation</h4>
                   <div className="bg-gray-700 rounded-md p-4">
-                    <h5 className="font-semibold mb-2">Project Overview</h5>
-                    <p className="text-sm mb-4">
-                      {selectedProject.description} This project was built to solve complex infrastructure challenges
-                      and improve operational efficiency.
-                    </p>
-                    
-                    <h5 className="font-semibold mb-2">Technical Architecture</h5>
-                    <p className="text-sm mb-4">
-                      The system uses a microservices architecture with containerized components deployed on Kubernetes.
-                      It follows GitOps principles for deployment and configuration management.
-                    </p>
-                    
-                    <h5 className="font-semibold mb-2">Key Features</h5>
-                    <ul className="list-disc list-inside text-sm mb-4">
-                      <li>Automated deployment and scaling</li>
-                      <li>Comprehensive monitoring and alerting</li>
-                      <li>Self-healing capabilities</li>
-                      <li>Infrastructure as Code implementation</li>
-                      <li>CI/CD integration</li>
-                    </ul>
-                    
+                    <h5 className="font-semibold mb-2">Overview</h5>
+                    <p className="text-sm mb-4">{selectedProject.description}</p>
+
+                    <h5 className="font-semibold mb-2">Role</h5>
+                    <p className="text-sm mb-4">{selectedProject.role}</p>
+
+                    <h5 className="font-semibold mb-2">Status</h5>
+                    <p className="text-sm mb-4">{selectedProject.status} · {selectedProject.sublabel}</p>
+
                     <h5 className="font-semibold mb-2">Technologies Used</h5>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {selectedProject.tech.map((tech, i) => (

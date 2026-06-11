@@ -1,11 +1,12 @@
 'use client';
 
-import { Suspense, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, Float, MeshReflectorMaterial } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import { NeonStrip } from './Atmosphere';
+import ContextGuard from './ContextGuard';
 import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
@@ -232,11 +233,12 @@ interface PedestalProps {
   skill: SkillData;
   highlighted: boolean;
   hovered: boolean;
+  isLow: boolean;
   onHover: (h: boolean) => void;
   onClick: (e: ThreeEvent<MouseEvent>) => void;
 }
 
-function Pedestal({ position, skill, highlighted, hovered, onHover, onClick }: PedestalProps) {
+function Pedestal({ position, skill, highlighted, hovered, isLow, onHover, onClick }: PedestalProps) {
   const hasLogo = hasCustomLogo(skill.id);
   const color = hasLogo ? logoTint(skill.id) : CATEGORY_COLORS[skill.category];
   return (
@@ -283,11 +285,17 @@ function Pedestal({ position, skill, highlighted, hovered, onHover, onClick }: P
 
       {/* Name label, billboarded so it always faces the camera as you
           orbit the hall, with a dark plate behind for legibility. Bigger
-          text now so the info is readable across the whole hall. */}
+          text now so the info is readable across the whole hall. On the
+          low tier the years/category subline is dropped (every subline
+          is its own troika Text draw, and there are dozens of pedestals);
+          the selected pedestal keeps its full label so the detail you
+          asked for stays labeled. */}
       <LabelPlate
         position={[0, -0.2, 0.55]}
         text={skill.name}
-        subtext={`${skill.years}Y · ${skill.category.toUpperCase()}`}
+        subtext={
+          isLow && !highlighted ? undefined : `${skill.years}Y · ${skill.category.toUpperCase()}`
+        }
         size={0.17}
         subSize={0.08}
         color="#f1f5f9"
@@ -384,6 +392,7 @@ function Scene({
           skill={s}
           highlighted={selectedId === s.id}
           hovered={hoveredId === s.id}
+          isLow={isLow}
           onHover={(h) => setHovered(h ? s.id : null)}
           onClick={(e) => {
             e.stopPropagation();
@@ -432,6 +441,9 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Category | 'all'>('all');
+  // Bumped when the WebGL context dies and never restores; keying the
+  // Canvas on it tears the renderer down and rebuilds from scratch.
+  const [glGen, setGlGen] = useState(0);
   const selected = useMemo(() => SKILLS.find((s) => s.id === selectedId) ?? null, [selectedId]);
   const visibleSkills = useMemo(
     () => (filter === 'all' ? SKILLS : SKILLS.filter((s) => s.category === filter)),
@@ -447,15 +459,27 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
     document.body.style.cursor = '';
   };
 
+  // Leaving the scene clears the selection and any mid-hover cursor so
+  // a hidden hall never holds a stale detail panel (or leaves the body
+  // cursor stuck on pointer) when the visitor comes back.
+  useEffect(() => {
+    if (active) return;
+    setSelectedId(null);
+    setHoveredId(null);
+    document.body.style.cursor = '';
+  }, [active]);
+
   return (
     <div className="w-full h-screen relative bg-black">
       <Canvas
+        key={glGen}
         shadows={!isLow}
         camera={{ position: [0, 5.5, 12], fov: 52 }}
         gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
         dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
       >
+        <ContextGuard onLost={() => setGlGen((g) => g + 1)} />
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 8, 24]} />
         <Suspense fallback={null}>
@@ -478,7 +502,7 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
       </Canvas>
 
       {/* Heading */}
-      <div className="hidden sm:block pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/45 backdrop-blur-sm border border-cyan-500/20">
+      <div className="hidden sm:block pointer-events-none absolute top-24 left-1/2 -translate-x-1/2 text-center px-6 py-3 rounded-md bg-slate-950/65 sm:bg-slate-950/45 sm:backdrop-blur-sm border border-cyan-500/20">
         <div className="font-mono text-[11px] tracking-[0.32em] text-cyan-300 uppercase">
           Inventory
         </div>
@@ -543,7 +567,7 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
             animate={{ x: 0, opacity: 1, scale: 1 }}
             exit={{ x: 60, opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-1/2 -translate-y-1/2 right-6 w-[380px] bg-slate-950/92 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 shadow-2xl shadow-cyan-500/20"
+            className="absolute top-1/2 -translate-y-1/2 right-6 w-[380px] bg-slate-950/95 sm:bg-slate-950/92 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-6 shadow-2xl shadow-cyan-500/20"
           >
             <div className="flex items-start justify-between gap-3">
               <div>

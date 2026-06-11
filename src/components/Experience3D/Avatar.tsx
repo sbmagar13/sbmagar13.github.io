@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import HoloPlate from './HoloPlate';
 import HoloProjector from './HoloProjector';
+import ContextGuard from './ContextGuard';
 import CinematicEffects from './Effects';
 import LensFlare from './LensFlare';
 import ParticleStorm from './ParticleStorm';
@@ -314,6 +315,10 @@ export default function Avatar({
   const tier = usePerfTier();
   const isLow = tier === 'low';
   const [pickedStat, setPickedStat] = useState<string | null>(null);
+  // Bumped when the WebGL context is lost for good (iOS Safari evicting
+  // the GPU context); keying the Canvas on it rebuilds the scene instead
+  // of leaving a permanently black rectangle. See ContextGuard.
+  const [glGen, setGlGen] = useState(0);
   const stat = pickedStat ? STATS.find((s) => s.id === pickedStat) ?? null : null;
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -351,11 +356,13 @@ export default function Avatar({
   return (
     <div className="w-full h-screen relative bg-black">
       <Canvas
+        key={glGen}
         camera={{ position: [0, 1.5, 7], fov: 42 }}
         gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
         dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
       >
+        <ContextGuard onLost={() => setGlGen((g) => g + 1)} />
         <color attach="background" args={[PALETTE.voidA]} />
         <fog attach="fog" args={['#020617', 6, 18]} />
         <Suspense fallback={null}>
@@ -377,7 +384,7 @@ export default function Avatar({
       {/* Heading. Bolder backdrop + corner brackets so it reads against
           the bright halo of the holographic plate behind it. */}
       <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2">
-        <div className="relative px-8 py-4 rounded-lg bg-slate-950/85 backdrop-blur-md border border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.18)]">
+        <div className="relative px-8 py-4 rounded-lg bg-slate-950/95 sm:bg-slate-950/85 sm:backdrop-blur-md border border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.18)]">
           {/* Decorative corner brackets */}
           <span aria-hidden className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-300 rounded-tl-sm" />
           <span aria-hidden className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-300 rounded-tr-sm" />
@@ -426,7 +433,7 @@ export default function Avatar({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 30, opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed z-30 bg-slate-950/95 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto bottom-4 inset-x-4 sm:inset-x-auto sm:bottom-8 sm:right-6 sm:w-[360px] sm:max-w-[44vw]"
+            className="fixed z-30 bg-slate-950 sm:bg-slate-950/95 sm:backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto bottom-4 inset-x-4 sm:inset-x-auto sm:bottom-8 sm:right-6 sm:w-[360px] sm:max-w-[44vw]"
             role="dialog"
             aria-label={`Detail: ${stat.value}`}
           >

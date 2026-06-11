@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from 'xterm-addon-fit';
-import { executeCommand, isVimActive } from './commands';
+import { executeCommand, isVimActive, getCommandNames } from './commands';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -18,8 +18,11 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  // Command history lives in refs, not state: the xterm onKey closure is
+  // created once inside the init effect, so state values captured there
+  // go stale after the first render. Refs always read current.
+  const historyRef = useRef<string[]>([]);
+  const historyIndexRef = useRef(0);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
 
@@ -83,7 +86,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       cursorBlink: true,
       cursorStyle: 'block',
       fontFamily: 'var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace',
-      fontSize: window.innerWidth < 768 ? 12 : 14, // Slightly larger font on mobile for better readability
+      fontSize, // Matches the size the Geist Mono preload above waited for
       lineHeight: window.innerWidth < 768 ? 1.2 : 1.2, // Consistent line height for readability
       theme: {
         background: '#0a0a0a',
@@ -197,16 +200,16 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     }
     
     term.writeln('');
-    
-    // Center the subtitle text
+
+    // A real shell greets minimally: one motd line, one dim hint, done.
     const subtitle = 'DevOps Brain Terminal v2.0.0';
     const subtitlePadding = Math.max(0, Math.floor((termWidth - subtitle.length) / 2));
     const subtitleSpaces = ' '.repeat(subtitlePadding);
-    
-    const helpText = 'Type "help" to see available commands';
+
+    const helpText = "Type 'help' for commands, or just start with 'about'.";
     const helpPadding = Math.max(0, Math.floor((termWidth - helpText.length) / 2));
     const helpSpaces = ' '.repeat(helpPadding);
-    
+
     term.writeln(subtitleSpaces + '\x1b[1;37m' + subtitle + '\x1b[0m');
     term.writeln(helpSpaces + '\x1b[90m' + helpText + '\x1b[0m');
     term.writeln('');
@@ -219,17 +222,19 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     
     term.onKey(({ key, domEvent }) => {
       const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
-      
+
       if (domEvent.keyCode === 13) { // Enter
-        // Process command
+        // Process command. The history cursor resets on every Enter,
+        // including an empty one, exactly like bash: a blank line after
+        // recalling history should not leave Up resuming mid-walk.
         term.writeln('');
         if (currentLine.trim()) {
           processCommand(currentLine.trim());
-          setCommandHistory(prev => [...prev, currentLine.trim()]);
-          setHistoryIndex(commandHistory.length + 1);
+          historyRef.current.push(currentLine.trim());
         } else {
           writePrompt(term);
         }
+        historyIndexRef.current = historyRef.current.length;
         currentLine = '';
       } else if (domEvent.keyCode === 8) { // Backspace
         if (currentLine.length > 0) {
@@ -237,40 +242,75 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           // Move cursor backward
           term.write('\b \b');
         }
+      } else if (domEvent.keyCode === 9) { // Tab: complete against the command registry
+        domEvent.preventDefault();
+        if (!isVimActive() && currentLine.length > 0 && !currentLine.includes(' ')) {
+          const matches = getCommandNames().filter(name => name.startsWith(currentLine));
+          if (matches.length === 1) {
+            // Single match: complete it and add a trailing space
+            const completion = matches[0].slice(currentLine.length) + ' ';
+            currentLine = matches[0] + ' ';
+            term.write(completion);
+          } else if (matches.length > 1) {
+            // Extend to the longest common prefix first; if nothing to
+            // extend, list the candidates like a real shell would.
+            let prefix = matches[0];
+            for (const match of matches) {
+              while (!match.startsWith(prefix)) prefix = prefix.slice(0, -1);
+            }
+            if (prefix.length > currentLine.length) {
+              term.write(prefix.slice(currentLine.length));
+              currentLine = prefix;
+            } else {
+              term.writeln('');
+              term.writeln(matches.join('  '));
+              writePrompt(term);
+              term.write(currentLine);
+            }
+          }
+        }
+      } else if (domEvent.ctrlKey && !domEvent.altKey && !domEvent.metaKey && domEvent.key.toLowerCase() === 'l') {
+        // Ctrl+L clears the screen like a real terminal, keeping the
+        // current input line. (Disabled inside the vim trap, same as
+        // the 'clear' command.)
+        domEvent.preventDefault();
+        if (!isVimActive()) {
+          term.clear();
+        }
       } else if (domEvent.keyCode === 38) { // Up arrow
-        if (historyIndex > 0) {
-          const newIndex = historyIndex - 1;
-          setHistoryIndex(newIndex);
-          const historyCommand = commandHistory[newIndex];
-          
+        // History recall is disabled inside the vim trap: redrawing the
+        // shell prompt over the vim screen breaks the gag.
+        if (!isVimActive() && historyIndexRef.current > 0) {
+          historyIndexRef.current -= 1;
+          const historyCommand = historyRef.current[historyIndexRef.current];
+
           // Clear current line
           term.write('\r\x1b[K');
           writePrompt(term);
-          
+
           // Write history command
           term.write(historyCommand);
           currentLine = historyCommand;
         }
       } else if (domEvent.keyCode === 40) { // Down arrow
-        if (historyIndex < commandHistory.length - 1) {
-          const newIndex = historyIndex + 1;
-          setHistoryIndex(newIndex);
-          const historyCommand = commandHistory[newIndex];
-          
+        if (!isVimActive() && historyIndexRef.current < historyRef.current.length - 1) {
+          historyIndexRef.current += 1;
+          const historyCommand = historyRef.current[historyIndexRef.current];
+
           // Clear current line
           term.write('\r\x1b[K');
           writePrompt(term);
-          
+
           // Write history command
           term.write(historyCommand);
           currentLine = historyCommand;
-        } else if (historyIndex === commandHistory.length - 1) {
-          setHistoryIndex(commandHistory.length);
-          
+        } else if (!isVimActive() && historyIndexRef.current === historyRef.current.length - 1) {
+          historyIndexRef.current = historyRef.current.length;
+
           // Clear current line
           term.write('\r\x1b[K');
           writePrompt(term);
-          
+
           currentLine = '';
         }
       } else if (printable) {
@@ -278,19 +318,19 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         term.write(key);
       }
     });
-    
-    // Execute initial command on all devices
-    setTimeout(() => {
-      const commandToExecute = initialCommand || 'help';
-      currentLine = commandToExecute;
-      term.writeln('');
-      term.write(`${commandToExecute}`);
-      term.writeln('');
-      processCommand(commandToExecute);
-      setCommandHistory(prev => [...prev, commandToExecute]);
-      setHistoryIndex(1);
-      currentLine = '';
-    }, 300); // Reduced delay for faster startup
+
+    // Run the caller-provided initial command, if any. No default:
+    // a real shell greets quietly and waits.
+    if (initialCommand) {
+      setTimeout(() => {
+        term.writeln('');
+        term.write(`${initialCommand}`);
+        term.writeln('');
+        processCommand(initialCommand);
+        historyRef.current.push(initialCommand);
+        historyIndexRef.current = historyRef.current.length;
+      }, 300); // Reduced delay for faster startup
+    }
     
     // Automatically focus the terminal on desktop devices
     setTimeout(() => {
@@ -399,7 +439,7 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     // Notify parent component about the command
     if (onCommandExecuted) {
       // These commands can trigger UI changes in the parent
-      const navigationCommands = ['about', 'projects', 'skills', 'tools', 'exit'];
+      const navigationCommands = ['about', 'projects', 'skills', 'tools', 'blog', 'exit'];
       if (navigationCommands.includes(command.split(' ')[0])) {
         onCommandExecuted(command.split(' ')[0]);
       }
@@ -676,10 +716,10 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           
           // Process the command
           processCommand(commandToExecute);
-          
+
           // Add to history
-          setCommandHistory(prev => [...prev, commandToExecute]);
-          setHistoryIndex(commandHistory.length + 1);
+          historyRef.current.push(commandToExecute);
+          historyIndexRef.current = historyRef.current.length;
         } else if (xtermRef.current) {
           // Just write a new prompt if the command is empty
           xtermRef.current.writeln('');

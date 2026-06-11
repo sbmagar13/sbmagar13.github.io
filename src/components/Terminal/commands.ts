@@ -40,28 +40,6 @@ function generateBar(percentage: number): string {
   return '█'.repeat(filledChars) + '-'.repeat(width - filledChars);
 }
 
-function generateSparkline(): string {
-  const values = [];
-  // Generate random values with a slight trend
-  let value = 50 + Math.random() * 20;
-  
-  // Use fewer points on mobile devices
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const points = isMobile ? 12 : 24;
-  
-  for (let i = 0; i < points; i++) {
-    value = Math.max(10, Math.min(90, value + (Math.random() * 20 - 10)));
-    values.push(value);
-  }
-  
-  // Map values to sparkline characters
-  const chars = '▁▂▃▄▅▆▇█';
-  return values.map(v => {
-    const index = Math.floor((v / 100) * (chars.length - 1));
-    return chars[index];
-  }).join('');
-}
-
 // Available commands
 const commands: Record<string, (args: string[]) => string> = {
   '404': () => {
@@ -97,33 +75,30 @@ const commands: Record<string, (args: string[]) => string> = {
 
 \x1b[1;33mCore Commands:\x1b[0m
   \x1b[1;36mhelp\x1b[0m                 Show this help message
-  \x1b[1;36mclear\x1b[0m                Clear the terminal
+  \x1b[1;36mclear\x1b[0m                Clear the terminal (Ctrl+L works too)
   \x1b[1;36mhistory\x1b[0m              Show command history
   \x1b[1;36mexit\x1b[0m                 Exit terminal mode (switch to GUI)
 
 \x1b[1;33mProfile Commands:\x1b[0m
   \x1b[1;36mabout\x1b[0m                Show information about me
   \x1b[1;36mwhois\x1b[0m                Who am I?
-  \x1b[1;36muptime\x1b[0m               Show my experience uptime
+  \x1b[1;36muptime\x1b[0m               Career uptime, honestly measured
   \x1b[1;36mcontact\x1b[0m              Show contact information
   \x1b[1;36mconnect\x1b[0m              Show social connection endpoints
-  \x1b[1;36mskills\x1b[0m               Show my technical skills
-  \x1b[1;36mprojects\x1b[0m             List my projects
+  \x1b[1;36mskills\x1b[0m               The real stack, nothing padded
+  \x1b[1;36mprojects\x1b[0m             Real production work
 
 \x1b[1;33mDevOps Commands:\x1b[0m
-  \x1b[1;36mdeploy [project]\x1b[0m     Deploy a project (simulation)
-  \x1b[1;36mdocker [command]\x1b[0m     Docker container operations
-  \x1b[1;36mmonitor [service]\x1b[0m    Monitor a service (simulation)
-  \x1b[1;36mincident [id]\x1b[0m        View incident reports
-  \x1b[1;36mchaos [target]\x1b[0m       Trigger chaos monkey (simulation)
-  \x1b[1;36mtrace [request]\x1b[0m      Trace a request through the system
-  \x1b[1;36mscale [service] [n]\x1b[0m  Scale a service (simulation)
-  \x1b[1;36mping [host]\x1b[0m          Ping a host (simulation)
+  \x1b[1;36mdeploy\x1b[0m               This site's actual deploy pipeline
+  \x1b[1;36mdocker [command]\x1b[0m     Docker container operations (animation)
+  \x1b[1;36mmonitor\x1b[0m              Honest monitoring: this tab is the infra
+  \x1b[1;36mincident\x1b[0m             The real 19-minute outage postmortem
+  \x1b[1;36mchaos\x1b[0m                Release a chaos monkey on a static site
+  \x1b[1;36minfra\x1b[0m                The production platform, simplified
 
 \x1b[1;33mContent Commands:\x1b[0m
-  \x1b[1;36mblog [id]\x1b[0m            Access my tech blog/runbooks
-  \x1b[1;36mtools [id]\x1b[0m           Show my DevOps tools
-  \x1b[1;36minfra\x1b[0m                View infrastructure diagram
+  \x1b[1;36mblog\x1b[0m                 Open the blog
+  \x1b[1;36mtools\x1b[0m                Open the tech stack
 
 \x1b[1;33mFun Commands:\x1b[0m
   \x1b[1;36msudo [command]\x1b[0m       Try it and see what happens
@@ -132,7 +107,7 @@ const commands: Record<string, (args: string[]) => string> = {
   \x1b[1;36mfortune\x1b[0m              Get a random DevOps fortune
   \x1b[1;36m404\x1b[0m                  Show a not found page
 
-\x1b[90mTip: Try some undocumented commands - there might be easter eggs!\x1b[0m
+\x1b[90mTab completes. Up arrow recalls. There are more commands than this list admits.\x1b[0m
 `;
   },
   
@@ -149,9 +124,8 @@ const commands: Record<string, (args: string[]) => string> = {
 \x1b[1;36mUptime:\x1b[0m 5+ years in production (and counting)
 \x1b[1;36mKernel:\x1b[0m Human v3.7.2
 \x1b[1;36mShell:\x1b[0m Bash/Zsh with custom aliases
-\x1b[1;36mPackages:\x1b[0m 150+ technologies integrated
+\x1b[1;36mPackages:\x1b[0m see 'skills' (curated, no padding)
 \x1b[1;36mProcesses:\x1b[0m Multithreaded problem-solving
-\x1b[1;36mMemory:\x1b[0m 128TB of technical knowledge
 \x1b[1;36mSwap:\x1b[0m Lemon Tea-powered memory extension
 
 Type 'skills' to see my technical stack.
@@ -161,88 +135,84 @@ Type 'projects' to see my work.
   
   projects: () => {
     return `
-\x1b[1;32m=== PRODUCTION ENVIRONMENT ===\x1b[0m
+\x1b[1;32m=== PRODUCTION WORK (all real) ===\x1b[0m
 
-\x1b[1;33m[1] Kubernetes Cluster Automation\x1b[0m
-    \x1b[1;36mNamespace:\x1b[0m Infrastructure
-    \x1b[1;36mTech:\x1b[0m Kubernetes, Terraform, ArgoCD, Helm
-    \x1b[1;36mStatus:\x1b[0m Running (99.99% uptime)
-    \x1b[1;36mDescription:\x1b[0m Automated cluster provisioning and management
+\x1b[1;33m[1] EventLogic platform\x1b[0m
+    \x1b[1;36mWhat:\x1b[0m Swedish multi-tenant event-management SaaS, sole platform owner
+    \x1b[1;36mTech:\x1b[0m ECS Fargate, Aurora PostgreSQL (schema-per-tenant), ElastiCache Redis, Amazon MQ
+    \x1b[1;36mRegion:\x1b[0m eu-north-1
 
-\x1b[1;33m[2] CI/CD Pipeline Overhaul\x1b[0m
-    \x1b[1;36mNamespace:\x1b[0m DevOps
-    \x1b[1;36mTech:\x1b[0m GitHub Actions, Jenkins, Docker
-    \x1b[1;36mStatus:\x1b[0m Running (98.5% success rate)
-    \x1b[1;36mDescription:\x1b[0m Reduced deployment time by 75%
+\x1b[1;33m[2] Cross-region disaster recovery\x1b[0m
+    \x1b[1;36mWhat:\x1b[0m DR path from eu-north-1 to eu-west-1, built where none existed
+    \x1b[1;36mTech:\x1b[0m Aurora Global Database, EFS + ECR replication, shared KMS keys
+    \x1b[1;36mExtra:\x1b[0m documented runbook for promotion
 
-\x1b[1;33m[3] Monitoring & Alerting System\x1b[0m
-    \x1b[1;36mNamespace:\x1b[0m Observability
-    \x1b[1;36mTech:\x1b[0m Prometheus, Grafana, AlertManager
-    \x1b[1;36mStatus:\x1b[0m Running (1.2M metrics collected)
-    \x1b[1;36mDescription:\x1b[0m Complete observability platform
+\x1b[1;33m[3] Tenant provisioning orchestrator\x1b[0m
+    \x1b[1;36mWhat:\x1b[0m one Python API call provisions a full tenant
+    \x1b[1;36mSteps:\x1b[0m Aurora schema, SQS + EventBridge, ALB rules, CloudFront/S3, Route 53, DynamoDB
 
-\x1b[1;33m[4] Infrastructure as Code Framework\x1b[0m
-    \x1b[1;36mNamespace:\x1b[0m Infrastructure
-    \x1b[1;36mTech:\x1b[0m Terraform, Pulumi, AWS CDK
-    \x1b[1;36mStatus:\x1b[0m Running (100% infrastructure coverage)
-    \x1b[1;36mDescription:\x1b[0m Modular, reusable infrastructure components
+\x1b[1;33m[4] Self-hosted SRE platform\x1b[0m
+    \x1b[1;36mWhat:\x1b[0m OneUptime on K3s in eu-central-1: status pages, on-call, incidents
+    \x1b[1;36mWhy:\x1b[0m observability that survives a primary-region outage
 
-\x1b[1;33m[5] Enterprise API Platform\x1b[0m
-    \x1b[1;36mNamespace:\x1b[0m Development
-    \x1b[1;36mTech:\x1b[0m Python, Django, FastAPI, PostgreSQL
-    \x1b[1;36mStatus:\x1b[0m Running (99.95% uptime)
-    \x1b[1;36mDescription:\x1b[0m Scalable API platform serving 10M+ requests daily
+\x1b[1;33m[5] OpenTelemetry dual-export pipeline\x1b[0m
+    \x1b[1;36mWhat:\x1b[0m OTEL collector ships metrics, logs, traces to OneUptime and Loki at once
+    \x1b[1;36mTech:\x1b[0m Grafana over Prometheus, Loki and CloudWatch
 
-Type 'deploy [number]' to see deployment details.
+\x1b[1;33m[6] 3-node Elasticsearch cluster\x1b[0m
+    \x1b[1;36mWhat:\x1b[0m self-managed, Terraform + Ansible, split-restart playbooks
+    \x1b[1;36mWhy:\x1b[0m a single config change can never cascade across the cluster
+
+\x1b[1;33m[7] Hashnode MCP server (shelved)\x1b[0m
+    \x1b[1;36mWhat:\x1b[0m open-source MCP server wiring Claude into the Hashnode API
+    \x1b[1;36mStatus:\x1b[0m shelved after Hashnode terminated public API access
+    \x1b[1;36mCode:\x1b[0m https://github.com/sbmagar13/hashnode-mcp-server
+
+Type 'incident' for the war story. Type 'infra' for the platform map.
 `;
   },
   
   skills: () => {
+    // Strictly the verified stack. If a tool is not in real use, it is
+    // not on this list. No keyword stuffing.
     return `
-\x1b[1;32m=== PACKAGE REGISTRY ===\x1b[0m
+\x1b[1;32m=== SKILLS ===\x1b[0m
+\x1b[90mThe real stack. If it's not here, I don't claim it.\x1b[0m
 
-\x1b[1;33mInfrastructure:\x1b[0m
-  • AWS, GCP, Azure (Multi-cloud architecture)
-  • Kubernetes, Docker, Containerd
-  • Terraform, CloudFormation, Pulumi
-  • Linux System Administration
+\x1b[1;33mCloud / AWS:\x1b[0m
+  \x1b[0mAWS (15+ services in production, sole platform owner), ECS Fargate, Lambda,
+  CloudFront, S3, API Gateway, Amazon MQ, EFS, ECR, Route 53, VPC networking\x1b[0m
 
-\x1b[1;33mCI/CD & Automation:\x1b[0m
-  • GitHub Actions, Jenkins, CircleCI
-  • ArgoCD, Flux, Spinnaker
-  • Bash, Python, Go scripting
-  • GitOps workflows
+\x1b[1;33mInfrastructure as Code:\x1b[0m
+  \x1b[1;36mTerraform (primary)\x1b[0m, Terragrunt, CloudFormation, AWS CDK, Ansible
 
-\x1b[1;33mMonitoring & Observability:\x1b[0m
-  • Prometheus, Grafana, Datadog
-  • ELK Stack, Loki, Jaeger
-  • SLOs, SLIs, Error Budgets
-  • Incident Response
+\x1b[1;33mContainers:\x1b[0m
+  Docker, \x1b[1;36mKubernetes (K3s self-hosted)\x1b[0m
+
+\x1b[1;33mCI/CD:\x1b[0m
+  \x1b[0mGitLab CI (primary), Jenkins, AWS CodePipeline, GitHub Actions\x1b[0m
+
+\x1b[1;33mObservability:\x1b[0m
+  \x1b[0mPrometheus, Grafana, Loki, OpenTelemetry, CloudWatch,
+  Elasticsearch / ELK (self-managed 3-node), OneUptime (self-hosted)\x1b[0m
+
+\x1b[1;33mData:\x1b[0m
+  \x1b[0mAurora PostgreSQL (Global Database), PostgreSQL, Redis / ElastiCache, DynamoDB\x1b[0m
 
 \x1b[1;33mSecurity:\x1b[0m
-  • Infrastructure Security
-  • Secret Management (Vault, AWS KMS)
-  • Compliance Automation
-  • Vulnerability Scanning
+  \x1b[0mIAM, KMS, Secrets Manager, AWS Inspector, CloudTrail, OpenVPN\x1b[0m
 
-\x1b[1;33mPython Web Development:\x1b[0m
-  • Django (Full-stack web framework)
-  • FastAPI (Modern, high-performance APIs)
-  • Flask (Lightweight web applications)
-  • RESTful API design and implementation
-  • Database ORM (SQLAlchemy, Django ORM)
+\x1b[1;33mLanguages:\x1b[0m
+  \x1b[1;36mPython, 5+ yrs\x1b[0m (FastAPI, Django, Flask), Bash, JavaScript / TypeScript
 
-\x1b[1;33mAI & Machine Learning:\x1b[0m
-  • AI Agents & MCP Technologies
-  • LLM Integration & Prompt Engineering
-  • Automation with AI capabilities
-  • Python ML libraries & frameworks
+\x1b[1;33mAI / Agents:\x1b[0m
+  \x1b[0mAnthropic MCP, LangGraph, local LLM inference, PyTorch, LLM engineering\x1b[0m
 
-\x1b[1;33mFrontend Development:\x1b[0m
-  • React, Next.js, TypeScript
-  • Modern JavaScript frameworks
-  • Responsive web design
-  • UI/UX implementation
+\x1b[1;33mOS:\x1b[0m
+  \x1b[0mArch Linux (daily driver), Ubuntu\x1b[0m
+
+\x1b[1;33mFrontend (this site):\x1b[0m
+  \x1b[0mNext.js, React Three Fiber, TypeScript, Tailwind\x1b[0m
 `;
   },
   
@@ -294,62 +264,26 @@ Type 'connect' for more detailed social connection options.
   
   blog: () => {
     return `
-\x1b[1;32m=== RUNBOOK REPOSITORY ===\x1b[0m
+\x1b[1;32m=== BLOG ===\x1b[0m
 
-\x1b[1;33m[1] Kubernetes Troubleshooting Patterns\x1b[0m
-    \x1b[1;36mTags:\x1b[0m #kubernetes #debugging #postmortem
-    \x1b[1;36mDate:\x1b[0m 2025-03-15
-    \x1b[1;36mReadTime:\x1b[0m 8 minutes
+The writing lives in the \x1b[1;36mBlog\x1b[0m tab (press 5 if it didn't just open).
+Kubernetes troubleshooting, blameless postmortems, Terraform at scale,
+AI agents in DevOps.
 
-\x1b[1;33m[2] The Art of Blameless Postmortems\x1b[0m
-    \x1b[1;36mTags:\x1b[0m #culture #incidents #learning
-    \x1b[1;36mDate:\x1b[0m 2025-02-28
-    \x1b[1;36mReadTime:\x1b[0m 12 minutes
-
-\x1b[1;33m[3] Terraform at Scale: Lessons Learned\x1b[0m
-    \x1b[1;36mTags:\x1b[0m #terraform #iac #bestpractices
-    \x1b[1;36mDate:\x1b[0m 2025-01-10
-    \x1b[1;36mReadTime:\x1b[0m 15 minutes
-
-\x1b[1;33m[4] Automating Everything: My DevOps Philosophy\x1b[0m
-    \x1b[1;36mTags:\x1b[0m #automation #culture #devops
-    \x1b[1;36mDate:\x1b[0m 2024-12-05
-    \x1b[1;36mReadTime:\x1b[0m 10 minutes
-
-\x1b[1;33m[5] Building Scalable APIs with Python Frameworks\x1b[0m
-    \x1b[1;36mTags:\x1b[0m #python #django #fastapi #flask #api
-    \x1b[1;36mDate:\x1b[0m 2025-03-01
-    \x1b[1;36mReadTime:\x1b[0m 14 minutes
-
-Type 'blog [number]' to read a specific article.
+\x1b[90mThis terminal only points at it. The posts speak for themselves.\x1b[0m
 `;
   },
-  
+
   tools: () => {
     return `
-\x1b[1;32m=== DEVOPS TOOLKIT ===\x1b[0m
+\x1b[1;32m=== TOOLBOX ===\x1b[0m
 
-\x1b[1;33m[1] Infrastructure Visualizer\x1b[0m
-    \x1b[1;36mPurpose:\x1b[0m Generate architecture diagrams from code
-    \x1b[1;36mTech:\x1b[0m Python, D3.js, Terraform parser
-    \x1b[1;36mStatus:\x1b[0m Available for demo
+Opening the \x1b[1;36mTech Stack\x1b[0m tab (press 4 if it didn't switch).
 
-\x1b[1;33m[2] Chaos Testing Framework\x1b[0m
-    \x1b[1;36mPurpose:\x1b[0m Simulate failures to test resilience
-    \x1b[1;36mTech:\x1b[0m Go, Kubernetes API, Chaos Mesh
-    \x1b[1;36mStatus:\x1b[0m Available for demo
+\x1b[1;33mDaily drivers:\x1b[0m \x1b[1;36mTerraform\x1b[0m, \x1b[1;36mKubernetes\x1b[0m, \x1b[1;36mPython\x1b[0m, Docker, GitLab CI, Grafana
+\x1b[1;33mOS:\x1b[0m Arch Linux (daily driver), Ubuntu on servers
 
-\x1b[1;33m[3] SLO Dashboard Generator\x1b[0m
-    \x1b[1;36mPurpose:\x1b[0m Create beautiful SLO dashboards
-    \x1b[1;36mTech:\x1b[0m Grafana, Prometheus, React
-    \x1b[1;36mStatus:\x1b[0m Available for demo
-
-\x1b[1;33m[4] Cost Optimization Analyzer\x1b[0m
-    \x1b[1;36mPurpose:\x1b[0m Find cloud resource optimization opportunities
-    \x1b[1;36mTech:\x1b[0m Python, AWS/GCP APIs, ML
-    \x1b[1;36mStatus:\x1b[0m Available for demo
-
-Type 'tools [number]' to see a demo.
+\x1b[90mFull, honest list: type 'skills'.\x1b[0m
 `;
   },
   
@@ -399,175 +333,73 @@ Whois Server Response:
 `;
   },
   
-  deploy: (args: string[]) => {
-    const projectNumber = args[0];
-    
-    if (!projectNumber) {
-      return `
-\x1b[1;31mError: Missing project number\x1b[0m
-Usage: deploy [project_number]
-Example: deploy 1
-`;
-    }
-    
+  deploy: () => {
     // Trigger the deployment animation in the CI/CD Pipeline component
-    console.log('Executing deploy command with project:', projectNumber);
     triggerDeployAnimation();
-    
-    return `
-\x1b[1;32m=== DEPLOYMENT PIPELINE ===\x1b[0m
 
-\x1b[1;33mInitiating deployment for Project #${projectNumber}...\x1b[0m
+    return `
+\x1b[1;32m=== DEPLOY: sagarbudhathoki.com ===\x1b[0m
+
+\x1b[1;33mThis site's actual pipeline, no embellishment:\x1b[0m
 
 <<SEQUENTIAL_START>>
-\x1b[1;36m[1/7]\x1b[0m Running tests... \x1b[1;32m✓ Passed\x1b[0m
-\x1b[1;36m[2/7]\x1b[0m Building artifacts... \x1b[1;32m✓ Completed\x1b[0m
-\x1b[1;36m[3/7]\x1b[0m Scanning for vulnerabilities... \x1b[1;32m✓ No issues found\x1b[0m
-\x1b[1;36m[4/7]\x1b[0m Pushing to registry... \x1b[1;32m✓ Uploaded\x1b[0m
-\x1b[1;36m[5/7]\x1b[0m Updating infrastructure... \x1b[1;32m✓ Applied\x1b[0m
-\x1b[1;36m[6/7]\x1b[0m Deploying to production... \x1b[1;32m✓ Deployed\x1b[0m
-\x1b[1;36m[7/7]\x1b[0m Running smoke tests... \x1b[1;32m✓ Verified\x1b[0m
+\x1b[1;36m[1/4]\x1b[0m next build (static export)... \x1b[1;32m✓\x1b[0m
+\x1b[1;36m[2/4]\x1b[0m git push to GitHub... \x1b[1;32m✓\x1b[0m
+\x1b[1;36m[3/4]\x1b[0m GitHub Pages publishes the branch... \x1b[1;32m✓\x1b[0m
+\x1b[1;36m[4/4]\x1b[0m CDN serves the new version... \x1b[1;32m✓\x1b[0m
 <<SEQUENTIAL_END>>
 
-\x1b[1;32mDeployment completed successfully!\x1b[0m
-\x1b[1;36mDeployment ID:\x1b[0m d-${Math.random().toString(36).substring(2, 10)}
-\x1b[1;36mDuration:\x1b[0m 3m 42s
-\x1b[1;36mStatus:\x1b[0m \x1b[1;32mHEALTHY\x1b[0m
+\x1b[1;32mDeployed. No servers were restarted, because there are none.\x1b[0m
 
-\x1b[1;33mMonitoring deployment for the next 15 minutes...\x1b[0m
-\x1b[1;33mVisual pipeline animation triggered in the Projects section!\x1b[0m
+\x1b[1;33mThe pipelines I run at work:\x1b[0m GitLab CI (primary), Jenkins,
+AWS CodePipeline / CodeBuild, GitHub Actions.
+\x1b[1;33mTargets:\x1b[0m ECS, Lambda, CloudFront, EC2.
+
+\x1b[90mVisual pipeline animation triggered in the Projects section.\x1b[0m
 `;
   },
   
-  incident: (args: string[]) => {
-    const incidentNumber = args[0] || Math.floor(Math.random() * 3) + 1;
-    
-    const incidents = [
-      `
-\x1b[1;32m=== INCIDENT REPORT #001 ===\x1b[0m
+  incident: () => {
+    // One incident, and it actually happened. No fabricated feed.
+    return `
+\x1b[1;32m=== POSTMORTEM: THE 19-MINUTE OUTAGE (real) ===\x1b[0m
 
-\x1b[1;33mTitle:\x1b[0m Database Connection Pool Exhaustion
-\x1b[1;33mDate:\x1b[0m 2024-11-15
-\x1b[1;33mDuration:\x1b[0m 47 minutes
-\x1b[1;33mSeverity:\x1b[0m SEV2 (Major degradation)
+\x1b[1;33mDate:\x1b[0m 2024, production
+\x1b[1;33mImpact:\x1b[0m full platform down for 19 minutes
+\x1b[1;33mSeverity:\x1b[0m the kind where people stand behind your desk
 
-\x1b[1;36mSummary:\x1b[0m
-Connection pool exhaustion caused by a query that was not properly closed,
-leading to resource leakage and eventual service degradation.
+\x1b[1;36mWhat happened:\x1b[0m
+Blocking Redis KEYS calls exhausted the Tomcat/JDBC thread pool.
+Every request thread ended up waiting on Redis. The platform went dark.
 
-\x1b[1;36mRoot Cause:\x1b[0m
-A recent code change introduced a connection leak in the user authentication service.
+\x1b[1;36mImmediate fix:\x1b[0m
+Connection-pool checkout timeouts, tuned RDS parameters.
 
-\x1b[1;36mResolution:\x1b[0m
-1. Implemented proper connection closing in finally blocks
-2. Added connection timeout settings
-3. Increased monitoring on connection pool metrics
-4. Added circuit breaker pattern to prevent cascading failures
+\x1b[1;36mFollow-through:\x1b[0m
+A 68-task reliability program across 11 epics and 7 sprints,
+so it could not happen the same way twice.
 
-\x1b[1;36mLessons Learned:\x1b[0m
-1. Always verify resource cleanup in code reviews
-2. Implement better testing for resource leaks
-3. Set up more proactive alerting on connection pools
-`,
-      `
-\x1b[1;32m=== INCIDENT REPORT #002 ===\x1b[0m
-
-\x1b[1;33mTitle:\x1b[0m Kubernetes Node OOM Events
-\x1b[1;33mDate:\x1b[0m 2025-01-23
-\x1b[1;33mDuration:\x1b[0m 2 hours 12 minutes
-\x1b[1;33mSeverity:\x1b[0m SEV1 (Critical service impact)
-
-\x1b[1;36mSummary:\x1b[0m
-Multiple Kubernetes nodes experienced Out of Memory (OOM) events,
-causing pod evictions and service disruptions across the platform.
-
-\x1b[1;36mRoot Cause:\x1b[0m
-Memory limits were not properly set on some workloads, allowing them
-to consume excessive resources during peak traffic.
-
-\x1b[1;36mResolution:\x1b[0m
-1. Implemented proper resource requests and limits
-2. Added memory usage monitoring and alerting
-3. Deployed node autoscaling based on memory pressure
-4. Created runbook for handling OOM events
-
-\x1b[1;36mLessons Learned:\x1b[0m
-1. Always set appropriate resource constraints
-2. Test workloads under peak load conditions
-3. Implement better monitoring for resource usage
-4. Have clear escalation procedures for resource-related incidents
-`,
-      `
-\x1b[1;32m=== INCIDENT REPORT #003 ===\x1b[0m
-
-\x1b[1;33mTitle:\x1b[0m CI/CD Pipeline Failure
-\x1b[1;33mDate:\x1b[0m 2025-02-10
-\x1b[1;33mDuration:\x1b[0m 4 hours 35 minutes
-\x1b[1;33mSeverity:\x1b[0m SEV2 (Major degradation)
-
-\x1b[1;36mSummary:\x1b[0m
-CI/CD pipeline failures prevented teams from deploying changes,
-causing a backlog of pending releases and feature delays.
-
-\x1b[1;36mRoot Cause:\x1b[0m
-A dependency update in the build system introduced incompatibilities
-with existing build scripts and test frameworks.
-
-\x1b[1;36mResolution:\x1b[0m
-1. Rolled back the problematic dependency
-2. Implemented dependency version pinning
-3. Added integration tests for the build system itself
-4. Created a staging environment for testing build changes
-
-\x1b[1;36mLessons Learned:\x1b[0m
-1. Treat build infrastructure as critical production systems
-2. Test infrastructure changes thoroughly before deployment
-3. Have clear rollback procedures for all infrastructure components
-4. Implement better monitoring for build system health
-`
-    ];
-    
-    return incidents[Number(incidentNumber) - 1] || incidents[0];
+\x1b[1;36mLesson:\x1b[0m
+Never run KEYS against a production Redis. SCAN exists for a reason.
+`;
   },
   
   chaos: () => {
-    const services = ['api-gateway', 'user-service', 'payment-processor', 'recommendation-engine', 'notification-service'];
-    const randomService = services[Math.floor(Math.random() * services.length)];
-    const chaosTypes = ['pod-failure', 'network-latency', 'cpu-hog', 'memory-hog', 'disk-fill'];
-    const randomChaos = chaosTypes[Math.floor(Math.random() * chaosTypes.length)];
-    
+    // Obvious parody. There is nothing here to break, and that's the joke.
     return `
-\x1b[1;32m=== CHAOS MONKEY EXPERIMENT ===\x1b[0m
+\x1b[1;32m=== CHAOS ENGINEERING (static-site edition) ===\x1b[0m
 
-\x1b[1;31m🐒 Releasing the Chaos Monkey! 🐒\x1b[0m
+\x1b[1;31m🐒 Releasing the chaos monkey...\x1b[0m
 
-\x1b[1;33mTarget Service:\x1b[0m ${randomService}
-\x1b[1;33mChaos Type:\x1b[0m ${randomChaos}
-\x1b[1;33mDuration:\x1b[0m 5 minutes
-\x1b[1;33mScope:\x1b[0m 25% of service instances
+\x1b[1;33mTarget:\x1b[0m a pile of HTML on GitHub Pages
+\x1b[1;33mHypothesis:\x1b[0m you cannot crash what does not run
 
-<<SEQUENTIAL_START>>
-\x1b[1;36m[1/5]\x1b[0m Preparing experiment... \x1b[1;32m✓ Ready\x1b[0m
-\x1b[1;36m[2/5]\x1b[0m Verifying monitoring... \x1b[1;32m✓ Active\x1b[0m
-\x1b[1;36m[3/5]\x1b[0m Executing chaos... \x1b[1;32m✓ Injected\x1b[0m
-\x1b[1;36m[4/5]\x1b[0m Monitoring service health... \x1b[1;33m⚠ Degraded but functioning\x1b[0m
-\x1b[1;36m[5/5]\x1b[0m Restoring normal operation... \x1b[1;32m✓ Recovered\x1b[0m
-<<SEQUENTIAL_END>>
+The monkey looked for pods to evict. There are none.
+It looked for a server to kill. There isn't one.
+It is now sitting quietly, reading the page source.
 
-\x1b[1;32mExperiment completed successfully!\x1b[0m
-
-\x1b[1;33mResults:\x1b[0m
-- Service degraded but remained available
-- Failover mechanisms activated properly
-- 95% of requests succeeded during chaos
-- Recovery time: 12.3 seconds
-
-\x1b[1;33mRecommendations:\x1b[0m
-- Improve retry logic in client applications
-- Add circuit breakers to prevent cascading failures
-- Increase replica count for faster recovery
-
-Remember: "Chaos in production teaches us more in an hour than a month of testing in staging."
+\x1b[1;32mExperiment over. Steady state was never at risk.\x1b[0m
+\x1b[90mFor chaos with real stakes, type 'incident'.\x1b[0m
 `;
   },
   
@@ -590,165 +422,49 @@ ${commandHistory.map((cmd, i) => `\x1b[1;36m${i + 1}:\x1b[0m ${cmd}`).join('\n')
 `;
   },
   
-  monitor: (args: string[]) => {
-    const service = args[0] || 'all';
-    const services = {
-      'api-gateway': { status: 'healthy', latency: '23ms', requests: '1.2k/s', errors: '0.01%' },
-      'auth-service': { status: 'healthy', latency: '45ms', requests: '850/s', errors: '0.00%' },
-      'user-service': { status: 'degraded', latency: '120ms', requests: '650/s', errors: '2.30%' },
-      'payment-service': { status: 'healthy', latency: '67ms', requests: '320/s', errors: '0.05%' },
-      'notification-service': { status: 'healthy', latency: '35ms', requests: '210/s', errors: '0.00%' },
-    };
-    
-    if (service !== 'all' && !services[service as keyof typeof services]) {
-      return `
-\x1b[1;31mError: Unknown service "${service}"\x1b[0m
-Available services: api-gateway, auth-service, user-service, payment-service, notification-service, all
-`;
-    }
-    
-    if (service === 'all') {
-      return `
-\x1b[1;32m=== SYSTEM MONITORING DASHBOARD ===\x1b[0m
-\x1b[1;37mLast updated: ${new Date().toISOString()}\x1b[0m
+  monitor: () => {
+    // The only honest metric a static site has: how long this tab has
+    // been open. Everything else here is verifiable fact, not dashboard
+    // theatre.
+    const seconds =
+      typeof performance !== 'undefined' ? Math.floor(performance.now() / 1000) : 0;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
 
-\x1b[1;33mService Status:\x1b[0m
-${Object.entries(services).map(([name, metrics]) => 
-  `  \x1b[1;36m${name.padEnd(20)}\x1b[0m ${metrics.status === 'healthy' ? '\x1b[1;32m●\x1b[0m HEALTHY' : '\x1b[1;33m●\x1b[0m DEGRADED'}`
-).join('\n')}
-
-\x1b[1;33mSystem Metrics:\x1b[0m
-  \x1b[1;36mCPU Usage:      \x1b[0m [${generateBar(65)}] 65%
-  \x1b[1;36mMemory Usage:   \x1b[0m [${generateBar(78)}] 78%
-  \x1b[1;36mNetwork Traffic:\x1b[0m [${generateBar(42)}] 42%
-  \x1b[1;36mDisk I/O:       \x1b[0m [${generateBar(30)}] 30%
-
-\x1b[1;33mAlerts:\x1b[0m
-  \x1b[1;33m⚠ user-service latency above threshold (120ms > 100ms)\x1b[0m
-  \x1b[1;33m⚠ user-service error rate above threshold (2.30% > 1.00%)\x1b[0m
-
-Type 'monitor [service-name]' for detailed metrics.
-`;
-    }
-    
-    const metrics = services[service as keyof typeof services];
-    const isHealthy = metrics.status === 'healthy';
-    
     return `
-\x1b[1;32m=== ${service.toUpperCase()} MONITORING ===\x1b[0m
-\x1b[1;37mLast updated: ${new Date().toISOString()}\x1b[0m
+\x1b[1;32m=== MONITORING (honest edition) ===\x1b[0m
 
-\x1b[1;33mStatus:\x1b[0m ${isHealthy ? '\x1b[1;32m● HEALTHY\x1b[0m' : '\x1b[1;33m● DEGRADED\x1b[0m'}
-\x1b[1;33mLatency (p95):\x1b[0m ${metrics.latency} ${parseInt(metrics.latency) > 100 ? '\x1b[1;33m⚠\x1b[0m' : ''}
-\x1b[1;33mRequests:\x1b[0m ${metrics.requests}
-\x1b[1;33mError Rate:\x1b[0m ${metrics.errors} ${parseFloat(metrics.errors) > 1.0 ? '\x1b[1;33m⚠\x1b[0m' : ''}
+\x1b[1;33mTarget:\x1b[0m this browser tab, the only infrastructure this site has
+\x1b[1;36mHost:\x1b[0m GitHub Pages, static export, zero servers
+\x1b[1;36mSession uptime:\x1b[0m ${mins}m ${secs}s (since you loaded the page)
+\x1b[1;36mError budget:\x1b[0m intact, there is no backend to burn it
+\x1b[1;36mAlerts firing:\x1b[0m 0, and it will stay that way
 
-\x1b[1;33mLatency Trend (24h):\x1b[0m
-${generateSparkline()}
-
-\x1b[1;33mEndpoint Health:\x1b[0m
-  \x1b[1;36m/health       \x1b[0m \x1b[1;32m200 OK\x1b[0m
-  \x1b[1;36m/metrics      \x1b[0m \x1b[1;32m200 OK\x1b[0m
-  \x1b[1;36m/api/v1/users \x1b[0m ${isHealthy ? '\x1b[1;32m200 OK\x1b[0m' : '\x1b[1;33m429 Too Many Requests\x1b[0m'}
-  \x1b[1;36m/api/v1/auth  \x1b[0m \x1b[1;32m200 OK\x1b[0m
-
-\x1b[1;33mLogs:\x1b[0m
-${isHealthy ? 
-  '  \x1b[90m2025-04-02T00:15:23Z INFO  Connection pool stable\x1b[0m\n' +
-  '  \x1b[90m2025-04-02T00:14:57Z INFO  Processed 1000 requests\x1b[0m\n' +
-  '  \x1b[90m2025-04-02T00:14:32Z INFO  Cache hit ratio: 94.5%\x1b[0m' :
-  '  \x1b[1;31m2025-04-02T00:15:23Z ERROR Connection timeout exceeded\x1b[0m\n' +
-  '  \x1b[1;33m2025-04-02T00:14:57Z WARN  High memory usage detected\x1b[0m\n' +
-  '  \x1b[1;33m2025-04-02T00:14:32Z WARN  Slow query detected (450ms)\x1b[0m'
-}
-
-Type 'scale ${service} [replicas]' to adjust capacity.
+\x1b[1;33mThe stack I actually monitor with at work:\x1b[0m
+  Prometheus, Grafana, Loki, OpenTelemetry, CloudWatch,
+  Elasticsearch / ELK, OneUptime (self-hosted, on-call wired in)
 `;
   },
   
   ping: (args: string[]) => {
-    const host = args[0] || 'localhost';
-    const pingTimes = [
-      Math.random() * 10 + 5,
-      Math.random() * 15 + 5,
-      Math.random() * 20 + 5,
-      Math.random() * 25 + 5
-    ].map(n => n.toFixed(2));
-    
-    const packetLoss = Math.random() < 0.8 ? 0 : Math.floor(Math.random() * 30);
-    const isCloudProvider = host.includes('aws') || host.includes('azure') || host.includes('gcp') || host.includes('cloud');
-    const isKubernetes = host.includes('k8s') || host.includes('kube');
-    
+    const host = args[0] || 'sagarbudhathoki.com';
+
     return `
-\x1b[1;32m=== PING ${host} ===\x1b[0m
+\x1b[1;32mPING ${host}:\x1b[0m pong.
 
-\x1b[1;33mSending DevOps packets to ${host}...\x1b[0m
+\x1b[1;36mRound trip:\x1b[0m 0ms. This page is a static export; it was already
+in your browser cache before you asked.
 
-\x1b[1;36m64 bytes from ${host}: icmp_seq=1 ttl=64 time=${pingTimes[0]} ms\x1b[0m
-\x1b[1;36m64 bytes from ${host}: icmp_seq=2 ttl=64 time=${pingTimes[1]} ms\x1b[0m
-\x1b[1;36m64 bytes from ${host}: icmp_seq=3 ttl=64 time=${pingTimes[2]} ms\x1b[0m
-\x1b[1;36m64 bytes from ${host}: icmp_seq=4 ttl=64 time=${pingTimes[3]} ms\x1b[0m
-
-\x1b[1;32m--- ${host} ping statistics ---\x1b[0m
-\x1b[1;36m4 packets transmitted, ${4 - Math.floor(packetLoss / 25)} received, ${packetLoss}% packet loss, time 3ms\x1b[0m
-\x1b[1;36mrtt min/avg/max/mdev = ${Math.min(...pingTimes.map(Number))}/
-${(pingTimes.map(Number).reduce((a, b) => a + b, 0) / 4).toFixed(2)}/
-${Math.max(...pingTimes.map(Number))}/
-${(Math.max(...pingTimes.map(Number)) - Math.min(...pingTimes.map(Number)) / 4).toFixed(2)} ms\x1b[0m
-
-${packetLoss > 0 ? 
-  `\x1b[1;33mPacket loss detected! Possible causes:\x1b[0m
-  • The network is having an identity crisis
-  • Packets decided to take a Lemon Tea break
-  • Your firewall is being overprotective
-  • DNS (it's always DNS)` : 
-  `\x1b[1;32mConnection stable!\x1b[0m`}
-
-${isCloudProvider ? 
-  `\x1b[1;33mCloud Provider Detected:\x1b[0m Your packets are now being billed at $0.000001 per millisecond.` : ''}
-
-${isKubernetes ? 
-  `\x1b[1;33mKubernetes Cluster Detected:\x1b[0m Your ping request was load balanced across 17 pods, 3 of which were being evicted.` : ''}
-
-\x1b[90mPro tip: If ping fails, have you tried turning it off and on again?\x1b[0m
+\x1b[90mSent with love from Kathmandu.\x1b[0m
 `;
   },
-  
-  trace: (args: string[]) => {
-    const requestId = args[0] || Math.random().toString(36).substring(2, 10);
-    
+
+  trace: () => {
     return `
-\x1b[1;32m=== REQUEST TRACE ${requestId} ===\x1b[0m
+\x1b[1;36mbrowser → CDN → browser.\x1b[0m That is the whole trace.
+Static export, no hops worth instrumenting.
 
-\x1b[1;33mRequest Path:\x1b[0m
-\x1b[1;36mClient\x1b[0m → \x1b[1;36mLoad Balancer\x1b[0m → \x1b[1;36mAPI Gateway\x1b[0m → \x1b[1;36mAuth Service\x1b[0m → \x1b[1;36mUser Service\x1b[0m → \x1b[1;36mDatabase\x1b[0m
-
-\x1b[1;33mTimeline:\x1b[0m
-  \x1b[1;36m[+0ms]    \x1b[0m Client initiates request
-  \x1b[1;36m[+15ms]   \x1b[0m Load Balancer receives request
-  \x1b[1;36m[+28ms]   \x1b[0m API Gateway validates request
-  \x1b[1;36m[+45ms]   \x1b[0m Auth Service authenticates user
-  \x1b[1;36m[+120ms]  \x1b[0m User Service processes request \x1b[1;33m⚠ Slow\x1b[0m
-  \x1b[1;36m[+145ms]  \x1b[0m Database query executed
-  \x1b[1;36m[+160ms]  \x1b[0m User Service prepares response
-  \x1b[1;36m[+175ms]  \x1b[0m API Gateway formats response
-  \x1b[1;36m[+185ms]  \x1b[0m Response sent to client
-
-\x1b[1;33mService Performance:\x1b[0m
-  \x1b[1;36mLoad Balancer      \x1b[0m [${generateBar(10)}] 13ms
-  \x1b[1;36mAPI Gateway        \x1b[0m [${generateBar(15)}] 17ms
-  \x1b[1;36mAuth Service       \x1b[0m [${generateBar(20)}] 25ms
-  \x1b[1;36mUser Service       \x1b[0m [${generateBar(60)}] 75ms \x1b[1;33m⚠\x1b[0m
-  \x1b[1;36mDatabase           \x1b[0m [${generateBar(25)}] 25ms
-
-\x1b[1;33mHotspots:\x1b[0m
-  • User Service: Database connection pool contention
-  • User Service: Unoptimized query execution
-
-\x1b[1;33mRecommendations:\x1b[0m
-  • Increase connection pool size
-  • Add index to improve query performance
-  • Implement caching for frequent queries
+\x1b[90mThe real tracing happens at work: OpenTelemetry, dual-exported to OneUptime and Loki.\x1b[0m
 `;
   },
   
@@ -781,169 +497,121 @@ ${isKubernetes ?
 `;
   },
   
-  scale: (args: string[]) => {
-    const service = args[0];
-    const replicas = parseInt(args[1]) || 3;
-    
-    if (!service) {
-      return `
-\x1b[1;31mError: Missing service name\x1b[0m
-Usage: scale [service] [replicas]
-Example: scale user-service 5
-`;
-    }
-    
+  scale: () => {
     return `
-\x1b[1;32m=== SCALING ${service.toUpperCase()} ===\x1b[0m
+GitHub Pages already scales this site harder than any replica count I could type here.
 
-\x1b[1;33mCurrent state:\x1b[0m
-  \x1b[1;36mReplicas:\x1b[0m 2
-  \x1b[1;36mCPU:\x1b[0m 85% utilized
-  \x1b[1;36mMemory:\x1b[0m 75% utilized
-  \x1b[1;36mLoad:\x1b[0m High
-
-\x1b[1;33mScaling operation:\x1b[0m
-  \x1b[1;36mTarget replicas:\x1b[0m ${replicas}
-  \x1b[1;36mChange:\x1b[0m +${replicas - 2} instances
-
-\x1b[1;36m[1/4]\x1b[0m Updating deployment configuration... \x1b[1;32m✓ Done\x1b[0m
-\x1b[1;36m[2/4]\x1b[0m Provisioning new instances... \x1b[1;32m✓ Done\x1b[0m
-\x1b[1;36m[3/4]\x1b[0m Waiting for readiness checks... \x1b[1;32m✓ Done\x1b[0m
-\x1b[1;36m[4/4]\x1b[0m Updating load balancer... \x1b[1;32m✓ Done\x1b[0m
-
-\x1b[1;32mScaling completed successfully!\x1b[0m
-
-\x1b[1;33mNew state:\x1b[0m
-  \x1b[1;36mReplicas:\x1b[0m ${replicas}
-  \x1b[1;36mCPU:\x1b[0m ${Math.floor(85 * 2 / replicas)}% utilized
-  \x1b[1;36mMemory:\x1b[0m ${Math.floor(75 * 2 / replicas)}% utilized
-  \x1b[1;36mLoad:\x1b[0m ${replicas >= 4 ? 'Normal' : 'Moderate'}
-
-\x1b[1;33mRecommendation:\x1b[0m
-  ${replicas < 3 ? 'Consider scaling to at least 3 replicas for high availability' : 
-    replicas > 5 ? 'Consider implementing autoscaling for cost optimization' : 
-    'Current replica count is optimal for the current load'}
+\x1b[90mAt work, scaling is ECS service autoscaling and capacity math, not vibes.\x1b[0m
 `;
   },
   
   infra: () => {
     return `
-\x1b[1;32m=== INFRASTRUCTURE DIAGRAM ===\x1b[0m
+\x1b[1;32m=== THE PLATFORM I RUN (simplified, real) ===\x1b[0m
 
-\x1b[1;36m                                  ┌───────────────┐                                  \x1b[0m
-\x1b[1;36m                                  │   Internet    │                                  \x1b[0m
-\x1b[1;36m                                  └───────┬───────┘                                  \x1b[0m
-\x1b[1;36m                                          │                                          \x1b[0m
-\x1b[1;36m                                          ▼                                          \x1b[0m
-\x1b[1;36m                                  ┌───────────────┐                                  \x1b[0m
-\x1b[1;36m                                  │  CloudFront   │                                  \x1b[0m
-\x1b[1;36m                                  └───────┬───────┘                                  \x1b[0m
-\x1b[1;36m                                          │                                          \x1b[0m
-\x1b[1;36m                                          ▼                                          \x1b[0m
-\x1b[1;36m                                  ┌───────────────┐                                  \x1b[0m
-\x1b[1;36m                                  │ Load Balancer │                                  \x1b[0m
-\x1b[1;36m                                  └───────┬───────┘                                  \x1b[0m
-\x1b[1;36m                                          │                                          \x1b[0m
-\x1b[1;36m                    ┌───────────────┬─────┴─────┬───────────────┐                    \x1b[0m
-\x1b[1;36m                    │               │           │               │                    \x1b[0m
-\x1b[1;36m                    ▼               ▼           ▼               ▼                    \x1b[0m
-\x1b[1;36m            ┌───────────────┐┌───────────────┐┌───────────────┐┌───────────────┐    \x1b[0m
-\x1b[1;36m            │  API Gateway  ││  API Gateway  ││  API Gateway  ││  API Gateway  │    \x1b[0m
-\x1b[1;36m            └───────┬───────┘└───────┬───────┘└───────┬───────┘└───────┬───────┘    \x1b[0m
-\x1b[1;36m                    │               │           │               │                    \x1b[0m
-\x1b[1;36m                    └───────────────┴─────┬─────┴───────────────┘                    \x1b[0m
-\x1b[1;36m                                          │                                          \x1b[0m
-\x1b[1;36m                                          ▼                                          \x1b[0m
-\x1b[1;36m            ┌───────────────┐      ┌───────────────┐      ┌───────────────┐        \x1b[0m
-\x1b[1;36m            │  Auth Service │◄────►│ Service Mesh  │◄────►│  User Service │        \x1b[0m
-\x1b[1;36m            └───────────────┘      └───────┬───────┘      └───────────────┘        \x1b[0m
-\x1b[1;36m                                          │                                          \x1b[0m
-\x1b[1;36m                                          ▼                                          \x1b[0m
-\x1b[1;36m            ┌───────────────┐      ┌───────────────┐      ┌───────────────┐        \x1b[0m
-\x1b[1;36m            │Payment Service│◄────►│ Service Mesh  │◄────►│   Notification│        \x1b[0m
-\x1b[1;36m            └───────────────┘      └───────┬───────┘      └───────────────┘        \x1b[0m
-\x1b[1;36m                                          │                                          \x1b[0m
-\x1b[1;36m                    ┌───────────────┬─────┴─────┬───────────────┐                    \x1b[0m
-\x1b[1;36m                    │               │           │               │                    \x1b[0m
-\x1b[1;36m                    ▼               ▼           ▼               ▼                    \x1b[0m
-\x1b[1;36m            ┌───────────────┐┌───────────────┐┌───────────────┐┌───────────────┐    \x1b[0m
-\x1b[1;36m            │  PostgreSQL   ││    MongoDB    ││     Redis     ││   Kafka       │    \x1b[0m
-\x1b[1;36m            └───────────────┘└───────────────┘└───────────────┘└───────────────┘    \x1b[0m
+\x1b[1;36m  Internet\x1b[0m
+\x1b[1;36m     │\x1b[0m
+\x1b[1;36m  Route 53 ── CloudFront ── ALB\x1b[0m
+\x1b[1;36m     │\x1b[0m
+\x1b[1;36m  ECS Fargate services · eu-north-1\x1b[0m
+\x1b[1;36m     ├── Aurora PostgreSQL ── Global DB replica · eu-west-1 (DR)\x1b[0m
+\x1b[1;36m     ├── ElastiCache Redis\x1b[0m
+\x1b[1;36m     └── Amazon MQ\x1b[0m
 
-\x1b[1;33mMonitoring & Observability:\x1b[0m
-  • Prometheus + Grafana for metrics
-  • ELK Stack for logging
-  • Jaeger for distributed tracing
-  • AlertManager for alerting
+\x1b[1;33mObservability:\x1b[0m
+  OTEL collector dual-exports to OneUptime (K3s, eu-central-1) and Loki.
+  Grafana on top of Prometheus, Loki and CloudWatch.
 
-\x1b[1;33mInfrastructure as Code:\x1b[0m
-  • Terraform for cloud resources
-  • Kubernetes manifests for services
-  • Helm charts for applications
-  • ArgoCD for GitOps deployments
+\x1b[1;33mProvisioning:\x1b[0m
+  Terraform + Terragrunt for infra. One Python API call per new tenant.
 
-Type 'monitor' to check system status.
-Type 'deploy' to simulate a deployment.
+Type 'projects' for the rack-by-rack tour. Type 'incident' for the war story.
 `;
   },
   
   sudo: (args: string[]) => {
     const command = args.join(' ');
-    
+
     if (command === 'make me a sandwich') {
       return `
-\x1b[1;32m$ sudo make me a sandwich\x1b[0m
-
-🥪 Coming right up! Sandwich ready.
-
-\x1b[1;33mNote:\x1b[0m This command executed successfully because you used sudo.
-If you had just typed 'make me a sandwich', I would have said 'Make it yourself'.
-(Just like a good DevOps engineer knows when to automate vs. when to delegate)
+\x1b[1;32mOkay.\x1b[0m 🥪
+\x1b[90m(xkcd 149 compliance achieved.)\x1b[0m
 `;
     }
-    
+
     if (command === 'rm -rf /') {
-      return `
-\x1b[1;32m$ sudo rm -rf /\x1b[0m
-
-\x1b[1;31mNice try! 🧐\x1b[0m
-
-Even in a simulated environment, I respect the sanctity of root directories.
-Instead, I've taken the liberty of removing all your technical debt.
-You're welcome! System runs 73% faster now.
-`;
+      return commands['rm'](['-rf', '/']);
     }
-    
-    if (command === 'apt-get install girlfriend' || command === 'apt-get install boyfriend') {
-      return `
-\x1b[1;32m$ sudo apt-get install ${command.split(' ')[3]}\x1b[0m
 
-\x1b[1;33mSearching repositories...\x1b[0m
-
-\x1b[1;31mE: Unable to locate package ${command.split(' ')[3]}\x1b[0m
-\x1b[1;33mSuggested packages:\x1b[0m social-skills, outdoor-activities, dating-app
-\x1b[1;33mTry:\x1b[0m sudo apt-get install hobby --with-recommendation=social
-`;
-    }
-    
     if (!command) {
       return `
-\x1b[1;31mError: Missing command\x1b[0m
-Usage: sudo [command]
-Example: sudo make me a sandwich
-Pro tip: Try 'sudo rm -rf /' if you're feeling adventurous (or destructive)
+usage: sudo [command]
+\x1b[90mNot that it will help.\x1b[0m
 `;
     }
-    
+
     return `
-\x1b[1;32m$ sudo ${command}\x1b[0m
+\x1b[1;33m[sudo] password for visitor:\x1b[0m ********
 
-\x1b[1;33m[sudo] password for devops-user:\x1b[0m ********
+\x1b[1;31mvisitor is not in the sudoers file.  This incident will be reported.\x1b[0m
+\x1b[90mReported to whom? It's a static site. Nobody is listening. But it has been noted.\x1b[0m
+`;
+  },
 
-\x1b[1;31mPermission denied\x1b[0m
+  rm: (args: string[]) => {
+    const flags = args.join(' ');
 
-\x1b[1;33mThis incident will be reported to Sagar's ignore-this list.\x1b[0m
-\x1b[1;33mPro tip:\x1b[0m Real DevOps engineers don't need sudo. They have properly configured RBAC.
+    if (flags.startsWith('-rf') || flags.startsWith('-fr')) {
+      return `
+\x1b[1;33mrm: nothing to delete.\x1b[0m
+
+This is a static export. There is no server to cry on, no disk to wipe,
+and GitHub Pages will just keep serving the same files out of spite.
+
+\x1b[90mYour browser cache is the only thing at risk, and that one is on you.\x1b[0m
+`;
+    }
+
+    return `rm: cannot remove '${flags || '?'}': read-only filesystem (it's a portfolio)`;
+  },
+
+  top: () => {
+    // Parody process table for this site's scenes. Every value is a
+    // joke on purpose; nothing here should read as a real metric.
+    return `
+\x1b[1;32m=== top (portfolio edition) ===\x1b[0m
+\x1b[90mload average: chill, chill, chill\x1b[0m
+
+\x1b[1;36m  PID  COMMAND        CPU   MEM         TIME      STATE\x1b[0m
+    1  hero-orbit     yes   a few MB    forever   floating
+    2  datacenter     yes   11 racks    static    humming
+    3  journey        yes   since 2020  static    walking
+    4  skills-hall    yes   curated     static    honest
+    5  terminal       yes   this tab    now       you are here
+
+\x1b[90mAll numbers are jokes. The scenes are real. Press nothing to exit.\x1b[0m
+`;
+  },
+
+  htop: (args: string[]) => commands['top'](args),
+
+  sl: () => {
+    // For everyone who meant 'ls'. Tradition demands a train.
+    return `
+\x1b[1;33mYou typed 'sl'. You meant 'ls'. The train cares not.\x1b[0m
+
+\x1b[1;36m      ====        ________                ___________
+  _D _|  |_______/        \\__I_I_____===__|_________|
+   |(_)---  |   H\\________/ |   |        =|___ ___|
+   /     |  |   H  |  |     |   |         ||_| |_||
+  |      |  |   H  |__--------------------| [___] |
+  | ________|___H__/__|_____/[][]~\\_______|       |
+  |/ |   |-----------I_____I [][] []  D   |=======|
+__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__
+ |/-=|___|=    ||    ||    ||    |_____/~\\___/
+  \\_/      \\_O=====O=====O=====O_/      \\_/\x1b[0m
+
+\x1b[90mNo brakes on the typo train. (There is no 'ls' here either; try 'help'.)\x1b[0m
 `;
   },
   
@@ -1289,6 +957,13 @@ function editDistance(a: string, b: string): number {
 // navigation, loading spinners) so nothing bypasses the trap.
 export function isVimActive(): boolean {
   return vimActive;
+}
+
+// Every registered command name, for the shell's tab completion.
+// New commands join automatically because the registry is the
+// single source of truth (same as the did-you-mean index).
+export function getCommandNames(): string[] {
+  return Object.keys(commands);
 }
 
 // Execute a command and return the output

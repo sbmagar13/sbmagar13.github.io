@@ -256,6 +256,7 @@ export default function Home() {
         updateVisitedSections('projects');
         break;
       case 'skills':
+      case 'tools':
         setActiveSection('techstack');
         updateVisitedSections('techstack');
         break;

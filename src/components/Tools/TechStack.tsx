@@ -3,44 +3,40 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  FaDocker, FaAws, 
-  FaJenkins, FaGithub, 
-  FaPython, 
+import {
+  FaDocker, FaAws,
+  FaJenkins, FaGithub,
+  FaPython,
   FaNetworkWired, FaLock, FaCode,
-  FaBook, FaDatabase, 
-  FaCloud, FaTerminal, 
+  FaBook, FaDatabase,
+  FaCloud, FaTerminal,
   FaCogs, FaLayerGroup,
-  FaSearch, FaThLarge, FaDownload,
+  FaSearch, FaThLarge,
   FaExclamationTriangle, FaShieldAlt,
-  FaProjectDiagram, FaChartLine
+  FaProjectDiagram, FaChartLine,
+  FaUserShield
 } from 'react-icons/fa';
-import { 
-  SiKubernetes, SiTerraform, 
+import {
+  SiKubernetes, SiTerraform,
   SiPostgresql, SiAmazonrds,
   SiGitlab, SiGithubactions,
-  SiArchlinux, SiUbuntu, SiCentos,
-  SiHeroku, SiFfmpeg,
+  SiArchlinux, SiUbuntu,
+  SiFfmpeg,
   SiElasticsearch,
   SiKibana, SiLogstash, SiAnsible,
-  SiPrometheus, SiGrafana, SiIstio,
-  SiAmazonroute53, SiOpenai,
-  SiPytorch
+  SiPrometheus, SiGrafana,
+  SiAmazonroute53,
+  SiPytorch,
+  SiAwsfargate, SiAwslambda,
+  SiRedis, SiAmazondynamodb,
+  SiGnubash, SiTypescript,
+  SiAwssecretsmanager
 } from 'react-icons/si';
-import {
-  FaUserShield, FaRadiation
-} from 'react-icons/fa';
 
 // Custom icons for technologies not available in react-icons
-const SiLangchain = () => (
+const SiLanggraph = () => (
   <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor">
     <path d="M12 1.5C6.2 1.5 1.5 6.2 1.5 12S6.2 22.5 12 22.5 22.5 17.8 22.5 12 17.8 1.5 12 1.5zM9.5 16.5L4.5 12l5-4.5 1.5 1.5-3.5 3 3.5 3-1.5 1.5zm5 0l-1.5-1.5 3.5-3-3.5-3 1.5-1.5 5 4.5-5 4.5z" />
-  </svg>
-);
-
-const SiHuggingface = () => (
-  <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor">
-    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-9.5c0 .83-.67 1.5-1.5 1.5S7 11.33 7 10.5 7.67 9 8.5 9s1.5.67 1.5 1.5zm5 0c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zM12 14c-1.66 0-3 1.34-3 3h6c0-1.66-1.34-3-3-3z" />
   </svg>
 );
 
@@ -59,7 +55,6 @@ interface TechImage {
   experience: number;
   description: string;
   vulnerabilities?: string[];
-  pullCount: number;
   isHighlighted?: boolean;
   codeSnippet?: string;
 }
@@ -78,46 +73,57 @@ const TechStack = () => {
       category: 'development',
       icon: <FaPython />,
       tags: ['programming', 'scripting', 'automation', 'web'],
-      experience: 6,
-      description: 'High-level programming language known for its readability and versatility.',
-      pullCount: 290,
+      experience: 5,
+      description: 'Default tool for 5+ years. FastAPI, Django, and Flask services, plus the tenant provisioning orchestrator.',
       isHighlighted: true,
-      codeSnippet: `def hello_world():\n    print("Hello, World!")\n\nif __name__ == "__main__":\n    hello_world()`,
+    },
+    {
+      id: 'bash',
+      name: 'Bash',
+      category: 'development',
+      icon: <SiGnubash />,
+      tags: ['scripting', 'automation', 'linux'],
+      experience: 5,
+      description: 'Shell scripting for deploy automation and runbooks.',
+    },
+    {
+      id: 'typescript',
+      name: 'JavaScript / TypeScript',
+      category: 'development',
+      icon: <SiTypescript />,
+      tags: ['programming', 'web', 'tooling'],
+      experience: 4,
+      description: 'Light frontend work, Node tooling, and infra glue. This site is Next.js + TypeScript.',
     },
     // AI/LLM Technologies
     {
-      id: 'openai',
-      name: 'OpenAI API',
+      id: 'mcp',
+      name: 'Model Context Protocol',
       category: 'ai-ml',
-      icon: <SiOpenai />,
-      tags: ['ai', 'llm', 'gpt', 'api'],
-      experience: 2,
-      description: 'API for accessing OpenAI&apos;s large language models like GPT-4 for natural language processing and generation.',
-      pullCount: 180,
+      icon: <FaProjectDiagram />,
+      tags: ['ai', 'llm', 'integration', 'protocol'],
+      experience: 1,
+      description: 'Built an MCP server for Hashnode end to end: tool registration, request handlers, Claude integration.',
       isHighlighted: true,
-      codeSnippet: `import openai\n\nopenai.api_key = os.getenv("OPENAI_API_KEY")\n\nresponse = openai.ChatCompletion.create(\n  model="gpt-4",\n  messages=[\n    {"role": "system", "content": "You are a helpful assistant."},\n    {"role": "user", "content": "Hello, world!"}\n  ]\n)`,
+      codeSnippet: `import { Server } from '@modelcontextprotocol/sdk/server';\n\nconst server = new Server(\n  { name: 'hashnode-mcp', version: '1.0.0' },\n  { capabilities: { tools: {} } }\n);\n\nserver.setRequestHandler(ListToolsRequestSchema, async () => ({\n  tools: [\n    { name: 'publish_article', description: 'Publish a draft to Hashnode' },\n    { name: 'get_articles', description: 'List posts from a publication' },\n  ],\n}));`,
     },
     {
-      id: 'huggingface',
-      name: 'Hugging Face',
+      id: 'langgraph',
+      name: 'LangGraph',
       category: 'ai-ml',
-      icon: <SiHuggingface />,
-      tags: ['ai', 'llm', 'transformers', 'nlp'],
+      icon: <SiLanggraph />,
+      tags: ['ai', 'agents', 'orchestration'],
       experience: 1,
-      description: 'Platform for building, training and deploying state-of-the-art machine learning models.',
-      pullCount: 160,
-      codeSnippet: `from transformers import pipeline\n\nclassifier = pipeline("sentiment-analysis")\nresult = classifier("I love working with transformers!")[0]\nprint(f"label: {result[&apos;label&apos;]}, score: {round(result[&apos;score&apos;], 4)}")`,
+      description: 'Graph-based orchestration for multi-step LLM agent workflows.',
     },
     {
-      id: 'langchain',
-      name: 'LangChain',
+      id: 'local-llm',
+      name: 'Local LLM Inference',
       category: 'ai-ml',
-      icon: <SiLangchain />,
-      tags: ['ai', 'llm', 'agents', 'rag'],
+      icon: <FaTerminal />,
+      tags: ['ai', 'llm', 'self-hosted', 'privacy'],
       experience: 1,
-      description: 'Framework for developing applications powered by language models through composability.',
-      pullCount: 150,
-      codeSnippet: `from langchain.llms import OpenAI\nfrom langchain.chains import LLMChain\nfrom langchain.prompts import PromptTemplate\n\nllm = OpenAI(temperature=0.9)\nprompt = PromptTemplate(input_variables=["product"], template="What is a good name for a company that makes {product}?")\nchain = LLMChain(llm=llm, prompt=prompt)\n\nprint(chain.run("eco-friendly water bottles"))`,
+      description: 'Self-hosted models for private inference when the data cannot leave the box.',
     },
     {
       id: 'pytorch',
@@ -126,20 +132,7 @@ const TechStack = () => {
       icon: <SiPytorch />,
       tags: ['ai', 'deep-learning', 'neural-networks'],
       experience: 2,
-      description: 'Open source machine learning framework that accelerates the path from research prototyping to production deployment.',
-      pullCount: 210,
-      codeSnippet: `import torch\nimport torch.nn as nn\n\nclass SimpleNN(nn.Module):\n    def __init__(self):\n        super(SimpleNN, self).__init__()\n        self.linear = nn.Linear(10, 1)\n        \n    def forward(self, x):\n        return torch.sigmoid(self.linear(x))\n\nmodel = SimpleNN()`,
-    },
-    {
-      id: 'mcp',
-      name: 'Model Context Protocol',
-      category: 'ai-ml',
-      icon: <FaProjectDiagram />,
-      tags: ['ai', 'llm', 'integration', 'protocol'],
-      experience: 1,
-      description: 'Protocol for integrating AI models with external tools, data sources, and capabilities.',
-      pullCount: 120,
-      codeSnippet: `import { Server } from '@modelcontextprotocol/sdk/server';\n\nconst server = new Server(\n  { name: 'weather-server', version: '0.1.0' },\n  { capabilities: { tools: {}, resources: {} } }\n);\n\nserver.setRequestHandler(ListToolsRequestSchema, async () => ({\n  tools: [{ name: 'get_weather', description: 'Get weather for a location' }]\n}));`,
+      description: 'VQGAN + CLIP experiments and deep learning prototypes.',
     },
     // Cloud Technologies
     {
@@ -147,56 +140,41 @@ const TechStack = () => {
       name: 'AWS',
       category: 'cloud',
       icon: <FaAws />,
-      tags: ['cloud', 'iaas', 'paas', 'serverless'],
+      tags: ['cloud', 'iaas', 'serverless', 'multi-tenant'],
       experience: 4,
-      description: 'Comprehensive cloud computing platform offering over 200 fully featured services from data centers globally.',
-      pullCount: 300,
+      description: 'Sole platform owner of a multi-tenant SaaS running 15+ AWS services in production.',
       isHighlighted: true,
-      codeSnippet: `// AWS SDK for JavaScript example\nimport { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";\n\nconst client = new S3Client({ region: "us-west-2" });\nconst command = new PutObjectCommand({\n  Bucket: "my-bucket",\n  Key: "my-file.txt",\n  Body: "Hello S3!"\n});\n\nawait client.send(command);`,
     },
     {
-      id: 'azure',
-      name: 'Microsoft Azure',
+      id: 'ecs-fargate',
+      name: 'ECS Fargate',
       category: 'cloud',
-      icon: <FaCloud />,
-      tags: ['cloud', 'iaas', 'paas', 'microsoft'],
+      icon: <SiAwsfargate />,
+      tags: ['containers', 'serverless', 'aws'],
       experience: 3,
-      description: 'Microsoft&apos;s cloud computing platform providing a range of cloud services including compute, analytics, storage, and networking.',
-      pullCount: 250,
-      codeSnippet: `// Azure SDK for JavaScript example\nimport { BlobServiceClient } from "@azure/storage-blob";\n\nconst blobServiceClient = BlobServiceClient.fromConnectionString(\n  "DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=mykey;EndpointSuffix=core.windows.net"\n);\nconst containerClient = blobServiceClient.getContainerClient("my-container");\nconst blockBlobClient = containerClient.getBlockBlobClient("my-blob.txt");\n\nawait blockBlobClient.upload("Hello Azure!", Buffer.byteLength("Hello Azure!"));`,
+      description: 'Serverless container orchestration. The main SaaS workloads run here.',
+      isHighlighted: true,
     },
     {
-      id: 'aws-rds',
-      name: 'AWS RDS',
-      category: 'database',
-      icon: <SiAmazonrds />,
-      tags: ['database', 'cloud', 'managed-service'],
-      experience: 3,
-      description: 'Managed relational database service that makes it easy to set up, operate, and scale a database in the cloud.',
-      pullCount: 220,
-    },
-    {
-      id: 'heroku',
-      name: 'Heroku',
+      id: 'aws-lambda',
+      name: 'AWS Lambda',
       category: 'cloud',
-      icon: <SiHeroku />,
-      tags: ['paas', 'deployment', 'cloud'],
-      experience: 2,
-      description: 'Platform as a service (PaaS) that enables developers to build, run, and operate applications entirely in the cloud.',
-      pullCount: 180,
+      icon: <SiAwslambda />,
+      tags: ['serverless', 'functions', 'aws'],
+      experience: 4,
+      description: 'Serverless functions wired into pipelines and event flows.',
     },
     // Infrastructure Technologies
     {
       id: 'kubernetes',
-      name: 'Kubernetes',
+      name: 'Kubernetes (K3s)',
       category: 'infrastructure',
       icon: <SiKubernetes />,
-      tags: ['container-orchestration', 'infrastructure', 'cloud-native'],
+      tags: ['container-orchestration', 'k3s', 'self-hosted'],
       experience: 3,
-      description: 'Container orchestration platform for automating deployment, scaling, and management of containerized applications.',
-      pullCount: 250,
+      description: 'Self-hosted K3s cluster in eu-central-1 running OneUptime.',
       isHighlighted: true,
-      codeSnippet: `apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: nginx-deployment\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: nginx`,
+      codeSnippet: `# checking on the K3s cluster\nkubectl get nodes -o wide\nkubectl -n oneuptime rollout status deploy/oneuptime\nkubectl -n oneuptime logs deploy/oneuptime --since=15m | grep -i error`,
     },
     {
       id: 'docker',
@@ -205,10 +183,9 @@ const TechStack = () => {
       icon: <FaDocker />,
       tags: ['containerization', 'infrastructure', 'devops'],
       experience: 4,
-      description: 'Platform for developing, shipping, and running applications in containers.',
-      pullCount: 320,
+      description: 'Daily driver for every service. Multi-stage builds and image hygiene.',
       isHighlighted: true,
-      codeSnippet: `FROM python:3.9-slim\n\nWORKDIR /app\nCOPY . .\nRUN pip install -r requirements.txt\n\nCMD ["python", "app.py"]`,
+      codeSnippet: `FROM python:3.12-slim AS build\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --prefix=/install -r requirements.txt\n\nFROM python:3.12-slim\nCOPY --from=build /install /usr/local\nCOPY . /app\nCMD ["uvicorn", "app.main:app", "--host", "0.0.0.0"]`,
     },
     {
       id: 'terraform',
@@ -217,33 +194,49 @@ const TechStack = () => {
       icon: <SiTerraform />,
       tags: ['iac', 'infrastructure', 'automation'],
       experience: 4,
-      description: 'Infrastructure as Code tool for building, changing, and versioning infrastructure safely and efficiently.',
-      pullCount: 210,
+      description: 'Primary IaC tool: reusable modules, remote state, drift detection across environments.',
       isHighlighted: true,
-      codeSnippet: `provider "aws" {\n  region = "us-west-2"\n}\n\nresource "aws_instance" "example" {\n  ami           = "ami-0c55b159cbfafe1f0"\n  instance_type = "t2.micro"\n}`,
+      codeSnippet: `module "ecs_service" {\n  source = "../../modules/ecs-service"\n\n  name          = "api"\n  cluster_arn   = module.ecs_cluster.arn\n  image         = var.api_image\n  desired_count = 2\n}`,
+    },
+    {
+      id: 'terragrunt',
+      name: 'Terragrunt',
+      category: 'infrastructure',
+      icon: <SiTerraform />,
+      tags: ['iac', 'terraform', 'dry'],
+      experience: 3,
+      description: 'Keeps Terraform DRY across environments: one module tree, thin per-env configs.',
+      isHighlighted: true,
+      codeSnippet: `# live/prod/eu-central-1/ecs-service/terragrunt.hcl\ninclude "root" {\n  path = find_in_parent_folders()\n}\n\nterraform {\n  source = "../../../../modules//ecs-service"\n}\n\ninputs = {\n  environment = "prod"\n}`,
+    },
+    {
+      id: 'ansible',
+      name: 'Ansible',
+      category: 'infrastructure',
+      icon: <SiAnsible />,
+      tags: ['configuration-management', 'automation', 'iac'],
+      experience: 4,
+      description: 'Config management. Split-restart playbooks for the self-managed Elasticsearch cluster.',
+    },
+    {
+      id: 'route53',
+      name: 'Route 53',
+      category: 'infrastructure',
+      icon: <SiAmazonroute53 />,
+      tags: ['networking', 'dns', 'aws'],
+      experience: 4,
+      description: 'DNS for multi-tenant routing.',
     },
     // CI/CD
-    {
-      id: 'aws-codepipeline',
-      name: 'AWS CodePipeline',
-      category: 'cicd',
-      icon: <SiAmazonCodePipeline />,
-      tags: ['aws', 'ci-cd', 'automation', 'devops'],
-      experience: 3,
-      description: 'Fully managed continuous delivery service that helps automate release pipelines for fast and reliable application updates.',
-      pullCount: 190,
-      codeSnippet: `{\n  "pipeline": {\n    "name": "MyPipeline",\n    "roleArn": "arn:aws:iam::123456789012:role/service-role/AmazonCodePipeline-ServiceRole",\n    "stages": [\n      {\n        "name": "Source",\n        "actions": []\n      },\n      {\n        "name": "Build",\n        "actions": []\n      }\n    ]\n  }\n}`,
-    },
     {
       id: 'gitlab-ci',
       name: 'GitLab CI',
       category: 'cicd',
       icon: <SiGitlab />,
       tags: ['ci-cd', 'automation', 'pipeline'],
-      experience: 3,
-      description: 'Continuous Integration service integrated with GitLab for automating builds, tests, and deployments.',
-      pullCount: 190,
-      codeSnippet: `stages:\n  - build\n  - test\n  - deploy\n\nbuild_job:\n  stage: build\n  script:\n    - echo "Building the app"`,
+      experience: 4,
+      description: 'Primary pipeline platform for app and infra deploys.',
+      isHighlighted: true,
     },
     {
       id: 'jenkins',
@@ -251,9 +244,17 @@ const TechStack = () => {
       category: 'cicd',
       icon: <FaJenkins />,
       tags: ['ci-cd', 'automation', 'pipeline'],
-      experience: 2,
-      description: 'Open-source automation server for building, testing, and deploying code.',
-      pullCount: 180,
+      experience: 4,
+      description: 'Long-running automation server driving ECS, Lambda, and EC2 deploys.',
+    },
+    {
+      id: 'aws-codepipeline',
+      name: 'AWS CodePipeline',
+      category: 'cicd',
+      icon: <SiAmazonCodePipeline />,
+      tags: ['aws', 'ci-cd', 'automation', 'devops'],
+      experience: 3,
+      description: 'AWS-native release pipelines paired with CodeBuild.',
     },
     {
       id: 'github-actions',
@@ -262,11 +263,18 @@ const TechStack = () => {
       icon: <SiGithubactions />,
       tags: ['ci-cd', 'automation', 'github'],
       experience: 3,
-      description: 'CI/CD platform integrated with GitHub repositories.',
-      pullCount: 150,
-      codeSnippet: `name: CI\non: [push]\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v2\n      - run: npm ci\n      - run: npm test`,
+      description: 'Workflows that live next to the code, including the deploy for this site.',
     },
     // Databases
+    {
+      id: 'aurora-postgresql',
+      name: 'Aurora PostgreSQL',
+      category: 'database',
+      icon: <SiAmazonrds />,
+      tags: ['database', 'aws', 'multi-region'],
+      experience: 3,
+      description: 'Schema-per-tenant Aurora with a multi-region Global Database for disaster recovery.',
+    },
     {
       id: 'postgresql',
       name: 'PostgreSQL',
@@ -274,9 +282,25 @@ const TechStack = () => {
       icon: <SiPostgresql />,
       tags: ['database', 'sql', 'relational'],
       experience: 4,
-      description: 'Powerful, open-source object-relational database system with a strong reputation for reliability and data integrity.',
-      pullCount: 230,
-      codeSnippet: `CREATE TABLE users (\n  id SERIAL PRIMARY KEY,\n  username VARCHAR(50) UNIQUE NOT NULL,\n  email VARCHAR(100) UNIQUE NOT NULL\n);`,
+      description: 'The default relational store. EXPLAIN plans, indexing, replication.',
+    },
+    {
+      id: 'redis',
+      name: 'Redis / ElastiCache',
+      category: 'database',
+      icon: <SiRedis />,
+      tags: ['cache', 'database', 'aws'],
+      experience: 3,
+      description: 'Caching, rate limits, ephemeral state. Connection-pool tuning resolved a 19-minute production outage.',
+    },
+    {
+      id: 'dynamodb',
+      name: 'DynamoDB',
+      category: 'database',
+      icon: <SiAmazondynamodb />,
+      tags: ['database', 'nosql', 'aws'],
+      experience: 3,
+      description: 'Tenant registry and key-value lookups on hot paths.',
     },
     // Operating Systems
     {
@@ -286,10 +310,9 @@ const TechStack = () => {
       icon: <SiArchlinux />,
       tags: ['linux', 'os', 'rolling-release'],
       experience: 5,
-      description: 'Lightweight and flexible Linux distribution that aims to Keep It Simple.',
-      pullCount: 200,
+      description: 'Daily driver for 5+ years. Rolling release, KISS.',
       isHighlighted: true,
-      codeSnippet: `# Arch Linux package installation\npacman -S nginx postgresql docker`,
+      codeSnippet: `# the daily ritual\nsudo pacman -Syu`,
     },
     {
       id: 'ubuntu',
@@ -298,129 +321,19 @@ const TechStack = () => {
       icon: <SiUbuntu />,
       tags: ['linux', 'os', 'debian-based'],
       experience: 6,
-      description: 'Popular Linux distribution based on Debian, focused on ease of use and regular releases.',
-      pullCount: 280,
-    },
-    {
-      id: 'centos',
-      name: 'CentOS',
-      category: 'os',
-      icon: <SiCentos />,
-      tags: ['linux', 'os', 'rhel-based'],
-      experience: 4,
-      description: 'Community-driven free software effort focused on delivering a robust open source ecosystem around a Linux platform.',
-      pullCount: 190,
+      description: 'Production servers and the default container base image.',
     },
     // Misc Tools
     {
       id: 'ffmpeg',
-      name: 'FFmpeg/LIVE555',
+      name: 'FFmpeg',
       category: 'misc',
       icon: <SiFfmpeg />,
       tags: ['multimedia', 'streaming', 'video-processing'],
       experience: 2,
-      description: 'Complete, cross-platform solution to record, convert and stream audio and video.',
-      pullCount: 150,
+      description: 'RTSP camera streams, NVR storage, and video processing pipelines.',
     },
-    // ELK Stack
-    {
-      id: 'elk-stack',
-      name: 'ELK Stack',
-      category: 'monitoring',
-      icon: <SiElasticsearch />,
-      tags: ['log-management', 'search', 'analytics', 'monitoring'],
-      experience: 4,
-      description: 'Comprehensive log management and analytics platform combining Elasticsearch, Logstash, and Kibana.',
-      pullCount: 220,
-      codeSnippet: `# Elasticsearch query\nGET /logs/_search\n{\n  "query": {\n    "match": {\n      "status": "error"\n    }\n  }\n}`,
-    },
-    {
-      id: 'elasticsearch',
-      name: 'Elasticsearch',
-      category: 'monitoring',
-      icon: <SiElasticsearch />,
-      tags: ['search', 'analytics', 'database', 'distributed'],
-      experience: 4,
-      description: 'Distributed, RESTful search and analytics engine capable of addressing a growing number of use cases.',
-      pullCount: 210,
-    },
-    {
-      id: 'kibana',
-      name: 'Kibana',
-      category: 'monitoring',
-      icon: <SiKibana />,
-      tags: ['visualization', 'dashboards', 'analytics', 'elk'],
-      experience: 4,
-      description: 'Data visualization dashboard software for Elasticsearch that provides visualization capabilities on top of content indexed on an Elasticsearch cluster.',
-      pullCount: 190,
-    },
-    {
-      id: 'logstash',
-      name: 'Logstash',
-      category: 'monitoring',
-      icon: <SiLogstash />,
-      tags: ['data-processing', 'pipeline', 'etl', 'elk'],
-      experience: 3,
-      description: 'Server-side data processing pipeline that ingests data from multiple sources, transforms it, and then sends it to a &quot;stash&quot; like Elasticsearch.',
-      pullCount: 180,
-    },
-    // DNS Systems
-    {
-      id: 'dns-management',
-      name: 'DNS Management',
-      category: 'infrastructure',
-      icon: <SiAmazonroute53 />,
-      tags: ['networking', 'domain', 'route53', 'dns'],
-      experience: 5,
-      description: 'Domain Name System services and management, including AWS Route53 and other DNS providers.',
-      pullCount: 230,
-    },
-    
-    // AWS Security Services
-    {
-      id: 'aws-iam',
-      name: 'AWS IAM',
-      category: 'security',
-      icon: <FaUserShield />,
-      tags: ['aws', 'identity', 'access-management', 'security'],
-      experience: 5,
-      description: 'AWS Identity and Access Management for secure resource access control and permission management.',
-      pullCount: 240,
-      codeSnippet: `{\n  "Version": "2012-10-17",\n  "Statement": [\n    {\n      "Effect": "Allow",\n      "Action": "s3:ListBucket",\n      "Resource": "arn:aws:s3:::example-bucket"\n    }\n  ]\n}`,
-    },
-    {
-      id: 'aws-waf-shield',
-      name: 'AWS WAF & Shield',
-      category: 'security',
-      icon: <FaShieldAlt />,
-      tags: ['aws', 'firewall', 'ddos-protection', 'security'],
-      experience: 3,
-      description: 'Web Application Firewall and DDoS protection services for securing applications and APIs.',
-      pullCount: 170,
-    },
-    {
-      id: 'aws-guardduty',
-      name: 'AWS GuardDuty',
-      category: 'security',
-      icon: <FaRadiation />,
-      tags: ['aws', 'threat-detection', 'monitoring', 'security'],
-      experience: 3,
-      description: 'Intelligent threat detection service that continuously monitors for malicious activity and unauthorized behavior.',
-      pullCount: 160,
-    },
-    
-    // Additional DevOps Tools
-    {
-      id: 'ansible',
-      name: 'Ansible',
-      category: 'infrastructure',
-      icon: <SiAnsible />,
-      tags: ['configuration-management', 'automation', 'iac'],
-      experience: 4,
-      description: 'Simple, agentless IT automation platform for application deployment and configuration management.',
-      pullCount: 220,
-      codeSnippet: `---\n- name: Install and configure web server\n  hosts: webservers\n  tasks:\n    - name: Install nginx\n      apt:\n        name: nginx\n        state: present\n    - name: Start nginx\n      service:\n        name: nginx\n        state: started`,
-    },
+    // Monitoring & Observability
     {
       id: 'prometheus',
       name: 'Prometheus',
@@ -428,8 +341,7 @@ const TechStack = () => {
       icon: <SiPrometheus />,
       tags: ['metrics', 'monitoring', 'alerting', 'time-series'],
       experience: 3,
-      description: 'Open-source systems monitoring and alerting toolkit with a dimensional data model and powerful query language.',
-      pullCount: 190,
+      description: 'Metrics collection, PromQL, and alerting rules.',
     },
     {
       id: 'grafana',
@@ -438,19 +350,81 @@ const TechStack = () => {
       icon: <SiGrafana />,
       tags: ['visualization', 'dashboards', 'monitoring'],
       experience: 3,
-      description: 'Open-source platform for monitoring and observability with beautiful dashboards.',
-      pullCount: 170,
+      description: 'Dashboards pulling from Prometheus, Loki, and CloudWatch.',
     },
     {
-      id: 'istio',
-      name: 'Istio',
-      category: 'infrastructure',
-      icon: <SiIstio />,
-      tags: ['service-mesh', 'microservices', 'traffic-management'],
-      experience: 2,
-      description: 'Service mesh platform that provides traffic management, security, and observability for microservices architectures.',
-      pullCount: 150,
-      codeSnippet: `apiVersion: networking.istio.io/v1alpha3\nkind: VirtualService\nmetadata:\n  name: reviews\nspec:\n  hosts:\n  - reviews\n  http:\n  - route:\n    - destination:\n        host: reviews\n        subset: v1\n      weight: 75\n    - destination:\n        host: reviews\n        subset: v2\n      weight: 25`,
+      id: 'elk-stack',
+      name: 'ELK Stack',
+      category: 'monitoring',
+      icon: <SiElasticsearch />,
+      tags: ['log-management', 'search', 'analytics', 'monitoring'],
+      experience: 4,
+      description: 'Self-managed three-node Elasticsearch, Logstash, and Kibana for log management.',
+    },
+    {
+      id: 'elasticsearch',
+      name: 'Elasticsearch',
+      category: 'monitoring',
+      icon: <SiElasticsearch />,
+      tags: ['search', 'analytics', 'distributed'],
+      experience: 4,
+      description: 'Self-managed cluster, upgraded with split-restart rollouts to keep ingest alive.',
+    },
+    {
+      id: 'kibana',
+      name: 'Kibana',
+      category: 'monitoring',
+      icon: <SiKibana />,
+      tags: ['visualization', 'dashboards', 'elk'],
+      experience: 4,
+      description: 'Log exploration and dashboards on the self-managed cluster.',
+    },
+    {
+      id: 'logstash',
+      name: 'Logstash',
+      category: 'monitoring',
+      icon: <SiLogstash />,
+      tags: ['data-processing', 'pipeline', 'elk'],
+      experience: 3,
+      description: 'Ingest pipelines feeding the self-managed Elasticsearch cluster.',
+    },
+    // Security
+    {
+      id: 'aws-iam',
+      name: 'AWS IAM',
+      category: 'security',
+      icon: <FaUserShield />,
+      tags: ['aws', 'identity', 'access-management', 'security'],
+      experience: 4,
+      description: 'Roles, fine-grained policies, and cross-account access for the whole platform.',
+      isHighlighted: true,
+    },
+    {
+      id: 'aws-kms',
+      name: 'AWS KMS',
+      category: 'security',
+      icon: <FaLock />,
+      tags: ['aws', 'encryption', 'security'],
+      experience: 4,
+      description: 'Shared KMS keys enabling cross-region disaster recovery.',
+    },
+    {
+      id: 'secrets-manager',
+      name: 'Secrets Manager',
+      category: 'security',
+      icon: <SiAwssecretsmanager />,
+      tags: ['aws', 'secrets', 'security'],
+      experience: 3,
+      description: 'Secret rotation and secure injection into ECS tasks.',
+    },
+    {
+      id: 'cloudtrail',
+      name: 'CloudTrail',
+      category: 'security',
+      icon: <FaSearch />,
+      tags: ['aws', 'audit', 'security'],
+      experience: 4,
+      description: 'API audit trail with multi-account aggregation.',
     },
   ];
   
@@ -466,7 +440,7 @@ const TechStack = () => {
     { id: 'ai-ml', name: 'AI & ML', icon: <FaCogs /> },
     { id: 'misc', name: 'Misc Tools', icon: <FaLayerGroup /> },
     { id: 'security', name: 'Security', icon: <FaLock /> },
-  ];
+  ].filter(category => category.id === 'all' || techImages.some(tech => tech.category === category.id));
   
   const filteredTech = techImages.filter(tech => {
     const matchesCategory = selectedCategory === 'all' || tech.category === selectedCategory;
@@ -488,7 +462,7 @@ const TechStack = () => {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-green-500 mb-2">The Registry</h2>
         <p className="text-gray-400">
-          Docker-style &quot;images&quot; of technologies I&apos;ve mastered and am currently learning.
+          Docker-style &quot;images&quot; of the tools I actually run, in production and on my own machines.
         </p>
       </div>
       
@@ -591,10 +565,7 @@ const TechStack = () => {
                   ))}
                 </div>
                 
-                <div className="flex justify-between text-xs text-gray-400">
-                  <div className="flex items-center">
-                    <FaDownload className="mr-1" /> {tech.pullCount.toLocaleString()}+
-                  </div>
+                <div className="flex justify-end text-xs text-gray-400">
                   {tech.vulnerabilities ? (
                     <div className="text-yellow-400 flex items-center">
                       <FaExclamationTriangle className="mr-1" /> {tech.vulnerabilities.length}
@@ -690,39 +661,12 @@ const TechStack = () => {
               </div>
             )}
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
-              <div>
-                <h4 className="text-lg font-semibold text-green-400 mb-2">Experience</h4>
-                <div className="bg-gray-700 p-4 rounded-md">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="text-gray-300">Years of Experience</div>
-                    <div className="font-mono text-xl">{selectedTech.experience}</div>
-                  </div>
-                  <div className="w-full bg-gray-600 rounded-full h-2.5 mb-4">
-                    <div 
-                      className="h-2.5 rounded-full bg-blue-500"
-                      style={{ width: `${(selectedTech.experience / 10) * 100}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <div>Beginner</div>
-                    <div>Intermediate</div>
-                    <div>Expert</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-semibold text-green-400 mb-2">Usage Statistics</h4>
-                <div className="bg-gray-700 p-4 rounded-md">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="text-gray-300">Pull Count</div>
-                    <div className="font-mono text-xl">{selectedTech.pullCount.toLocaleString()}</div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="text-gray-300">Last Used</div>
-                    <div className="font-mono">Today</div>
-                  </div>
+            <div className="mb-6">
+              <h4 className="text-lg font-semibold text-green-400 mb-2">Experience</h4>
+              <div className="bg-gray-700 p-4 rounded-md">
+                <div className="flex justify-between items-center">
+                  <div className="text-gray-300">Years of Experience</div>
+                  <div className="font-mono text-xl">{selectedTech.experience}+</div>
                 </div>
               </div>
             </div>

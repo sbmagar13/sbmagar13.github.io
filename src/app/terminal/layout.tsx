@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   // Absolute title so the root layout's "%s | Sagar Budhathoki" template
@@ -9,18 +9,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terminal" },
 };
 
-// Fixed-width layout viewport: phones render the same 980px desktop layout
-// scaled down to fit, instead of a reflowed mobile layout. initialScale is
-// explicitly undefined (not just omitted) because Next.js shallow-merges
-// viewport exports per key, and inheriting initialScale: 1 from the root
-// layout would stop browsers from computing the fit-to-width scale.
-export const viewport: Viewport = {
-  width: "980",
-  initialScale: undefined,
-  userScalable: true,
-  maximumScale: 5,
-  themeColor: "#0a0a0a",
-};
+// No route-level viewport override here: this route inherits the root
+// layout's device-width viewport. An earlier version forced a 980px
+// desktop-scaled viewport ("looks like PC, smaller"), but that scaled
+// layout fought the phone soft keyboard: focusing the terminal zoomed
+// and scrolled the page and it never settled back. A real terminal needs
+// real typing, so device-width wins here. The terminal renders its mobile
+// layout (40 cols, 12px) and the keyboard behaves natively.
 
 export default function TerminalLayout({
   children,

@@ -45,10 +45,6 @@ export default function Home() {
 
   const [theme, setTheme] = useState<Theme>('dark');
   const [visualEffect, setVisualEffect] = useState<VisualEffect>('neural');
-  // Touch capability, not screen width: the 980px layout viewport on this
-  // route makes window.innerWidth report ~980 on phones, so every
-  // touch-specific affordance must key off this instead of width.
-  const [isTouch, setIsTouch] = useState(false);
   // Set once the visitor picks an effect themselves, so the touch default
   // below never stomps an explicit choice.
   const effectChosenRef = useRef(false);
@@ -371,14 +367,12 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Detect touch devices. With the 980px layout viewport, the animated
-  // canvas backgrounds would paint a desktop-sized framebuffer on phone
-  // GPUs, so touch devices boot with effects off ('none' renders the cheap
-  // classic particles). The selector stays fully functional; we only skip
-  // the default when the visitor has already picked an effect.
+  // Touch devices boot with the heavy animated canvas backgrounds off
+  // ('none' renders the cheap classic particles) so phones stay smooth.
+  // The selector stays fully functional; we only skip the default when the
+  // visitor has already picked an effect.
   useEffect(() => {
     const touch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
-    setIsTouch(touch);
     if (touch && !effectChosenRef.current) {
       setVisualEffect('none');
     }
@@ -522,7 +516,10 @@ export default function Home() {
                   text="sagar.sh"
                   className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-cyan-500 to-blue-600"
                 />
-                <p className="text-gray-400 text-xs sm:text-sm mt-1">DevOps engineer · <span className="text-green-400 font-bold">Sagar Budhathoki</span></p>
+                {/* Hidden on mobile: the fixed top-right effect selector sits
+                    where this subtitle would run, and the name is already in
+                    the banner and nav. Shows from sm up where there is room. */}
+                <p className="hidden sm:block text-gray-400 text-xs sm:text-sm mt-1">DevOps engineer · <span className="text-green-400 font-bold">Sagar Budhathoki</span></p>
 
                 {/* GUI/CLI mode switch. Same segmented control the 3D route
                     speaks in (font-mono, rounded-full, sliding cyan active
@@ -822,15 +819,6 @@ export default function Home() {
               <option value="none">Classic</option>
             </select>
           </motion.div>
-
-          {/* The terminal's on-screen-keyboard helper (Terminal.tsx) hides
-              itself with md:hidden, which now matches on phones because the
-              layout viewport is 980px. Touch devices still need it to summon
-              the soft keyboard, so force it visible by id when touch is
-              available. */}
-          {isTouch && (
-            <style>{`#mobile-keyboard-button { display: flex !important; }`}</style>
-          )}
 
           {/* Performance Monitor */}
           <PerformanceMonitor />

@@ -9,12 +9,14 @@ import {
   skillsByCategory,
   type Category,
 } from '@/data/career';
+import { askSite, SAMPLE_QUESTIONS } from '@/lib/ask';
+import { SITE_URL, PERSON_ID, breadcrumb, faqPage } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Work',
   description:
-    'Plain-text career surface for Sagar Budhathoki, Senior DevOps / SRE Engineer. Selected production work, war stories, milestones, and the full skills inventory.',
-  alternates: { canonical: '/work' },
+    'Sagar Budhathoki, Senior DevOps / SRE Engineer: production work, war stories, milestones, and full skills. Sole owner of a multi-tenant SaaS on AWS.',
+  alternates: { canonical: '/work/' },
 };
 
 // ProfilePage JSON-LD: ties this page to the Person node the root
@@ -23,8 +25,35 @@ const PROFILE_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'ProfilePage',
   dateModified: '2026-06-12',
-  mainEntity: { '@id': 'https://sagarbudhathoki.com/#person' },
+  mainEntity: { '@id': PERSON_ID },
 };
+
+// Breadcrumb: Home -> Work. Additive, does not touch the Person node.
+const BREADCRUMB_JSON_LD = breadcrumb([
+  { name: 'Home', url: `${SITE_URL}/` },
+  { name: 'Work', url: `${SITE_URL}/work/` },
+]);
+
+// Strip any non-ASCII (e.g. the middot the site uses elsewhere) so the FAQ
+// answer text stays clean printable ASCII, then collapse whitespace.
+function asciiClean(text: string): string {
+  return text
+    .replace(/[^\x20-\x7E]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// FAQPage built at build time from the real ask engine: each sample recruiter
+// question is answered by askSite (grounded in career.ts), so the structured
+// Q&A is authentic, not invented. Google has scaled back FAQ rich results, so
+// this is for semantic clarity and AI-search ingestion, not guaranteed
+// snippets.
+const FAQ_JSON_LD = faqPage(
+  SAMPLE_QUESTIONS.map((question) => ({
+    question,
+    answer: asciiClean(askSite(question).answer),
+  })),
+);
 
 // Display labels for the skill groups. The category ids and the skills
 // themselves live in src/data/career.ts; only neutral headings live here.
@@ -120,6 +149,14 @@ export default function WorkPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(PROFILE_JSON_LD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_JSON_LD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
       />
       <TopNav />
 

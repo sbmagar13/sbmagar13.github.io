@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { IDENTITY } from '@/data/career';
+import { SITE_URL, PERSON_ID, breadcrumb } from '@/lib/seo';
 
 // Every career fact in this writeup comes from src/data/career.ts
 // (the aws war story, the reliability rack, and the 2024 milestone).
@@ -9,7 +10,7 @@ import { IDENTITY } from '@/data/career';
 
 const TITLE = 'Redis KEYS and the 19-minute outage';
 const DESCRIPTION =
-  'Public postmortem of a 2024 production incident: a 19-minute full-platform outage caused by blocking Redis KEYS calls exhausting the Tomcat/JDBC thread pool, and the 68-task reliability program that followed.';
+  'Sagar Budhathoki postmortem: a 19-minute production outage from blocking Redis KEYS calls exhausting the JDBC thread pool, and the 68-task reliability fix.';
 const CANONICAL = '/writing/redis-keys-outage';
 const PUBLISHED = '2026-06-11';
 
@@ -33,14 +34,21 @@ const JSON_LD = {
   headline: TITLE,
   description: DESCRIPTION,
   datePublished: PUBLISHED,
-  author: {
-    '@type': 'Person',
-    name: IDENTITY.name,
-    url: IDENTITY.links.site,
-  },
+  // Reference the Person node from the root layout by @id rather than
+  // redeclaring identity here, so the author resolves to the one canonical
+  // Person and nothing is duplicated.
+  author: { '@id': PERSON_ID },
   mainEntityOfPage: `${IDENTITY.links.site}${CANONICAL}/`,
   url: `${IDENTITY.links.site}${CANONICAL}/`,
 };
+
+// Breadcrumb: Home -> the post. There is no /writing index page, so we skip a
+// dead middle crumb and point the second crumb straight at this article rather
+// than inventing a /writing URL that would 404.
+const BREADCRUMB_JSON_LD = breadcrumb([
+  { name: 'Home', url: `${SITE_URL}/` },
+  { name: TITLE, url: `${SITE_URL}${CANONICAL}/` },
+]);
 
 function TopNav() {
   return (
@@ -119,6 +127,10 @@ export default function RedisKeysOutagePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_JSON_LD) }}
       />
       <TopNav />
 

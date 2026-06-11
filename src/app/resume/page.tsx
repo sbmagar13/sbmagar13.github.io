@@ -10,6 +10,7 @@ import {
   type RackData,
   type SkillData,
 } from '@/data/career';
+import { SITE_URL, breadcrumb } from '@/lib/seo';
 import './resume.css';
 
 // =============================================================================
@@ -27,10 +28,17 @@ import './resume.css';
 
 export const metadata: Metadata = {
   title: 'Resume',
-  description: `Printable one-page resume for ${IDENTITY.name}, ${IDENTITY.title}.`,
-  alternates: { canonical: '/resume' },
+  description: `One-page resume for ${IDENTITY.name}, ${IDENTITY.title}: AWS, Kubernetes, Terraform, CI/CD, observability, and AI agents for ops. Printable PDF.`,
+  alternates: { canonical: '/resume/' },
   robots: { index: true, follow: true },
 };
+
+// Breadcrumb: Home -> Resume. Additive structured data; the Person node lives
+// in the root layout and is not redeclared here.
+const BREADCRUMB_JSON_LD = breadcrumb([
+  { name: 'Home', url: `${SITE_URL}/` },
+  { name: 'Resume', url: `${SITE_URL}/resume/` },
+]);
 
 // -----------------------------------------------------------------------------
 // Derivation helpers
@@ -173,6 +181,10 @@ export default function ResumePage() {
 
   return (
     <div className="resume-root">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_JSON_LD) }}
+      />
       <div className="resume-topbar print:hidden">
         <Link href="/">{bare(IDENTITY.links.site)}</Link>
         <div>

@@ -2,13 +2,20 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { IDENTITY } from '@/data/career';
+import { SITE_URL, breadcrumb } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Colophon',
   description:
-    'How sagarbudhathoki.com is built: Next.js 15 static export on GitHub Pages, React Three Fiber scenes behind a device perf-tier system, an xterm.js terminal with a real command registry, and no backend at all.',
-  alternates: { canonical: '/colophon' },
+    "How Sagar Budhathoki's portfolio is built: Next.js 15 static export on GitHub Pages, React Three Fiber 3D scenes, an xterm.js terminal, no backend at all.",
+  alternates: { canonical: '/colophon/' },
 };
+
+// Breadcrumb: Home -> Colophon. Additive; does not duplicate the Person node.
+const BREADCRUMB_JSON_LD = breadcrumb([
+  { name: 'Home', url: `${SITE_URL}/` },
+  { name: 'Colophon', url: `${SITE_URL}/colophon/` },
+]);
 
 function TopNav() {
   return (
@@ -82,6 +89,10 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export default function ColophonPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-300">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_JSON_LD) }}
+      />
       <TopNav />
 
       <main className="mx-auto max-w-3xl px-6 py-12">

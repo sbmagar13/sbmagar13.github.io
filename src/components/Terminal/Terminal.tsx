@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from 'xterm-addon-fit';
-import { executeCommand } from './commands';
+import { executeCommand, isVimActive } from './commands';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -379,14 +379,23 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     if (!xtermRef.current) return;
     
     const term = xtermRef.current;
-    
+
+    // While the vim trap holds the terminal, every input goes straight
+    // to executeCommand so the gag can't be bypassed: no local clear,
+    // no section navigation, no loading spinners until the user :q!s.
+    if (isVimActive()) {
+      const result = executeCommand(command);
+      writeCommandResult(result);
+      return;
+    }
+
     // Special case for clear command
     if (command === 'clear') {
       term.clear();
       writePrompt(term);
       return;
     }
-    
+
     // Notify parent component about the command
     if (onCommandExecuted) {
       // These commands can trigger UI changes in the parent

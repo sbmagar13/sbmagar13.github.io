@@ -47,7 +47,6 @@ export default function Home() {
   const [visualEffect, setVisualEffect] = useState<VisualEffect>('neural');
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [uptime, setUptime] = useState({
-    days: 0,
     hours: 0,
     minutes: 0
   });
@@ -91,7 +90,18 @@ export default function Home() {
   // like a real process where some steps are fast and some are slow.
   // (Math.random in scheduler-only logic; output isn't displayed via React
   //  state derived from the random value, so it's safe with static export.)
+  // Plays once per session (sb_term_boot, mirroring sb_intro_shown on the
+  // 3D home), and any key or click skips it instantly.
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem('sb_term_boot')) {
+        setLoading(false);
+        return;
+      }
+    } catch {
+      // Some browsers / privacy modes block sessionStorage; just play the boot.
+    }
+
     const messages = [
       'Booting sagarbudhathoki.com...',
       'Loading shell environment...',
@@ -110,6 +120,20 @@ export default function Home() {
     const weights = [0.6, 0.5, 0.6, 1.3, 1.8, 0.9, 0.5, 1.6, 0.7, 0.8];
 
     const timers: ReturnType<typeof setTimeout>[] = [];
+    let finished = false;
+
+    const finishBoot = () => {
+      if (finished) return;
+      finished = true;
+      timers.forEach(clearTimeout);
+      try {
+        sessionStorage.setItem('sb_term_boot', '1');
+      } catch {
+        /* ignore */
+      }
+      setLoading(false);
+    };
+
     let elapsed = 0;
     messages.forEach((msg, i) => {
       // 320-800ms base, scaled by the weight for this step. Total run is
@@ -122,13 +146,22 @@ export default function Home() {
         setTimeout(() => {
           setBootMessages(prev => [...prev, { text: msg, t: scheduledAt / 1000 }]);
           if (i === messages.length - 1) {
-            timers.push(setTimeout(() => setLoading(false), 1800));
+            timers.push(setTimeout(finishBoot, 1800));
           }
         }, scheduledAt)
       );
     });
 
-    return () => timers.forEach(clearTimeout);
+    // Any key or click jumps straight to the shell.
+    const skip = () => finishBoot();
+    window.addEventListener('keydown', skip);
+    window.addEventListener('pointerdown', skip);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      window.removeEventListener('keydown', skip);
+      window.removeEventListener('pointerdown', skip);
+    };
   }, []);
   
   // Create enhanced particle effect
@@ -283,7 +316,8 @@ export default function Home() {
           updateVisitedSections('blog');
           break;
         case 'Escape':
-          // Close any open overlays
+          // Close the command palette (the only overlay this page owns)
+          setCommandPaletteOpen(false);
           break;
         case 't':
           // Toggle theme
@@ -306,19 +340,18 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Calculate dynamic uptime from DevOps career start date
+  // Session uptime, counted from page load. The site is a static export
+  // on GitHub Pages, so this session is the only honest uptime there is.
   useEffect(() => {
-    const startDate = new Date('2020-12-01T00:00:00Z'); // Career start date
+    const startedAt = Date.now();
 
     const calculateUptime = () => {
-      const now = new Date();
-      const diffMs = now.getTime() - startDate.getTime();
+      const diffMs = Date.now() - startedAt;
 
-      const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-      const hours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      const hours = Math.floor(diffMs / (60 * 60 * 1000));
       const minutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000));
 
-      setUptime({ days, hours, minutes });
+      setUptime({ hours, minutes });
     };
 
     // Calculate initial uptime
@@ -438,6 +471,11 @@ export default function Home() {
                     transition={{ duration: 0.4 }}
                   />
                 </div>
+              </div>
+
+              {/* Skip hint */}
+              <div className="mt-3 text-center text-xs text-gray-500 animate-pulse">
+                press any key or click to skip
               </div>
             </motion.div>
           </motion.div>
@@ -679,7 +717,7 @@ export default function Home() {
               <span>System operational</span>
             </div>
             <div className="text-center sm:text-left">
-              <span>Uptime: {uptime.days}d {uptime.hours}h {uptime.minutes}m</span>
+              <span>Session uptime: {uptime.hours}h {uptime.minutes}m</span>
             </div>
             <div className="text-center sm:text-right">
               <span>© {new Date().getFullYear()} Sagar Budhathoki · <a href="https://github.com/sbmagar13" className="text-green-500 hover:underline">github.com/sbmagar13</a></span>
@@ -697,11 +735,11 @@ export default function Home() {
               <FaCode className="mr-1" /> <span>Keyboard Shortcuts:</span>
             </div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-              <div><span className="text-green-500">Ctrl+1</span>: Terminal</div>
-              <div><span className="text-green-500">Ctrl+2</span>: About</div>
-              <div><span className="text-green-500">Ctrl+3</span>: Projects</div>
-              <div><span className="text-green-500">Ctrl+4</span>: Tech Stack</div>
-              <div><span className="text-green-500">Ctrl+5</span>: Blog</div>
+              <div><span className="text-green-500">1</span>: Terminal</div>
+              <div><span className="text-green-500">2</span>: About</div>
+              <div><span className="text-green-500">3</span>: Projects</div>
+              <div><span className="text-green-500">4</span>: Tech Stack</div>
+              <div><span className="text-green-500">5</span>: Blog</div>
               <div><span className="text-green-500">Ctrl+T</span>: Theme</div>
               <div><span className="text-green-500">Ctrl+K</span>: Command</div>
               <div><span className="text-green-500">Esc</span>: Close</div>
@@ -737,7 +775,7 @@ export default function Home() {
           {/* Command Palette */}
           <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
 
-          {/* 3D Experience Entry Button — points to the new home which
+          {/* 3D Experience Entry Button, points to the new home which
               is now the 3D experience. */}
           <motion.a
             href="/"

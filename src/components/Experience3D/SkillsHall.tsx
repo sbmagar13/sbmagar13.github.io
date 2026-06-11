@@ -328,17 +328,21 @@ function arrangeGrid(items: SkillData[], cols: number, spacing: number): [number
 }
 
 function Scene({
+  skills,
   onSelect,
   selectedId,
   hoveredId,
   setHovered,
+  isLow,
 }: {
+  skills: SkillData[];
   onSelect: (id: string | null) => void;
   selectedId: string | null;
   hoveredId: string | null;
   setHovered: (id: string | null) => void;
+  isLow: boolean;
 }) {
-  const positions = useMemo(() => arrangeGrid(SKILLS, 8, 1.85), []);
+  const positions = useMemo(() => arrangeGrid(skills, 8, 1.85), [skills]);
 
   return (
     <>
@@ -347,26 +351,33 @@ function Scene({
       <pointLight position={[-8, 4, -2]} intensity={0.8} color={PALETTE.neonMagenta} distance={20} />
       <pointLight position={[8, 4, -2]} intensity={0.8} color={PALETTE.neonCyan} distance={20} />
 
-      {/* Reflective floor */}
-      <mesh rotation-x={-Math.PI / 2} position-y={-0.4} receiveShadow>
+      {/* Reflective floor. On low tier, fall back to a plain matte floor;
+          MeshReflectorMaterial re-renders the whole hall from below into
+          a texture every frame and that second pass over every pedestal
+          is the single most expensive thing here. */}
+      <mesh rotation-x={-Math.PI / 2} position-y={-0.4} receiveShadow={!isLow}>
         <planeGeometry args={[40, 40]} />
-        <MeshReflectorMaterial
-          blur={[100, 30]}
-          resolution={1024}
-          mixBlur={0.5}
-          mixStrength={22}
-          roughness={0.5}
-          depthScale={1}
-          minDepthThreshold={0.4}
-          maxDepthThreshold={1.2}
-          color="#0f172a"
-          metalness={0.78}
-          mirror={0.5}
-        />
+        {isLow ? (
+          <meshStandardMaterial color="#0a1224" metalness={0.5} roughness={0.6} />
+        ) : (
+          <MeshReflectorMaterial
+            blur={[100, 30]}
+            resolution={1024}
+            mixBlur={0.5}
+            mixStrength={22}
+            roughness={0.5}
+            depthScale={1}
+            minDepthThreshold={0.4}
+            maxDepthThreshold={1.2}
+            color="#0f172a"
+            metalness={0.78}
+            mirror={0.5}
+          />
+        )}
       </mesh>
 
       {/* Pedestals */}
-      {SKILLS.map((s, i) => (
+      {skills.map((s, i) => (
         <Pedestal
           key={s.id}
           position={positions[i]}
@@ -386,7 +397,7 @@ function Scene({
       <NeonStrip start={[-6, -0.39, 3.6]} end={[6, -0.39, 3.6]} color={PALETTE.neonMagenta} />
 
       <ParticleStorm
-        count={1500}
+        count={isLow ? 350 : 1500}
         bounds={[12, 4, 12]}
         color={PALETTE.neonCyan}
         size={6}
@@ -420,7 +431,21 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
   const isLow = tier === 'low';
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Category | 'all'>('all');
   const selected = useMemo(() => SKILLS.find((s) => s.id === selectedId) ?? null, [selectedId]);
+  const visibleSkills = useMemo(
+    () => (filter === 'all' ? SKILLS : SKILLS.filter((s) => s.category === filter)),
+    [filter]
+  );
+
+  // Switching filters can hide the pedestal that was selected or hovered;
+  // clear that state so the detail panel and cursor don't go stale.
+  const applyFilter = (next: Category | 'all') => {
+    setFilter(next);
+    if (selected && next !== 'all' && selected.category !== next) setSelectedId(null);
+    setHoveredId(null);
+    document.body.style.cursor = '';
+  };
 
   return (
     <div className="w-full h-screen relative bg-black">
@@ -435,10 +460,12 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
         <fog attach="fog" args={['#020617', 8, 24]} />
         <Suspense fallback={null}>
           <Scene
+            skills={visibleSkills}
             onSelect={setSelectedId}
             selectedId={selectedId}
             hoveredId={hoveredId}
             setHovered={setHoveredId}
+            isLow={isLow}
           />
           {!isLow ? (
             <CinematicEffects
@@ -463,13 +490,47 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="absolute left-6 top-1/2 -translate-y-1/2 z-10 space-y-1.5 pointer-events-none">
-        {Object.entries(CATEGORY_COLORS).map(([cat, color]) => (
-          <div key={cat} className="flex items-center gap-2 text-[10px] font-mono">
+      {/* Legend, doubles as a category filter. Picking a category renders
+          only those pedestals, which is also a cheap perf lever on low
+          tier. ALL restores the full hall. Buttons carry real padding
+          (not just the 10px swatch) so they are tappable on touch
+          screens and a miss does not fall through to OrbitControls. */}
+      <div className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-10 space-y-0.5">
+        <button
+          type="button"
+          onClick={() => applyFilter('all')}
+          aria-pressed={filter === 'all'}
+          className="flex items-center gap-2 text-[10px] font-mono px-2 py-1.5 -mx-2 min-h-[28px] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+        >
+          <div
+            className="w-2.5 h-2.5 rounded-sm"
+            style={{ background: PALETTE.ledWhite, boxShadow: `0 0 8px ${PALETTE.ledWhite}` }}
+          />
+          <span
+            className={`uppercase tracking-wider transition-colors ${
+              filter === 'all' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            all
+          </span>
+        </button>
+        {(Object.entries(CATEGORY_COLORS) as [Category, string][]).map(([cat, color]) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => applyFilter(cat)}
+            aria-pressed={filter === cat}
+            className="flex items-center gap-2 text-[10px] font-mono px-2 py-1.5 -mx-2 min-h-[28px] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+          >
             <div className="w-2.5 h-2.5 rounded-sm" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
-            <span className="text-slate-400 uppercase tracking-wider">{cat}</span>
-          </div>
+            <span
+              className={`uppercase tracking-wider transition-colors ${
+                filter === cat ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {cat}
+            </span>
+          </button>
         ))}
       </div>
 
@@ -510,10 +571,14 @@ export default function SkillsHall({ active = true }: { active?: boolean } = {})
                 <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">Years</div>
                 <div className="mt-0.5 font-mono text-xl font-semibold text-cyan-200">{selected.years}</div>
               </div>
-              <div className="rounded-md border border-cyan-500/25 bg-slate-900/70 px-3.5 py-2.5">
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">Highlight</div>
-                <div className="mt-0.5 font-mono text-xl font-semibold text-cyan-200">{selected.highlight ? 'Yes' : ','}</div>
-              </div>
+              {/* Only owned-in-production skills carry the highlight flag;
+                  skip the card entirely for the rest. */}
+              {selected.highlight ? (
+                <div className="rounded-md border border-cyan-500/25 bg-slate-900/70 px-3.5 py-2.5">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">Highlight</div>
+                  <div className="mt-0.5 font-mono text-xl font-semibold text-cyan-200">Yes</div>
+                </div>
+              ) : null}
             </div>
             {selected.blurb ? (
               <p className="mt-4 text-[15px] text-slate-200 leading-relaxed">{selected.blurb}</p>

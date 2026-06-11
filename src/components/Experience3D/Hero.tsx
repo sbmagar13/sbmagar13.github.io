@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, OrbitControls, MeshDistortMaterial, ContactShadows } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,7 +40,7 @@ const STORIES: Record<ToolId, { tool: string; title: string; when: string; body:
   docker: {
     tool: 'Docker',
     title: 'CI/CD across three platforms',
-    when: '2023 — present',
+    when: '2023 to present',
     body:
       'Containerised build and deploy pipelines on Jenkins, GitLab CI, and AWS CodePipeline / CodeBuild. Targets include ECS, Lambda, CloudFront and EC2. App and infra share pipeline patterns so a single change can flow through any of them.',
   },
@@ -89,7 +89,7 @@ const STORIES: Record<ToolId, { tool: string; title: string; when: string; body:
   mcp: {
     tool: 'Anthropic MCP',
     title: 'AI agents for DevOps work',
-    when: '2025 — present',
+    when: '2025 to present',
     body:
       'Self-learning track. Building MCP-based agents that wrap real DevOps tasks (log triage, runbook prompts, infra analysis) so Claude and similar assistants can drive them. Earlier built a Hashnode MCP server, which is shelved now that Hashnode has terminated their public API. Current focus is the broader agentic-DevOps stack: MCP, LangGraph, local LLM inference.',
   },
@@ -106,6 +106,21 @@ const ORBIT_TOOLS: ToolId[] = [
   'opentelemetry',
   'mcp',
 ];
+
+// Short labels for the mobile chip row. On phones the scrolling
+// overlay sits over the Canvas, so the orbit logos can't be tapped;
+// these chips drive the same setPicked path instead.
+const CHIP_LABELS: Record<ToolId, string> = {
+  kubernetes: 'K8s',
+  docker: 'Docker',
+  aws: 'AWS',
+  aurora: 'Aurora',
+  terraform: 'Terraform',
+  python: 'Python',
+  grafana: 'Grafana',
+  opentelemetry: 'OTel',
+  mcp: 'MCP',
+};
 
 interface OrbitProps {
   radius?: number;
@@ -259,6 +274,29 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
   const isLow = tier === 'low';
   const story = picked ? STORIES[picked] : null;
 
+  // Escape closes an open story panel. Registered on the capture
+  // phase so stopPropagation keeps the page-level Escape-to-hero
+  // handler from firing on the same keypress. Only listens while a
+  // story is actually open AND the scene is visible; on desktop the
+  // Hero stays mounted after navigation, and a hidden scene's
+  // listener would swallow Escape presses meant for the page.
+  useEffect(() => {
+    if (!picked || !active) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      setPicked(null);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [picked, active]);
+
+  // Leaving the scene closes any open story so it doesn't linger
+  // invisibly (and reappear stale when the visitor returns).
+  useEffect(() => {
+    if (!active) setPicked(null);
+  }, [active]);
+
   return (
     <div className="relative w-full h-full sm:h-screen bg-black overflow-y-auto sm:overflow-hidden">
       <Canvas
@@ -266,6 +304,8 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
         gl={{ antialias: !isLow, powerPreference: 'high-performance' }}
         dpr={isLow ? [1, 1] : [1, 1.75]}
         frameloop={active ? 'always' : 'never'}
+        // Clicking empty space (not a tool) dismisses an open story.
+        onPointerMissed={() => setPicked(null)}
         // On phones the Hero overlay is taller than the viewport (title +
         // 5 stat cards + 4 CTAs) and the page needs to scroll to reach
         // the bottom CTAs. Pin the Canvas to the viewport with
@@ -310,10 +350,14 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
             SAGAR BUDHATHOKI
           </h1>
           <div className="mt-3 font-mono text-sm sm:text-base tracking-[0.4em] text-cyan-300/90 uppercase">
-            DevOps · SRE · AI Engineer
+            SENIOR DEVOPS / SRE ENGINEER
           </div>
           <div className="mt-2 font-mono text-[11px] tracking-[0.32em] text-slate-500 uppercase">
-            click any tool below to see a real story behind it
+            building ai agents for ops · open to remote senior roles
+          </div>
+          <div className="mt-2 font-mono text-[11px] tracking-[0.32em] text-slate-500 uppercase">
+            <span className="sm:hidden">tap a tool to read the real story behind it</span>
+            <span className="hidden sm:inline">click any tool below to see a real story behind it</span>
           </div>
         </motion.div>
 
@@ -337,6 +381,34 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
           ))}
         </motion.div>
 
+        {/* Mobile-only chip row. On phones the overlay captures every
+            touch for scrolling, so the 3D orbit logos can't be tapped;
+            these chips open the same war-story panel the orbit does. */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.65, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="sm:hidden mt-6 flex flex-wrap gap-2 justify-center max-w-3xl pointer-events-auto"
+        >
+          {ORBIT_TOOLS.map((id) => {
+            const isOpen = picked === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setPicked((prev) => (prev === id ? null : id))}
+                aria-pressed={isOpen}
+                className={`px-3 py-2 min-h-[40px] rounded-full font-mono text-[11px] tracking-wide border backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
+                  isOpen
+                    ? 'border-cyan-300 bg-cyan-500/20 text-cyan-200'
+                    : 'border-cyan-500/30 bg-slate-950/65 text-slate-300 active:bg-cyan-500/10'
+                }`}
+              >
+                {CHIP_LABELS[id]}
+              </button>
+            );
+          })}
+        </motion.div>
+
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -356,6 +428,14 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
             className="px-7 py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
           >
             GitHub
+          </a>
+          <a
+            href="https://linkedin.com/in/sbmagar13"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-7 py-3 rounded-md font-mono text-xs sm:text-sm tracking-widest uppercase text-sky-300 border border-sky-500/40 hover:bg-sky-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          >
+            LinkedIn
           </a>
           <a
             href="mailto:sagar@sagarbudhathoki.com"
@@ -382,7 +462,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 30, opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed z-30 bg-slate-950/95 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto bottom-4 inset-x-4 sm:inset-x-auto sm:bottom-8 sm:right-6 sm:w-[400px] sm:max-w-[44vw]"
+            className="fixed z-30 bg-slate-950/95 backdrop-blur-xl border border-cyan-500/40 rounded-lg p-5 sm:p-6 shadow-2xl shadow-cyan-500/15 pointer-events-auto bottom-4 inset-x-4 max-h-[45vh] overflow-y-auto sm:max-h-none sm:overflow-visible sm:inset-x-auto sm:bottom-8 sm:right-6 sm:w-[400px] sm:max-w-[44vw]"
             role="dialog"
             aria-label={`Story: ${story.title}`}
           >
@@ -409,7 +489,8 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
             </div>
             <p className="mt-4 text-[14px] text-slate-200 leading-relaxed">{story.body}</p>
             <div className="mt-4 text-[10px] font-mono text-slate-500">
-              Click another tool above to read its story.
+              <span className="sm:hidden">Tap another chip to switch stories, or × to close.</span>
+              <span className="hidden sm:inline">Click another tool above to read its story.</span>
             </div>
           </motion.aside>
         ) : null}

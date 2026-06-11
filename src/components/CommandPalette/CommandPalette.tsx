@@ -52,7 +52,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       description: 'Visit GitHub profile',
       icon: <FaGithub />,
       action: () => {
-        window.open('https://github.com/sagarbudhathoki', '_blank');
+        window.open('https://github.com/sbmagar13', '_blank');
         onClose();
       },
       keywords: ['github', 'code', 'repository', 'source']

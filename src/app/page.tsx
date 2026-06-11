@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import HolographicHUD from '@/components/Experience3D/HolographicHUD';
@@ -8,7 +8,7 @@ import HoloCursor from '@/components/Experience3D/HoloCursor';
 import CinematicIntro from '@/components/Experience3D/CinematicIntro';
 import SceneWarp from '@/components/Experience3D/SceneWarp';
 import Achievements, { type Achievement } from '@/components/Experience3D/Achievements';
-import { usePerfTier } from '@/components/Experience3D/usePerfTier';
+import { usePerfTier, useReducedMotion } from '@/components/Experience3D/usePerfTier';
 
 // Heavy 3D scenes, lazy-loaded so navigation between sections only
 // pays for what it shows.
@@ -27,6 +27,21 @@ const SECTIONS: { id: Section; label: string; key: string }[] = [
   { id: 'projects', label: 'PROJECTS', key: '3' },
   { id: 'skills', label: 'SKILLS', key: '4' },
 ];
+
+// Hash deep links: /#projects opens the Projects scene directly. The
+// hero owns the bare URL; '#home' is accepted on read so a pasted link
+// still resolves.
+const HASH_TO_SECTION: Record<string, Section> = {
+  '#home': 'hero',
+  '#avatar': 'avatar',
+  '#journey': 'journey',
+  '#projects': 'projects',
+  '#skills': 'skills',
+};
+
+function sectionFromHash(hash: string): Section | null {
+  return HASH_TO_SECTION[hash] ?? null;
+}
 
 function SceneFallback() {
   return (
@@ -57,9 +72,20 @@ const KONAMI = [
   'a',
 ];
 
+// Length of the longest buffer suffix that is a proper prefix of
+// KONAMI. Non-zero means the visitor is partway through the sequence,
+// so the arrow keys belong to the cheat code, not navigation.
+function konamiPrefixLength(buffer: string[]): number {
+  for (let len = Math.min(buffer.length, KONAMI.length - 1); len > 0; len--) {
+    if (buffer.slice(-len).every((k, i) => k === KONAMI[i])) return len;
+  }
+  return 0;
+}
+
 export default function Experience3DPage() {
   const tier = usePerfTier();
   const isLow = tier === 'low';
+  const reducedMotion = useReducedMotion();
   const [section, setSection] = useState<Section>('hero');
   // Once a section is visited it stays mounted on desktop, so switching
   // back is instant. On mobile this strategy explodes (5 WebGL contexts
@@ -67,10 +93,21 @@ export default function Experience3DPage() {
   // mountedSections always equals { section } and the previous scene
   // unmounts when you navigate away.
   const [visited, setVisited] = useState<Set<Section>>(new Set(['hero']));
+  // 'explored' only grows from user-initiated navigation (keyboard,
+  // nav, CTA, deep link, back/forward). 'visited' also gets fed by the
+  // pre-mount warmup timers below, so achievements key off explored,
+  // otherwise every badge would unlock on a timer a few seconds after
+  // load without the visitor touching anything.
+  const [explored, setExplored] = useState<Set<Section>>(new Set(['hero']));
   const mountedSections = useMemo(
     () => (isLow ? new Set<Section>([section]) : visited),
     [isLow, section, visited],
   );
+  // Low-tier scene handoff cover. Phones unmount the outgoing Canvas
+  // instantly, so without this the screen snaps straight to the loading
+  // spinner. The cover drops in fully opaque the moment the section
+  // changes, holds while the incoming scene initializes, then fades out.
+  const [handoffCover, setHandoffCover] = useState(false);
   // Intro shows once per browser session.
   const [showIntro, setShowIntro] = useState(false);
   // Konami code easter egg.
@@ -86,15 +123,15 @@ export default function Experience3DPage() {
   useEffect(() => {
     const candidates: Array<{ when: boolean; a: Achievement }> = [
       {
-        when: visited.size >= 2,
+        when: explored.size >= 2,
         a: { id: 'first-contact', title: 'First Contact', detail: 'You stepped out of the Hero.' },
       },
       {
-        when: visited.size >= 4,
+        when: explored.size >= 4,
         a: { id: 'operator', title: 'Operator', detail: 'Three scenes deep. Carry on.' },
       },
       {
-        when: visited.size === 5,
+        when: explored.size === 5,
         a: { id: 'explorer', title: 'Explorer', detail: 'You saw every scene.' },
       },
     ];
@@ -105,10 +142,41 @@ export default function Experience3DPage() {
         return;
       }
     }
-  }, [visited, unlocked]);
+  }, [explored, unlocked]);
+
+  const markExplored = useCallback((id: Section) => {
+    setExplored((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  // Single entry point for user-initiated section changes (nav buttons,
+  // dots, keyboard, the Hero CTA). Pushes a hash history entry so the
+  // browser's back / forward buttons walk between scenes. pushState
+  // (unlike assigning location.hash) never scrolls the page. popstate
+  // and the warmup timers bypass this on purpose.
+  const navigate = useCallback(
+    (id: Section) => {
+      markExplored(id);
+      if (id === section) return;
+      setSection(id);
+      window.history.pushState(
+        null,
+        '',
+        id === 'hero' ? window.location.pathname + window.location.search : `#${id}`,
+      );
+    },
+    [section, markExplored],
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // Deep-link arrivals skip the intro entirely: someone following a
+    // #projects link wants the scene, not the boot screen.
+    if (sectionFromHash(window.location.hash)) return;
     try {
       if (!sessionStorage.getItem('sb_intro_shown')) {
         setShowIntro(true);
@@ -118,6 +186,28 @@ export default function Experience3DPage() {
       setShowIntro(true);
     }
   }, []);
+
+  // Deep links: open the section named in the hash straight away.
+  useEffect(() => {
+    const id = sectionFromHash(window.location.hash);
+    if (id && id !== 'hero') {
+      setSection(id);
+      markExplored(id);
+    }
+  }, [markExplored]);
+
+  // Back / forward buttons restore the section the hash points at.
+  // setSection directly rather than navigate(), so we never push a new
+  // entry on top of the one the browser just restored (feedback loop).
+  useEffect(() => {
+    const onPop = () => {
+      const id = sectionFromHash(window.location.hash) ?? 'hero';
+      setSection(id);
+      markExplored(id);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [markExplored]);
 
   const dismissIntro = () => {
     setShowIntro(false);
@@ -174,6 +264,25 @@ export default function Experience3DPage() {
     return () => timers.forEach(clearTimeout);
   }, [isLow]);
 
+  // Drop the handoff cover on every low-tier section change, hold it
+  // while the incoming Canvas initializes, then let it fade (the fade
+  // itself is the exit transition on the cover below, ~300ms, ~650ms
+  // total). High tier keeps scenes mounted so it never needs this.
+  // useLayoutEffect so the cover is painted in the same frame as the
+  // scene swap; a passive effect can leak one uncovered frame when the
+  // browser squeezes a paint in before the scheduled effect runs.
+  const coverSkipFirst = useRef(true);
+  useLayoutEffect(() => {
+    if (coverSkipFirst.current) {
+      coverSkipFirst.current = false;
+      return;
+    }
+    if (!isLow) return;
+    setHandoffCover(true);
+    const t = setTimeout(() => setHandoffCover(false), 350);
+    return () => clearTimeout(t);
+  }, [section, isLow]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -189,30 +298,36 @@ export default function Experience3DPage() {
         konamiBuffer.current = [];
         setKonami(true);
         setTimeout(() => setKonami(false), 6000);
+        // The final 'a' belongs to the cheat code. Consume it here so
+        // it doesn't also trigger 'a = previous section'.
+        return;
       }
+      // Mid-sequence the arrows are konami input, not navigation.
+      const midKonami = konamiPrefixLength(konamiBuffer.current) > 0;
 
       if (e.key === 'Escape') {
-        setSection('hero');
+        navigate('hero');
         return;
       }
       // Number shortcuts.
       const match = SECTIONS.find((s) => s.key === e.key);
       if (match) {
-        setSection(match.id);
+        navigate(match.id);
         return;
       }
-      // a/d cycling.
+      // a/d cycling. Plain a/d always navigate; the arrow keys only do
+      // when the visitor isn't partway through the konami sequence.
       const ids = SECTIONS.map((s) => s.id);
       const idx = ids.indexOf(section);
-      if (e.key === 'a' || e.key === 'ArrowLeft') {
-        setSection(ids[(idx - 1 + ids.length) % ids.length]);
-      } else if (e.key === 'd' || e.key === 'ArrowRight') {
-        setSection(ids[(idx + 1) % ids.length]);
+      if (e.key === 'a' || (e.key === 'ArrowLeft' && !midKonami)) {
+        navigate(ids[(idx - 1 + ids.length) % ids.length]);
+      } else if (e.key === 'd' || (e.key === 'ArrowRight' && !midKonami)) {
+        navigate(ids[(idx + 1) % ids.length]);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [section]);
+  }, [section, navigate]);
 
   return (
     <div className="w-full h-screen overflow-hidden bg-black relative">
@@ -229,13 +344,13 @@ export default function Experience3DPage() {
             {/* Brand hidden on mobile so the nav has room. The home dot
                 on the left edge replaces it. */}
             <button
-              onClick={() => setSection('hero')}
+              onClick={() => navigate('hero')}
               className="hidden sm:inline-block font-mono text-sm tracking-[0.3em] text-cyan-300/90 hover:text-white transition-colors pointer-events-auto"
             >
               SAGAR BUDHATHOKI
             </button>
             <button
-              onClick={() => setSection('hero')}
+              onClick={() => navigate('hero')}
               className="sm:hidden font-mono text-base tracking-widest text-cyan-300 hover:text-white transition-colors pointer-events-auto"
               aria-label="Home"
             >
@@ -245,7 +360,7 @@ export default function Experience3DPage() {
               {SECTIONS.filter((s) => s.id !== 'hero').map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => setSection(s.id)}
+                  onClick={() => navigate(s.id)}
                   className={`relative px-2 sm:px-4 py-2 font-mono text-[10px] sm:text-xs tracking-widest transition-colors ${
                     section === s.id ? 'text-cyan-300' : 'text-slate-400 hover:text-white'
                   }`}
@@ -267,6 +382,15 @@ export default function Experience3DPage() {
             >
               TERMINAL
             </a>
+            {/* Compact terminal link for phones, where the full label
+                doesn't fit next to the nav. */}
+            <a
+              href="/terminal"
+              aria-label="Terminal view"
+              className="sm:hidden font-mono text-xs tracking-widest text-purple-300 border border-purple-500/30 hover:bg-purple-500/10 px-2.5 py-2 rounded transition-colors pointer-events-auto"
+            >
+              {'>_'}
+            </a>
           </motion.header>
         ) : null}
       </AnimatePresence>
@@ -284,7 +408,7 @@ export default function Experience3DPage() {
             {SECTIONS.filter((s) => s.id !== 'hero').map((s) => (
               <button
                 key={s.id}
-                onClick={() => setSection(s.id)}
+                onClick={() => navigate(s.id)}
                 className="group flex items-center gap-3"
                 aria-label={`Go to ${s.label}`}
               >
@@ -325,10 +449,14 @@ export default function Experience3DPage() {
           <motion.div
             key={id}
             initial={false}
-            animate={{
-              opacity: isActive ? 1 : 0,
-              scale: isActive ? 1 : 0.985,
-            }}
+            // Reduced motion gets an opacity-only crossfade; the subtle
+            // scale settle is exactly the kind of movement being opted
+            // out of.
+            animate={
+              reducedMotion
+                ? { opacity: isActive ? 1 : 0 }
+                : { opacity: isActive ? 1 : 0, scale: isActive ? 1 : 0.985 }
+            }
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: 'absolute',
@@ -340,7 +468,7 @@ export default function Experience3DPage() {
             }}
           >
             <Suspense fallback={<SceneFallback />}>
-              {id === 'hero' && <Hero active={isActive} onEnter={() => setSection('avatar')} />}
+              {id === 'hero' && <Hero active={isActive} onEnter={() => navigate('avatar')} />}
               {id === 'avatar' && <Avatar active={isActive} />}
               {id === 'journey' && <Journey active={isActive} />}
               {id === 'projects' && <DataCenter active={isActive} />}
@@ -358,10 +486,27 @@ export default function Experience3DPage() {
       {/* Holographic cursor (hidden on touch devices automatically) */}
       <HoloCursor />
 
+      {/* Low-tier handoff cover: hides the unmount/remount snap between
+          scenes on phones. Sits above the scenes and their fallback
+          spinner, below the header and the intro. */}
+      <AnimatePresence>
+        {handoffCover ? (
+          <motion.div
+            key="handoff"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[35] bg-slate-950 pointer-events-none"
+          />
+        ) : null}
+      </AnimatePresence>
+
       {/* Brief CRT warp + scan line every time the section changes. Only
           mounted after the intro has dismissed so the warp doesn't fire
-          underneath the boot overlay where it can't be seen. */}
-      {!showIntro ? <SceneWarp trigger={section} /> : null}
+          underneath the boot overlay where it can't be seen. Skipped
+          entirely for reduced-motion visitors. */}
+      {!showIntro && !reducedMotion ? <SceneWarp trigger={section} /> : null}
 
       {/* Achievement toasts (Explorer, Operator, etc.) */}
       <Achievements unlock={currentUnlock} />

@@ -187,7 +187,7 @@ const RACKS: RackData[] = [
     description:
       'Multimodal text-to-image generation using VQGAN + CLIP architectures in PyTorch. From the AI/ML era of the career, kept here as an artifact.',
     tech: ['PyTorch', 'CLIP', 'VQGAN', 'Python'],
-    github: 'https://github.com/sbmagar/VQGAN-CLIP-Text-to-Image',
+    github: 'https://github.com/sbmagar13/VQGAN-CLIP-Text-to-Image',
     position: [2.7, 0, 2.5],
     rotation: [0, Math.PI, 0],
     screen: 'matrix',
@@ -368,9 +368,9 @@ function Scene({ onRackClick, activeId, hoveredId, setHovered, bursts, onBurstDo
       ))}
 
       {/* Atmospheric dust, main drift layer only. Toned down so the
-          racks read cleanly. */}
+          racks read cleanly. Thinned out further on the low tier. */}
       <ParticleStorm
-        count={2000}
+        count={isLow ? 450 : 2000}
         bounds={[16, 6, 14]}
         color={PALETTE.neonCyan}
         size={6}
@@ -603,6 +603,18 @@ export default function DataCenter({ active = true }: { active?: boolean } = {})
                 ))}
               </div>
             </div>
+
+            {/* Repo link, only on racks with public code */}
+            {activeRack.github ? (
+              <a
+                href={activeRack.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2 px-3.5 py-2 rounded-md font-mono text-[11px] tracking-widest uppercase text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+              >
+                View source on GitHub ↗
+              </a>
+            ) : null}
 
             <div className="mt-6 text-[11px] font-mono text-slate-500">
               Press <span className="text-cyan-300">esc</span> or click anywhere to deselect

@@ -27,7 +27,7 @@ const MILESTONES: Milestone[] = [
     year: '2020',
     title: 'AI / ML beginnings',
     description:
-      'VolgAI, Genese Cloud Academy, IBZ Networks. Built AI chatbots with RASA (NLP), backend APIs with Django and Flask, RTSP/FFmpeg pipelines for CCTV image processing. Async work via Celery and RabbitMQ. AWS AI/ML Intership at Genese.',
+      'VolgAI, Genese Cloud Academy, IBZ Networks. Built AI chatbots with RASA (NLP), backend APIs with Django and Flask, RTSP/FFmpeg pipelines for CCTV image processing. Async work via Celery and RabbitMQ. AWS AI/ML Internship at Genese.',
     shape: 'book',
     color: PALETTE.ledWhite,
   },
@@ -246,11 +246,13 @@ function Scene({
   selectedIdx,
   hoveredIdx,
   setHovered,
+  isLow,
 }: {
   onSelect: (i: number | null) => void;
   selectedIdx: number | null;
   hoveredIdx: number | null;
   setHovered: (i: number | null) => void;
+  isLow: boolean;
 }) {
   const points = useMemo(buildPath, []);
   const curve = useMemo(() => new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.5), [points]);
@@ -322,7 +324,7 @@ function Scene({
       })}
 
       <ParticleStorm
-        count={1500}
+        count={isLow ? 350 : 1500}
         bounds={[12, 6, 12]}
         color={PALETTE.neonCyan}
         size={6}
@@ -381,6 +383,7 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
             selectedIdx={selectedIdx}
             hoveredIdx={hoveredIdx}
             setHovered={setHoveredIdx}
+            isLow={isLow}
           />
           {!isLow ? (
             <CinematicEffects
@@ -426,7 +429,7 @@ export default function Journey({ active = true }: { active?: boolean } = {}) {
                     background: `${selected.color}12`,
                   }}
                 >
-                  Milestone · year
+                  Milestone · {selected.year}
                 </div>
                 <div className="mt-3 font-mono text-4xl font-semibold text-white tracking-wider">{selected.year}</div>
               </div>

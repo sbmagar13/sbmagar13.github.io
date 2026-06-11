@@ -3,6 +3,9 @@ import { asciiArt } from './ascii';
 // Command history for persistence
 const commandHistory: string[] = [];
 
+// Vim gag state: once the user runs `vim`, they're trapped until a proper quit
+let vimActive = false;
+
 // Function to trigger deployment animation
 const triggerDeployAnimation = () => {
   // Call the global function exposed by CiCdPipeline component
@@ -142,8 +145,8 @@ const commands: Record<string, (args: string[]) => string> = {
 \x1b[1;32m=== SYSTEM INFORMATION ===\x1b[0m
 
 \x1b[1;36mName:\x1b[0m Sagar Budhathoki
-\x1b[1;36mRole:\x1b[0m Infrastructure Architect & SRE, Python Web Developer, AI Engineer
-\x1b[1;36mUptime:\x1b[0m 99.99% (4+ years in production)
+\x1b[1;36mRole:\x1b[0m Senior DevOps / SRE Engineer
+\x1b[1;36mUptime:\x1b[0m 5+ years in production (and counting)
 \x1b[1;36mKernel:\x1b[0m Human v3.7.2
 \x1b[1;36mShell:\x1b[0m Bash/Zsh with custom aliases
 \x1b[1;36mPackages:\x1b[0m 150+ technologies integrated
@@ -279,7 +282,6 @@ Type 'connect' for more detailed social connection options.
 \x1b[1;33mDirect Contact:\x1b[0m
   \x1b[1;36mEmail:        \x1b[0m sagar@sagarbudhathoki.com (or hello@sagarbudhathoki.com)
   \x1b[1;36mWebsite:      \x1b[0m https://sagarbudhathoki.com
-  \x1b[1;36mPhone:        \x1b[0m +9779864420272, +9779805275666
 
 \x1b[1;33mConnection Status:\x1b[0m
   \x1b[1;32m● ONLINE\x1b[0m - All endpoints available and ready for connection
@@ -358,12 +360,12 @@ Type 'tools [number]' to see a demo.
 Domain Information:
   Name: Sagar Budhathoki
   Registrar: Life Experience Inc.
-  Creation Date: ${new Date().getFullYear() - 4} years ago
+  Registered (DevOps): 2020, 5+ years ago
   Status: Continuously learning
 
 Contact Information:
   Type: Human
-  Role: Infrastructure Architect & SRE, Python Web Developer, AI Engineer
+  Role: Senior DevOps / SRE Engineer
   Location: The Cloud (occasionally on Earth)
 
 DNS Records:
@@ -382,23 +384,18 @@ Whois Server Response:
   },
   
   uptime: () => {
-    // Calculate days based on 4 years
-    const uptimeDays = 4 * 365 + Math.floor(Math.random() * 200); // Randomize for realism
-    const availability = (99.99).toFixed(2);
-    
+    // No made-up counters here: the site is a static export on GitHub Pages,
+    // so there is no server to have uptime. The career numbers are real.
     return `
 \x1b[1;32m=== SYSTEM UPTIME ===\x1b[0m
 
-\x1b[1;36mCareer Uptime:\x1b[0m 4+ years (${uptimeDays} days)
-\x1b[1;36mAvailability:\x1b[0m ${availability}%
-\x1b[1;36mMean Time Between Failures:\x1b[0m Very high
-\x1b[1;36mMean Time To Recovery:\x1b[0m Very low
-\x1b[1;36mIncidents Resolved:\x1b[0m Countless
-\x1b[1;36mLemon Tea Consumed:\x1b[0m ${Math.floor(uptimeDays * 2.5)} cups
+\x1b[1;36mSite Uptime:\x1b[0m static export on GitHub Pages. No server, nothing to crash.
+\x1b[1;36mCareer Uptime:\x1b[0m 5+ years in DevOps / SRE, still in production
+\x1b[1;36mIncidents Resolved:\x1b[0m enough to have strong opinions about Redis KEYS
+\x1b[1;36mLemon Tea Consumed:\x1b[0m unmeasured, deliberately
 
 \x1b[1;33mStatus:\x1b[0m \x1b[1;32mOPERATIONAL\x1b[0m
-\x1b[1;33mLoad Average:\x1b[0m [||||||||||||||||||||] 85%
-\x1b[1;33mCurrent Task:\x1b[0m Building awesome portfolio website
+\x1b[1;33mCurrent Task:\x1b[0m Keeping this terminal honest
 `;
   },
   
@@ -953,7 +950,6 @@ Pro tip: Try 'sudo rm -rf /' if you're feeling adventurous (or destructive)
   coffee: () => {
     // Calculate coffee brewing metrics
     const brewTemp = 94;
-    const brewPressure = 9 + (Math.random() * 0.5).toFixed(1);
     const extractionTime = 25 + Math.floor(Math.random() * 5);
     const caffeineLevel = 85 + Math.floor(Math.random() * 15);
     const coffeeVersion = '2.5.' + Math.floor(Math.random() * 10);
@@ -979,7 +975,7 @@ Pro tip: Try 'sudo rm -rf /' if you're feeling adventurous (or destructive)
 ${asciiArt.coffee}
 
 \x1b[1;33mService Status:\x1b[0m
-  \x1b[1;36mBrew Pressure:   \x1b[0m [${generateBar(parseInt(brewPressure) * 10)}] ${brewPressure} bars
+  \x1b[1;36mBrew Pressure:   \x1b[0m [${generateBar(90)}] plenty (measured in vibes, not bars)
   \x1b[1;36mCaffeine Level:  \x1b[0m [${generateBar(caffeineLevel)}] ${caffeineLevel}%
   \x1b[1;36mFlavor Profile:  \x1b[0m [${generateBar(90)}] Excellent
   \x1b[1;36mUptime Impact:   \x1b[0m [${generateBar(95)}] Productivity +95%
@@ -1123,7 +1119,7 @@ ${bottom}
     ];
     
     const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-    
+
     return `
 \x1b[1;32m=== DEVOPS FORTUNE ===\x1b[0m
 
@@ -1132,35 +1128,221 @@ ${bottom}
 \x1b[90mYour DevOps fortune cookie has been consumed. No refunds.\x1b[0m
 \x1b[90mRemember: In case of emergency, break glass and run 'kubectl delete pod --all'.\x1b[0m
 `;
+  },
+
+  kubectl: (args: string[]) => {
+    if (args.length === 0) {
+      return `
+kubectl controls the sagarbudhathoki.com cluster.
+
+Usage:
+  \x1b[1;36mkubectl get pods\x1b[0m     List this site's sections as pods
+
+That's the whole API surface. RBAC here is extremely strict.
+`;
+    }
+
+    if (args[0] === 'get' && ['pods', 'pod', 'po'].includes(args[1])) {
+      return `
+\x1b[1;36mNAME                 READY   STATUS    RESTARTS   AGE\x1b[0m
+hero-7f8d9           1/1     Running   0          static
+avatar-3c41b         1/1     Running   0          static
+datacenter-a2e57     1/1     Running   0          static
+journey-66f1d        1/1     Running   0          static
+skills-hall-b9d04    1/1     Running   0          static
+terminal-1f4a2       1/1     Running   0          static
+blog-7c9e0           1/1     Running   0          static
+
+\x1b[90mAll Running. No CrashLoopBackOff on this resume.\x1b[0m
+`;
+    }
+
+    return `
+\x1b[1;31mError from server (Forbidden):\x1b[0m "${args.join(' ')}" is above this terminal's pay grade. Try 'kubectl get pods'.
+`;
+  },
+
+  terraform: (args: string[]) => {
+    if (args[0] === 'plan') {
+      return `
+\x1b[1;32m=== terraform plan ===\x1b[0m
+
+Terraform will perform the following actions:
+
+  \x1b[1;32m# site_visitor.you\x1b[0m will be created
+  \x1b[1;32m+\x1b[0m resource "site_visitor" "you" {
+      \x1b[1;32m+\x1b[0m impressed  = (known after apply)
+      \x1b[1;32m+\x1b[0m tab_status = "open"
+      \x1b[1;32m+\x1b[0m next_step  = "type 'contact'"
+    }
+
+\x1b[1;33mPlan: 1 to add, 0 to change, 0 to destroy.\x1b[0m
+`;
+    }
+
+    if (args[0] === 'apply') {
+      return `
+\x1b[1;31mError: approval required\x1b[0m
+
+This plan changes head count, and auto-approve is disabled for
+career resources. To apply: hire him. Type 'contact' to start.
+`;
+    }
+
+    return `
+Usage: terraform [plan|apply]
+\x1b[90mState is stored in his head, with locking enabled.\x1b[0m
+`;
+  },
+
+  neofetch: () => {
+    return `
+\x1b[1;36m${asciiArt.brain}\x1b[0m
+
+\x1b[1;32msagar\x1b[0m@\x1b[1;32msagarbudhathoki.com\x1b[0m
+-------------------------
+\x1b[1;33mOS:\x1b[0m        Static export (no server harmed in serving this page)
+\x1b[1;33mHost:\x1b[0m      GitHub Pages
+\x1b[1;33mFramework:\x1b[0m Next.js 15
+\x1b[1;33mRenderer:\x1b[0m  React Three Fiber (the 3D home), plain DOM here
+\x1b[1;33mShell:\x1b[0m     this terminal
+\x1b[1;33mUptime:\x1b[0m    static, there is nothing to go down
+\x1b[1;33mPackages:\x1b[0m  see 'skills'
+\x1b[1;33mTheme:\x1b[0m     green on black, as nature intended
+`;
+  },
+
+  vim: (args: string[]) => {
+    vimActive = true;
+    const file = args[0] || 'resume.txt';
+
+    return `
+\x1b[1;32m"${file}"\x1b[0m [New File]
+
+~
+~                  VIM - Vi IMproved
+~
+~              You are now inside Vim.
+~         Statistically, some never leave.
+~
+~    Type \x1b[1;36m:q!\x1b[0m and press Enter to get out.
+~
+
+\x1b[1;31mE37: No write since last change (add ! to override)\x1b[0m
+`;
+  },
+
+  ssh: (args: string[]) => {
+    const host = args[0] || 'production';
+
+    return `
+\x1b[1;33mConnecting to ${host}...\x1b[0m
+
+\x1b[1;31m${host}: Permission denied (publickey,hire_me).\x1b[0m
+
+No stray SSH keys here. Production access goes through onboarding,
+least privilege, and an offer letter. Type 'contact' to begin auth.
+`;
+  },
+
+  git: (args: string[]) => {
+    if (args[0] === 'log') {
+      return `
+\x1b[1;32m=== git log --oneline career ===\x1b[0m
+
+\x1b[1;33m9f3a1c2\x1b[0m (2025) Deploy self-hosted observability platform on K3s: OneUptime in eu-central-1
+\x1b[1;33m7d4b8e1\x1b[0m (2024) Build cross-region DR: Aurora Global Database, EFS + ECR replication, shared KMS keys
+\x1b[1;33m3c9f2a7\x1b[0m (2024) Fix 19-minute platform outage: blocking Redis KEYS calls exhausted the JDBC pool
+\x1b[1;33m5e1d6b4\x1b[0m Ship tenant provisioning API: one call wires Aurora, SQS, ALB, CloudFront, Route 53
+\x1b[1;33m1a2f9c8\x1b[0m (2023) Take sole ownership of a production AWS platform: ECS Fargate, Aurora, Redis
+\x1b[1;33m0b8e4d3\x1b[0m (2020) Initial commit: start the DevOps career
+
+\x1b[90mEvery one of these shipped to production. No force pushes.\x1b[0m
+`;
+    }
+
+    return `
+git: this portfolio is already committed. Try 'git log'.
+`;
   }
 };
+
+// Levenshtein distance, used for 'did you mean' suggestions
+function editDistance(a: string, b: string): number {
+  const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+
+  for (let i = 1; i <= a.length; i++) {
+    let prev = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+
+  return row[b.length];
+}
+
+// Whether the vim trap is holding the terminal. The Terminal shell
+// checks this before its own side paths (local clear, section
+// navigation, loading spinners) so nothing bypasses the trap.
+export function isVimActive(): boolean {
+  return vimActive;
+}
 
 // Execute a command and return the output
 export function executeCommand(input: string): string {
   // Add to history
   commandHistory.push(input);
-  
+
+  // Vim trap: once inside, only a proper quit gets you out
+  if (vimActive) {
+    const vimInput = input.trim();
+    if ([':q', ':q!', ':wq', ':wq!', ':x', ':qa', ':qa!'].includes(vimInput)) {
+      vimActive = false;
+      return `
+\x1b[1;32mYou escaped Vim. Genuinely impressive.\x1b[0m
+Back in the shell. Type 'help' to continue.
+`;
+    }
+    return `
+\x1b[1;31mE492: Not an editor command: ${vimInput}\x1b[0m
+\x1b[90mStill inside Vim. The way out is ':q!' then Enter.\x1b[0m
+`;
+  }
+
   // Parse command and arguments
   const [command, ...args] = input.trim().split(' ');
-  
+
   // Check if command exists
   if (command in commands) {
     // Get the command output
     let output = commands[command](args);
-    
+
     // Check if we're on mobile and need to adapt the output
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     if (isMobile) {
       // For mobile, simplify ASCII art and long outputs
       output = adaptOutputForMobile(output);
     }
-    
+
     return output;
   }
-  
-  // Handle unknown command
+
+  // Unknown command: suggest the closest registered command (edit distance <= 2)
+  let suggestion: string | null = null;
+  let bestDistance = 3;
+  for (const name of Object.keys(commands)) {
+    const distance = editDistance(command.toLowerCase(), name);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      suggestion = name;
+    }
+  }
+
   return `
-\x1b[1;31mCommand not found: ${command}\x1b[0m
+\x1b[1;31mCommand not found: ${command}\x1b[0m${suggestion ? `\nDid you mean \x1b[1;36m${suggestion}\x1b[0m?` : ''}
 Type 'help' to see available commands.
 `;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, OrbitControls, MeshDistortMaterial, ContactShadows } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +16,17 @@ import LabelPlate from './LabelPlate';
 import { usePerfTier, type PerfTier } from './usePerfTier';
 import { PALETTE } from './Materials';
 import { STORIES, ORBIT_TOOLS, CHIP_LABELS, STAT_CARDS, type ToolId } from '@/data/career';
+import { askSite, SAMPLE_QUESTIONS, type AskResult } from '@/lib/ask';
+import { getLiveData, relativeTime } from '@/lib/liveData';
+import { unlockDiscovery } from '@/lib/discoveries';
+
+// The "ask" overlay reads its sample list once. The placeholder rotates
+// through these; the "try:" row shows the first few as tappable chips.
+const ASK_SUGGESTIONS = SAMPLE_QUESTIONS.slice(0, 3);
+
+// Live signal, read once at module load from the bundled static JSON. The
+// build commits a seed for this so it never depends on the network.
+const LIVE = getLiveData();
 
 // Four cards, not five: 'Top Lang / Python' is dropped here because
 // Python already shows up everywhere else on the site.
@@ -159,6 +170,144 @@ function Scene({ onPick, picked, tier }: SceneProps) {
   );
 }
 
+// Ask-the-site input + collapsible answer card. Self-contained: holds its own
+// query/answer state so the Hero shell stays lean. The placeholder rotates
+// through SAMPLE_QUESTIONS while the field is empty and unfocused.
+function AskPrompt({ isLow }: { isLow: boolean }) {
+  const [query, setQuery] = useState('');
+  const [result, setResult] = useState<AskResult | null>(null);
+  const [focused, setFocused] = useState(false);
+  // Index into SAMPLE_QUESTIONS for the rotating placeholder.
+  const [hint, setHint] = useState(0);
+
+  // Rotate the placeholder only while the field is empty and idle, so the
+  // hint never shifts under someone mid-type. Slow enough to read.
+  useEffect(() => {
+    if (query || focused) return;
+    const t = setInterval(() => {
+      setHint((i) => (i + 1) % SAMPLE_QUESTIONS.length);
+    }, 3200);
+    return () => clearInterval(t);
+  }, [query, focused]);
+
+  // Clearing the input hides the answer (per the contract).
+  useEffect(() => {
+    if (!query.trim()) setResult(null);
+  }, [query]);
+
+  function runAsk(raw: string) {
+    const q = raw.trim();
+    if (!q) return;
+    setResult(askSite(q));
+    // Record the discovery on the first ask. No 3D-route toast fires for
+    // this one (page.tsx cannot observe Hero's localStorage write); it
+    // surfaces in the terminal 'achievements' list. Idempotent.
+    unlockDiscovery('ask');
+  }
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    runAsk(query);
+  }
+
+  function ask(q: string) {
+    setQuery(q);
+    runAsk(q);
+  }
+
+  const placeholder = query || focused ? '> ask me anything' : `> ${SAMPLE_QUESTIONS[hint]}`;
+
+  return (
+    <motion.div
+      initial={{ y: 18, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.38, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="mt-6 sm:mt-8 w-full max-w-lg pointer-events-auto"
+    >
+      <form
+        onSubmit={onSubmit}
+        className="flex items-center gap-2 rounded-md border border-cyan-500/30 bg-slate-950/85 sm:bg-slate-950/65 sm:backdrop-blur-sm px-3 py-2 font-mono focus-within:border-cyan-400/70 transition-colors"
+      >
+        <span className="text-cyan-400/80 text-sm select-none" aria-hidden="true">
+          &gt;
+        </span>
+        <label htmlFor="ask-input" className="sr-only">
+          Ask this site anything about Sagar
+        </label>
+        <input
+          id="ask-input"
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder={placeholder}
+          autoComplete="off"
+          spellCheck={false}
+          className="flex-1 min-w-0 bg-transparent text-[12px] sm:text-[13px] text-slate-100 placeholder:text-slate-500 outline-none"
+        />
+        <button
+          type="submit"
+          aria-label="Ask"
+          className="shrink-0 w-7 h-7 flex items-center justify-center rounded text-cyan-300 border border-cyan-500/30 hover:border-cyan-400/70 hover:text-cyan-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+        >
+          &rarr;
+        </button>
+      </form>
+
+      {/* Tappable sample questions: fill + submit in one tap. */}
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-mono text-slate-500">
+        <span className="select-none">try:</span>
+        {ASK_SUGGESTIONS.map((q) => (
+          <button
+            key={q}
+            type="button"
+            onClick={() => ask(q)}
+            className="rounded-full border border-cyan-500/25 px-2 py-0.5 text-cyan-300/80 hover:border-cyan-400/60 hover:text-cyan-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+          >
+            {q}
+          </button>
+        ))}
+      </div>
+
+      {/* Collapsible answer card, in the war-story panel's visual language. */}
+      <AnimatePresence>
+        {result ? (
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 10, opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className={`mt-3 rounded-lg border border-cyan-500/40 bg-slate-950 ${
+              isLow ? '' : 'sm:bg-slate-950/95 sm:backdrop-blur-xl'
+            } p-4 text-left shadow-2xl shadow-cyan-500/15`}
+            aria-live="polite"
+          >
+            <p className="font-mono text-[12px] sm:text-[13px] text-slate-200 leading-relaxed whitespace-pre-line">
+              {result.answer}
+            </p>
+            {result.sources.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {result.sources.map((s) => (
+                  <a
+                    key={s.href}
+                    href={s.href}
+                    target={s.href.startsWith('/') ? undefined : '_blank'}
+                    rel={s.href.startsWith('/') ? undefined : 'noopener noreferrer'}
+                    className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 font-mono text-[10px] text-cyan-300 hover:border-cyan-400/70 hover:text-cyan-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                  >
+                    {s.label}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 export default function Hero({ onEnter, active = true }: { onEnter?: () => void; active?: boolean }) {
   const [picked, setPicked] = useState<ToolId | null>(null);
   // Bumped when the WebGL context is lost for good (iOS Safari evicting
@@ -252,11 +401,12 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
           <div className="mt-2 font-mono text-[10px] sm:text-[11px] tracking-[0.24em] sm:tracking-[0.32em] text-slate-500 uppercase">
             ai agents for ops · open to remote senior roles
           </div>
-          <div className="mt-2 font-mono text-[10px] sm:text-[11px] tracking-[0.24em] sm:tracking-[0.32em] text-slate-500 uppercase">
-            <span className="sm:hidden">tap a tool for its story</span>
-            <span className="hidden sm:inline">click a tool in orbit for its story</span>
-          </div>
         </motion.div>
+
+        {/* Ask the site anything. The flagship interaction: sits directly
+            under the title and above the stat cards. Replaces the old
+            "click a tool for its story" helper line. */}
+        <AskPrompt isLow={isLow} />
 
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -338,7 +488,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
               rel="noopener noreferrer"
               aria-label="GitHub"
               title="GitHub"
-              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-700/60 text-slate-400 hover:border-cyan-400/60 hover:text-cyan-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-600/70 bg-slate-950/90 text-slate-300 shadow-lg shadow-black/40 hover:border-cyan-400/60 hover:text-cyan-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
               <FaGithub className="text-lg" />
             </a>
@@ -348,7 +498,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
               rel="noopener noreferrer"
               aria-label="LinkedIn"
               title="LinkedIn"
-              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-700/60 text-slate-400 hover:border-sky-400/60 hover:text-sky-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-600/70 bg-slate-950/90 text-slate-300 shadow-lg shadow-black/40 hover:border-sky-400/60 hover:text-sky-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
               <FaLinkedin className="text-lg" />
             </a>
@@ -356,7 +506,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
               href="mailto:sagar@sagarbudhathoki.com"
               aria-label="Email"
               title="Email"
-              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-700/60 text-slate-400 hover:border-purple-400/60 hover:text-purple-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-600/70 bg-slate-950/90 text-slate-300 shadow-lg shadow-black/40 hover:border-purple-400/60 hover:text-purple-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
               <FaEnvelope className="text-lg" />
             </a>
@@ -364,7 +514,7 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
               href="/terminal"
               aria-label="Terminal view"
               title="Terminal view"
-              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-700/60 text-slate-400 hover:border-slate-400/60 hover:text-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              className="flex items-center justify-center w-11 h-11 rounded-md border border-slate-600/70 bg-slate-950/90 text-slate-300 shadow-lg shadow-black/40 hover:border-slate-400/60 hover:text-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
               <FaTerminal className="text-lg" />
             </a>
@@ -385,6 +535,20 @@ export default function Hero({ onEnter, active = true }: { onEnter?: () => void;
           >
             prefer plain text? /work
           </a>
+          {/* Live signal: one dim, honest line, only when real data exists.
+              Reads the bundled github.json via getLiveData; no network. */}
+          {LIVE.latestCommit && relativeTime(LIVE.latestCommit.date) ? (
+            <div className="mt-2">
+              <a
+                href={LIVE.latestCommit.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pointer-events-auto font-mono text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                last shipped: {relativeTime(LIVE.latestCommit.date)} to {LIVE.latestCommit.repo}
+              </a>
+            </div>
+          ) : null}
         </motion.div>
       </div>
 

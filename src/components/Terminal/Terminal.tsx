@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { executeCommand, isVimActive, getCommandNames } from './commands';
+import { unlockDiscovery } from '@/lib/discoveries';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -523,6 +524,9 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     }
 
     tourActiveRef.current = true;
+    // Genuine curiosity reward: ran the guided tour instead of guessing.
+    // SSR-safe (the lib guards window); no toast, the tour itself is feedback.
+    unlockDiscovery('tour');
     const schedule = (fn: () => void, delay: number) => {
       tourTimeoutsRef.current.push(window.setTimeout(fn, delay));
     };

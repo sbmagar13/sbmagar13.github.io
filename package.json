@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "fetch-github": "node scripts/fetch-github.mjs",
+    "prebuild": "node scripts/fetch-github.mjs",
     "build": "next build --no-lint && touch out/.nojekyll",
     "start": "next start",
     "lint": "next lint",
-    "export": "next build --no-lint && touch out/.nojekyll",
+    "export": "npm run build",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d out",
     "serve": "npx serve out",

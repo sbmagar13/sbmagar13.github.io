@@ -523,6 +523,36 @@ export default function Home() {
                   className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-cyan-500 to-blue-600"
                 />
                 <p className="text-gray-400 text-xs sm:text-sm mt-1">DevOps engineer · <span className="text-green-400 font-bold">Sagar Budhathoki</span></p>
+
+                {/* GUI/CLI mode switch. Same segmented control the 3D route
+                    speaks in (font-mono, rounded-full, sliding cyan active
+                    pill via layoutId, border-cyan-500/30, bg-slate-950/70) so
+                    the two views read as one product. Lives inside the header
+                    flow on the left, far from the top-right effect selector +
+                    online badge, and stays reachable on touch under the 980px
+                    layout viewport (no fixed overlay). '3D' links home; 'CLI'
+                    is the current page, so it's an inert active marker. */}
+                <div className="mt-2 flex justify-center sm:justify-start">
+                  <div className="inline-flex items-center gap-0.5 rounded-full border border-cyan-500/30 bg-slate-950/70 p-0.5 font-mono text-[10px] sm:text-xs backdrop-blur-sm">
+                    <motion.a
+                      href="/"
+                      className="relative rounded-full px-3 py-1 tracking-widest text-slate-400 hover:text-white transition-colors"
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      3D
+                    </motion.a>
+                    <span
+                      className="relative rounded-full px-3 py-1 tracking-widest text-cyan-300"
+                      aria-current="page"
+                    >
+                      <motion.span
+                        layoutId="modeSwitchActive"
+                        className="absolute inset-0 rounded-full bg-cyan-500/15 border border-cyan-400/40"
+                      />
+                      <span className="relative">CLI</span>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
             

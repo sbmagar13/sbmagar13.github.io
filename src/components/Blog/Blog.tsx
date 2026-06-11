@@ -6,6 +6,38 @@ import { FaCalendarAlt, FaClock, FaTags, FaChevronRight, FaSearch, FaFilter, FaC
 import ReactMarkdown from 'react-markdown';
 import { BlogPost } from '@/utils/blog';
 
+// Real posts that live on the Hashnode blog. The on-site blog surfaces
+// them as an index that links out to where the actual writing lives,
+// rather than re-hosting copies.
+const BLOG_BASE = 'https://blog.budhathokisagar.com.np';
+const EXTERNAL_POSTS: { title: string; blurb: string; slug: string }[] = [
+  {
+    title: 'Terraform CLI Tips and Cheatsheets',
+    blurb: 'Practical Terraform CLI shortcuts and patterns I reach for day to day.',
+    slug: 'terraform-cli-tips-and-cheatsheets',
+  },
+  {
+    title: 'Linting the Docker Image with Dockle',
+    blurb: 'Catching image misconfigurations and security issues before they ship.',
+    slug: 'linting-the-docker-image-with-dockle',
+  },
+  {
+    title: 'ElasticSearch on AWS EC2 using Terraform',
+    blurb: 'Standing up Elasticsearch on EC2, provisioned with Terraform.',
+    slug: 'elasticsearch-on-aws-ec2-using-terraform',
+  },
+  {
+    title: 'Install MongoDB on EC2: Solving the Public DNS Connection Issue',
+    blurb: 'A real connection problem on EC2 and how I tracked down the fix.',
+    slug: 'install-mongodb-on-ec2-instance-solved-connection-issue-from-public-dns',
+  },
+  {
+    title: 'Docker for Beginners: Learning Notes',
+    blurb: 'The notes I wish I had when I started with Docker.',
+    slug: 'docker-for-beginners-cheatsheet',
+  },
+];
+
 interface BlogProps {
   posts?: BlogPost[];
   loading?: boolean;
@@ -208,6 +240,35 @@ const Blog = ({ posts = [], loading = false, error = null, onRetry }: BlogProps)
         </motion.div>
       ) : (
         <>
+          {/* Latest from the real blog. These link out to Hashnode where
+              the writing actually lives, instead of re-hosting copies. */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-green-400 mb-4">Latest from my blog</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {EXTERNAL_POSTS.map((post) => (
+                <motion.a
+                  key={post.slug}
+                  href={`${BLOG_BASE}/${post.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-green-500 transition-colors block"
+                  whileHover={{ y: -4, boxShadow: '0 10px 25px -5px rgba(0, 255, 128, 0.1)' }}
+                >
+                  <div className="p-5">
+                    <h4 className="text-lg font-bold text-green-400 mb-2 flex items-start justify-between gap-2">
+                      <span>{post.title}</span>
+                      <FaExternalLinkAlt className="text-xs mt-1.5 text-gray-500 group-hover:text-green-400 shrink-0" />
+                    </h4>
+                    <p className="text-gray-300 text-sm">{post.blurb}</p>
+                  </div>
+                </motion.a>
+              ))}
+            </div>
+            <p className="text-gray-500 text-xs mt-3">
+              These open on blog.budhathokisagar.com.np, where I publish.
+            </p>
+          </div>
+
           {/* Featured Posts */}
           {featuredPosts.length > 0 && (
             <div className="mb-8">

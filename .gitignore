@@ -43,3 +43,6 @@ next-env.d.ts
 # Playwright
 /test-results/
 /playwright-report/
+
+# Local-only blog drafts (not published)
+/content/_drafts/

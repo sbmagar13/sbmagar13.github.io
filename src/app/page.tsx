@@ -9,6 +9,7 @@ import CinematicIntro from '@/components/Experience3D/CinematicIntro';
 import SceneWarp from '@/components/Experience3D/SceneWarp';
 import Achievements, { type Achievement } from '@/components/Experience3D/Achievements';
 import { usePerfTier, useReducedMotion } from '@/components/Experience3D/usePerfTier';
+import { unlockDiscovery } from '@/lib/discoveries';
 
 // Heavy 3D scenes, lazy-loaded so navigation between sections only
 // pays for what it shows.
@@ -84,8 +85,8 @@ function konamiPrefixLength(buffer: string[]): number {
 
 // Autopilot tour: a self-driving loop through every scene, ending back
 // on the hero. Each hop goes through navigate(), so hash history, the
-// explored set, achievements and the warp behave exactly like manual
-// navigation. User-initiated only; any key or nav click cancels it.
+// explored set and the warp behave exactly like manual navigation.
+// User-initiated only; any key or nav click cancels it.
 const TOUR_ROUTE: Section[] = ['hero', 'avatar', 'journey', 'projects', 'skills'];
 const TOUR_STEP_MS = 9000;
 const TOUR_DONE_MS = 4000;
@@ -113,10 +114,10 @@ export default function Experience3DPage() {
   // unmounts when you navigate away.
   const [visited, setVisited] = useState<Set<Section>>(new Set(['hero']));
   // 'explored' only grows from user-initiated navigation (keyboard,
-  // nav, CTA, deep link, back/forward). 'visited' also gets fed by the
-  // pre-mount warmup timers below, so achievements key off explored,
-  // otherwise every badge would unlock on a timer a few seconds after
-  // load without the visitor touching anything.
+  // nav, CTA, deep link, back/forward), as distinct from 'visited',
+  // which the pre-mount warmup timers below also feed. Achievements no
+  // longer key off it (those are genuine discoveries now), but the
+  // distinction is kept so any future user-intent logic has it ready.
   const [explored, setExplored] = useState<Set<Section>>(new Set(['hero']));
   const mountedSections = useMemo(
     () => (isLow ? new Set<Section>([section]) : visited),
@@ -140,36 +141,13 @@ export default function Experience3DPage() {
   const [tourDone, setTourDone] = useState(false);
   const tourTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tourDoneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Lightweight achievement tracker. A badge unlocks when its condition
-  // first becomes true; the toast in <Achievements /> shows for a few
-  // seconds and the id stays in the unlocked set so we don't fire it
-  // again on later renders.
-  const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
+  // Achievement toast feed. Genuine discoveries (the konami code, the
+  // full autopilot loop) hand a freshly unlocked Discovery here; the
+  // toast in <Achievements /> shows it for a few seconds. unlockDiscovery
+  // persists to localStorage and returns null once a discovery is already
+  // found, so the same toast never fires twice. Scene visits are just
+  // navigation and no longer unlock anything.
   const [currentUnlock, setCurrentUnlock] = useState<Achievement | null>(null);
-
-  useEffect(() => {
-    const candidates: Array<{ when: boolean; a: Achievement }> = [
-      {
-        when: explored.size >= 2,
-        a: { id: 'first-contact', title: 'First Contact', detail: 'You stepped out of the Hero.' },
-      },
-      {
-        when: explored.size >= 4,
-        a: { id: 'operator', title: 'Operator', detail: 'Three scenes deep. Carry on.' },
-      },
-      {
-        when: explored.size === 5,
-        a: { id: 'explorer', title: 'Explorer', detail: 'You saw every scene.' },
-      },
-    ];
-    for (const c of candidates) {
-      if (c.when && !unlocked.has(c.a.id)) {
-        setUnlocked((prev) => new Set([...prev, c.a.id]));
-        setCurrentUnlock(c.a);
-        return;
-      }
-    }
-  }, [explored, unlocked]);
 
   const markExplored = useCallback((id: Section) => {
     setExplored((prev) => {
@@ -245,10 +223,13 @@ export default function Experience3DPage() {
         return;
       }
       // Full loop done: land back on the hero, end the tour, and leave
-      // a short goodbye caption.
+      // a short goodbye caption. Watching the whole loop is a genuine
+      // discovery, so reward it (no-op if already unlocked).
       setAutopilot(false);
       navigate('hero');
       setTourDone(true);
+      const unlock = unlockDiscovery('autopilot');
+      if (unlock) setCurrentUnlock(unlock);
       tourDoneTimerRef.current = setTimeout(() => {
         tourDoneTimerRef.current = null;
         setTourDone(false);
@@ -410,6 +391,10 @@ export default function Experience3DPage() {
         konamiBuffer.current = [];
         setKonami(true);
         setTimeout(() => setKonami(false), 6000);
+        // Finding the cheat code is a genuine discovery; the toast fires
+        // alongside the konami visual (no-op if already unlocked).
+        const unlock = unlockDiscovery('konami');
+        if (unlock) setCurrentUnlock(unlock);
         // The final 'a' belongs to the cheat code. Consume it here so
         // it doesn't also trigger 'a = previous section'.
         return;
@@ -475,6 +460,40 @@ export default function Experience3DPage() {
         </div>
       </noscript>
 
+      {/* Persistent 3D / CLI mode switch (fixed top-right, every section
+          including the Hero where the header is hidden). This is the
+          primary way visitors find the terminal. A segmented control: 3D
+          is the active page, CLI links to /terminal. The active pill
+          slides between segments. z just under the intro (z-[80]) so the
+          boot overlay still covers it; clear of the autopilot pill, which
+          lives bottom-right. */}
+      <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[75] font-mono pointer-events-auto">
+        <div className="relative flex items-center gap-0.5 rounded-full border border-cyan-500/30 bg-slate-950/70 p-0.5 sm:p-1 sm:backdrop-blur shadow-[0_0_20px_rgba(34,211,238,0.12)]">
+          {/* Active page: 3D. A button (not a link) so it reads as the
+              current selection; clicking it does nothing meaningful. */}
+          <button
+            type="button"
+            aria-current="page"
+            aria-label="3D view, current page"
+            className="relative z-10 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-[10px] sm:text-xs tracking-widest text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          >
+            <motion.span
+              layoutId="modeSwitchPill"
+              className="absolute inset-0 rounded-full bg-cyan-400 shadow-[0_0_14px_rgba(34,211,238,0.5)]"
+              transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+            />
+            <span className="relative">3D</span>
+          </button>
+          <a
+            href="/terminal"
+            aria-label="Switch to CLI terminal view"
+            className="relative z-10 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-[10px] sm:text-xs tracking-widest text-cyan-300/80 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          >
+            CLI
+          </a>
+        </div>
+      </div>
+
       {/* Persistent header (hides on Hero) */}
       <AnimatePresence>
         {section !== 'hero' ? (
@@ -520,21 +539,12 @@ export default function Experience3DPage() {
                 </button>
               ))}
             </nav>
-            <a
-              href="/terminal"
-              className="hidden sm:inline-block font-mono text-xs tracking-widest text-purple-300 border border-purple-500/30 hover:bg-purple-500/10 px-4 py-2 rounded transition-colors pointer-events-auto"
-            >
-              TERMINAL
-            </a>
-            {/* Compact terminal link for phones, where the full label
-                doesn't fit next to the nav. */}
-            <a
-              href="/terminal"
-              aria-label="Terminal view"
-              className="sm:hidden font-mono text-xs tracking-widest text-purple-300 border border-purple-500/30 hover:bg-purple-500/10 px-2.5 py-2 rounded transition-colors pointer-events-auto"
-            >
-              {'>_'}
-            </a>
+            {/* The terminal link used to live here. The persistent 3D/CLI
+                mode switch (fixed top-right, visible on every section)
+                now owns terminal discovery, so this header just spans the
+                brand and the section nav. A spacer keeps the nav centered
+                where the link used to balance it. */}
+            <span aria-hidden className="hidden sm:block w-[1px]" />
           </motion.header>
         ) : null}
       </AnimatePresence>
@@ -713,7 +723,7 @@ export default function Experience3DPage() {
           entirely for reduced-motion visitors. */}
       {!showIntro && !reducedMotion ? <SceneWarp trigger={section} /> : null}
 
-      {/* Achievement toasts (Explorer, Operator, etc.) */}
+      {/* Discovery toasts (konami code, full autopilot loop) */}
       <Achievements unlock={currentUnlock} />
 
       {/* Cinematic boot intro, plays once per session. */}

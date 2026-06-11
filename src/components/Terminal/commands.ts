@@ -1,4 +1,11 @@
 import { asciiArt } from './ascii';
+import { askSite, SAMPLE_QUESTIONS } from '@/lib/ask';
+import {
+  DISCOVERIES,
+  getUnlocked,
+  discoveryProgress,
+  unlockDiscovery,
+} from '@/lib/discoveries';
 
 // Command history for persistence
 const commandHistory: string[] = [];
@@ -77,6 +84,7 @@ const commands: Record<string, (args: string[]) => string> = {
 
 \x1b[1;33mCore Commands:\x1b[0m
   \x1b[1;36mhelp\x1b[0m                 Show this help message
+  \x1b[1;36mask [question]\x1b[0m       Ask this site anything, e.g. 'ask production k8s?' (alias: ?)
   \x1b[1;36mclear\x1b[0m                Clear the terminal (Ctrl+L works too)
   \x1b[1;36mhistory\x1b[0m              Show command history
   \x1b[1;36mtour\x1b[0m                 Guided tour, auto-runs the good commands (alias: demo)
@@ -431,6 +439,10 @@ Never run KEYS against a production Redis. SCAN exists for a reason.
   },
   
   chaos: () => {
+    // Genuine curiosity reward: ran the chaos command. Side-effect-light,
+    // SSR-safe (the lib guards window); no toast here, the flavor text below
+    // is the contextual feedback.
+    unlockDiscovery('chaos');
     // Obvious parody. There is nothing here to break, and that's the joke.
     return `
 \x1b[1;32m=== CHAOS ENGINEERING (static-site edition) ===\x1b[0m
@@ -448,7 +460,79 @@ It is now sitting quietly, reading the page source.
 \x1b[90mFor chaos with real stakes, type 'incident'.\x1b[0m
 `;
   },
-  
+
+  ask: (args: string[]) => {
+    const query = args.join(' ').trim();
+
+    // Bare 'ask': short usage plus a couple of real sample questions.
+    if (!query) {
+      const samples = SAMPLE_QUESTIONS.slice(0, 3)
+        .map((q) => `  \x1b[1;36mask\x1b[0m ${q}`)
+        .join('\n');
+      return `
+\x1b[1;32m=== ASK THIS SITE ===\x1b[0m
+
+usage: ask <question>
+
+\x1b[1;33mTry:\x1b[0m
+${samples}
+`;
+    }
+
+    // Genuine curiosity reward: asked the site a question. SSR-safe, the lib
+    // guards window; no toast here, the answer itself is the feedback.
+    unlockDiscovery('ask');
+
+    const result = askSite(query);
+
+    // Sanitize to printable ASCII at the terminal boundary: career.ts
+    // strings (rack sublabels, metrics) carry middots and a lambda that
+    // Geist Mono does not ship, and they would garble in xterm. Mirrors
+    // the same strip used on the last-login line. The DOM ask UI keeps
+    // the original characters; only the terminal needs this.
+    const ascii = (s: string) => s.replace(/[^\x20-\x7E\n]/g, '-');
+
+    // The answer is plain text and may carry '\n'. Render it in the
+    // normal color, then a dim 'sources:' list of 'label  href' lines.
+    const sourceLines = result.sources
+      .map((source) => `  ${ascii(source.label)}  ${ascii(source.href)}`)
+      .join('\n');
+
+    return `
+${ascii(result.answer)}
+${
+  result.sources.length > 0
+    ? `\n\x1b[90msources:\x1b[0m\n\x1b[90m${sourceLines}\x1b[0m\n`
+    : ''
+}`;
+  },
+
+  '?': (args: string[]) => commands['ask'](args),
+
+  achievements: () => {
+    const unlocked = getUnlocked();
+    const rows = Object.keys(DISCOVERIES)
+      .map((id) => {
+        const discovery = DISCOVERIES[id];
+        const found = unlocked.includes(id);
+        const marker = found ? '[x]' : '[ ]';
+        const color = found ? '\x1b[1;32m' : '\x1b[90m';
+        return `  ${color}${marker} ${discovery.title}\x1b[0m\n      ${color}${discovery.detail}\x1b[0m`;
+      })
+      .join('\n');
+    const { found, total } = discoveryProgress();
+
+    return `
+\x1b[1;32m=== ACHIEVEMENTS ===\x1b[0m
+
+${rows}
+
+\x1b[1;33mfound ${found} of ${total}\x1b[0m
+`;
+  },
+
+  trophies: (args: string[]) => commands['achievements'](args),
+
   history: () => {
     if (commandHistory.length === 0) {
       return '\x1b[1;33mNo commands in history yet.\x1b[0m';
@@ -1095,6 +1179,9 @@ export function executeCommand(input: string): string {
     const vimInput = input.trim();
     if ([':q', ':q!', ':wq', ':wq!', ':x', ':qa', ':qa!'].includes(vimInput)) {
       vimActive = false;
+      // Genuine curiosity reward: found the way out of the vim trap. SSR-safe
+      // (the lib guards window); the flavor text below is the feedback.
+      unlockDiscovery('vim-escape');
       return `
 \x1b[1;32mYou escaped Vim. Genuinely impressive.\x1b[0m
 Back in the shell. Type 'help' to continue.

@@ -4,6 +4,8 @@ import Link from 'next/link';
 import {
   IDENTITY,
   MILESTONES,
+  EDUCATION,
+  CERTIFICATIONS,
   realProjects,
   warStories,
   skillsByCategory,
@@ -275,6 +277,32 @@ export default function WorkPage() {
               );
             })}
           </div>
+        </Section>
+
+        <Section title="Education">
+          <div className="space-y-3">
+            {EDUCATION.map((edu) => (
+              <div key={edu.degree} className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h3 className="font-mono text-sm text-white">{edu.degree}</h3>
+                <span className="font-mono text-xs text-slate-500">
+                  {edu.institution} · {edu.location}
+                </span>
+                <span className="ml-auto font-mono text-xs text-cyan-300">{edu.period}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Certifications & Recognition">
+          <ul className="space-y-3">
+            {CERTIFICATIONS.map((cert) => (
+              <li key={cert.title} className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h3 className="font-mono text-sm text-white">{cert.title}</h3>
+                <span className="font-mono text-xs text-slate-500">{cert.issuer}</span>
+                <span className="ml-auto font-mono text-xs text-cyan-300">{cert.year}</span>
+              </li>
+            ))}
+          </ul>
         </Section>
 
         <Section title="Contact">

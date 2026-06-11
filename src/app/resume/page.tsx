@@ -6,6 +6,8 @@ import {
   RACKS,
   SKILLS,
   STORIES,
+  EDUCATION,
+  CERTIFICATIONS,
   type Category,
   type RackData,
   type SkillData,
@@ -89,9 +91,9 @@ const JOBS: ResumeJob[] = [
   {
     // MILESTONES '2023': "Joined Threadcode Technologies as DevOps / SRE for
     // EventLogic, a Swedish multi-tenant event-management SaaS."
-    role: 'DevOps / SRE',
-    org: 'Threadcode Technologies · EventLogic, Swedish multi-tenant event-management SaaS',
-    period: '2023 · present',
+    role: 'DevOps / SRE Engineer',
+    org: 'Threadcode Technologies Pvt. Ltd. · EventLogic, Swedish multi-tenant event-management SaaS · Lalitpur, Nepal',
+    period: 'May 2023 · present',
     bullets: [
       // Verbatim from MILESTONES '2023'.
       'Owner of the entire AWS platform end to end: ECS Fargate, Aurora PostgreSQL, ElastiCache Redis, Amazon MQ in eu-north-1.',
@@ -109,8 +111,8 @@ const JOBS: ResumeJob[] = [
     // MILESTONES '2021': "Joined Cloudyfox Technology in September as DevOps
     // Engineer."
     role: 'DevOps Engineer',
-    org: 'Cloudyfox Technology',
-    period: '2021 · 2023',
+    org: 'Cloudyfox Technology Pvt. Ltd. · Kathmandu, Nepal',
+    period: 'Sep 2021 · Apr 2023',
     bullets: [
       // Verbatim from MILESTONES '2022'.
       'Ran Kubernetes for containerized workloads at Cloudyfox. Built CI/CD on GitLab CI and Jenkins for both app and infra deploys.',
@@ -121,9 +123,9 @@ const JOBS: ResumeJob[] = [
     ],
   },
   {
-    // MILESTONES '2020': title and companies, verbatim.
-    role: 'AI / ML beginnings',
-    org: 'VolgAI · Genese Cloud Academy · IBZ Networks',
+    // MILESTONES '2020': companies, verbatim.
+    role: 'AI/ML and Backend Engineer (earlier roles)',
+    org: 'VolgAI · Genese Cloud Academy · IBZ Networks · Kathmandu, Nepal',
     period: '2020 · 2021',
     bullets: [
       // Verbatim from MILESTONES '2020'.
@@ -279,13 +281,30 @@ export default function ResumePage() {
           ))}
         </Section>
 
+        <Section title="Certifications & Recognition">
+          {CERTIFICATIONS.map((cert) => (
+            <div key={cert.title} className="resume-edu">
+              <p>
+                {cert.title}
+                <span className="resume-job-org"> · {cert.issuer}</span>
+              </p>
+              <span className="resume-job-period">{cert.year}</span>
+            </div>
+          ))}
+        </Section>
+
         <Section title="Education">
-          {/* MILESTONES '2021': "Graduated Bachelor in Computer Engineering
-              from Tribhuvan University (IOE, Pokhara)." */}
-          <div className="resume-edu">
-            <p>Bachelor in Computer Engineering · Tribhuvan University (IOE, Pokhara)</p>
-            <span className="resume-job-period">2021</span>
-          </div>
+          {/* EDUCATION: Bachelor in Computer Engineering, Tribhuvan University,
+              Western Regional Campus (IOE), Pokhara, 2016 to 2020. */}
+          {EDUCATION.map((edu) => (
+            <div key={edu.degree} className="resume-edu">
+              <p>
+                {edu.degree}
+                <span className="resume-job-org"> · {edu.institution} · {edu.location}</span>
+              </p>
+              <span className="resume-job-period">{edu.period}</span>
+            </div>
+          ))}
         </Section>
       </main>
     </div>

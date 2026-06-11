@@ -140,7 +140,7 @@ export const STORIES: Record<ToolId, WarStory> = {
     title: 'AI agents for DevOps work',
     when: '2025 to present',
     body:
-      'Self-learning track. Building MCP-based agents that wrap real DevOps tasks (log triage, runbook prompts, infra analysis) so Claude and similar assistants can drive them. Earlier built a Hashnode MCP server, which is shelved now that Hashnode has terminated their public API. Current focus is the broader agentic-DevOps stack: MCP, LangGraph, local LLM inference.',
+      'Self-learning track. Building MCP-based agents that wrap real DevOps tasks (log triage, runbook prompts, infra analysis) so Claude and similar assistants can drive them. Built an open-source Hashnode MCP server that wires AI assistants into the Hashnode content API. Current focus is the broader agentic-DevOps stack: MCP, LangGraph, local LLM inference.',
   },
 };
 
@@ -347,10 +347,10 @@ export const RACKS: RackData[] = [
   {
     id: 'hashnode-mcp',
     label: 'hashnode-mcp',
-    sublabel: 'shelved · API terminated',
+    sublabel: 'AI assistant integration',
     status: 'Completed',
     description:
-      'Open-source Model Context Protocol server that wired AI assistants like Claude into the Hashnode content API. Shelved after Hashnode terminated public API access. The pattern lives on in the broader agentic-DevOps work.',
+      'Open-source Model Context Protocol server that wires AI assistants like Claude into the Hashnode content API. The pattern carries into the broader agentic-DevOps work. (Note: Hashnode has since wound down public API access.)',
     tech: ['Python', 'MCP', 'Hashnode API'],
     github: 'https://github.com/sbmagar13/hashnode-mcp-server',
     position: [0.9, 0, 2.5],
@@ -432,7 +432,7 @@ export const MILESTONES: Milestone[] = [
     year: '2025',
     title: 'Observability + first MCP work',
     description:
-      'Deployed self-hosted OneUptime on K3s in eu-central-1 for status pages, uptime monitoring, and on-call. OpenTelemetry collector dual-exports to OneUptime and Loki so observability survives a primary-region outage. Shipped an open-source Hashnode MCP server for Claude (later shelved when Hashnode terminated their public API).',
+      'Deployed self-hosted OneUptime on K3s in eu-central-1 for status pages, uptime monitoring, and on-call. OpenTelemetry collector dual-exports to OneUptime and Loki so observability survives a primary-region outage. Shipped an open-source Hashnode MCP server that wires AI assistants like Claude into the Hashnode content API.',
     shape: 'helix',
     color: PALETTE.neonPurple,
   },
@@ -443,6 +443,53 @@ export const MILESTONES: Milestone[] = [
       'Still running the production platform end to end. Hardening the multi-region story, sharpening SLOs, and going deep on AI agents for DevOps work: MCP, LangGraph, local LLM inference, self-learning side projects that wrap real ops tasks. Shipped this 3D portfolio as the public face of the practice. Open to remote senior DevOps / SRE roles.',
     shape: 'orb',
     color: PALETTE.neonCyan,
+  },
+];
+
+// -----------------------------------------------------------------------------
+// Education + certifications (resume facts, used by server-rendered pages)
+// -----------------------------------------------------------------------------
+
+export interface Education {
+  degree: string;
+  institution: string;
+  location: string;
+  period: string;
+}
+
+// Bachelor in Computer Engineering, Tribhuvan University, Western Regional
+// Campus (IOE), Pokhara, 2016 to 2020.
+export const EDUCATION: Education[] = [
+  {
+    degree: 'Bachelor in Computer Engineering',
+    institution: 'Tribhuvan University, Western Regional Campus (IOE)',
+    location: 'Pokhara, Nepal',
+    period: '2016 · 2020',
+  },
+];
+
+export interface Certification {
+  title: string;
+  issuer: string;
+  year: string;
+}
+
+// Certifications and recognition, in resume order.
+export const CERTIFICATIONS: Certification[] = [
+  {
+    title: 'Technical Reviewer, Python for DevOps',
+    issuer: 'Packt Publishing',
+    year: '2023',
+  },
+  {
+    title: 'Generative AI: From GANs to CLIP with Python and PyTorch',
+    issuer: 'Udemy',
+    year: '2021',
+  },
+  {
+    title: 'AWS AI/ML Internship',
+    issuer: 'Genese Cloud Academy',
+    year: '2020 · 2021',
   },
 ];
 
@@ -482,6 +529,7 @@ export const SKILLS: SkillData[] = [
   { id: 'elasticache', name: 'ElastiCache (Redis)', category: 'database', years: 3, blurb: 'Managed Redis. Connection-pool tuning saved a 19-min outage.' },
   { id: 'amazon-mq', name: 'Amazon MQ', category: 'cloud', years: 2, blurb: 'Managed message broker for inter-service queues.' },
   { id: 'dynamodb', name: 'DynamoDB', category: 'database', years: 3, blurb: 'Tenant registry, key-value lookups, hot paths.' },
+  { id: 'aws-dms', name: 'AWS DMS', category: 'database', years: 2, blurb: 'Database Migration Service for cutovers and replication.' },
   { id: 'cloudfront', name: 'CloudFront', category: 'cloud', years: 4, blurb: 'CDN + edge for tenant distribution.' },
   { id: 's3', name: 'S3', category: 'cloud', years: 4, blurb: 'Object storage. Static assets, backups, logs.' },
   { id: 'api-gateway', name: 'API Gateway', category: 'cloud', years: 3, blurb: 'Managed API frontends for Lambda and ECS.' },

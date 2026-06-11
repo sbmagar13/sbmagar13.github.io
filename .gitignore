@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Local-only blog drafts (not published)
 /content/_drafts/
+
+# Source resume PDF (has phone number, kept local only; public/resume.pdf is the generated phone-less one)
+/Sagar_Budhathoki_Senior_DevOps_SRE_Updated.pdf

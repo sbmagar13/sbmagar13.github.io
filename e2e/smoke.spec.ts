@@ -46,6 +46,19 @@ for (const path of ['/work/', '/resume/', '/colophon/']) {
   });
 }
 
+test('mobile: terminal runs a command from the native input bar', async ({ page }) => {
+  // The native input bar is md:hidden, so this only applies on mobile widths.
+  // xterm cannot take keyboard input on phones; the input bar drives it.
+  const vp = page.viewportSize();
+  test.skip(!vp || vp.width >= 768, 'mobile-only input bar');
+  await page.goto('/terminal/');
+  const input = page.getByLabel('Terminal command input');
+  await input.waitFor({ state: 'visible', timeout: 15000 }); // after the boot screen
+  await input.fill('help');
+  await page.getByRole('button', { name: 'Run command' }).click();
+  await expect(page.locator('.xterm')).toContainText(/AVAILABLE COMMANDS/i, { timeout: 8000 });
+});
+
 test('unknown URLs get the 404 page', async ({ page }) => {
   // Both `npx serve` and GitHub Pages serve out/404.html with a 404
   // status for paths that do not exist (verified against serve locally).

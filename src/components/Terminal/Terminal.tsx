@@ -30,6 +30,12 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
   const tourTimeoutsRef = useRef<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
+  // Mobile input: xterm's hidden-textarea input is broken on phones (the
+  // keyboard opens but keystrokes are not captured), so on touch screens
+  // we drive the terminal from a real native input bar at the bottom and
+  // only use xterm for output. This ref/state back that input.
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+  const [mobileInput, setMobileInput] = useState('');
 
   // Helper function to focus the terminal
   const focusTerminal = () => {
@@ -153,27 +159,12 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     // Open terminal
     term.open(container);
     
-    // Improved mobile touch support
+    // Make the terminal container focusable. (No touchstart preventDefault
+    // here: it used to block native scrolling of the output on phones.)
     if (terminalRef.current) {
-      // Make the terminal container focusable
       terminalRef.current.tabIndex = 0;
-      
-      // Handle touch on terminal
-      terminalRef.current.addEventListener('touchstart', (e) => {
-        // Prevent default to avoid unwanted scrolling
-        e.preventDefault();
-        
-        // Show the mobile keyboard button more prominently
-        const keyboardButton = document.getElementById('mobile-keyboard-button');
-        if (keyboardButton) {
-          keyboardButton.classList.add('pulse-animation');
-          setTimeout(() => {
-            keyboardButton.classList.remove('pulse-animation');
-          }, 2000);
-        }
-      });
     }
-    
+
     // Add a small delay before fitting to ensure DOM is fully rendered
     setTimeout(() => {
       if (fitAddonRef.current && terminalRef.current) {
@@ -403,10 +394,19 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
       }, 300); // Reduced delay for faster startup
     }
     
-    // Automatically focus the terminal on desktop devices
-    setTimeout(() => {
-      focusTerminal();
-    }, 300); // Reduced delay for better performance
+    // Auto-focus only on desktop. On phones, focusing xterm's hidden
+    // textarea pops the soft keyboard on arrival without capturing input
+    // (the bug). Mobile typing goes through the native input bar instead,
+    // which the visitor taps when they are ready.
+    const isDesktop =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(min-width: 768px)').matches &&
+      !('ontouchstart' in window);
+    if (isDesktop) {
+      setTimeout(() => {
+        focusTerminal();
+      }, 300);
+    }
     
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -420,31 +420,6 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     };
     } // end initTerminal
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  
-  // Cleanup mobile input elements when component unmounts
-  useEffect(() => {
-    return () => {
-      // Remove any mobile input elements when component unmounts
-      const mobileInput = document.getElementById('mobile-terminal-input');
-      const keyboardIndicator = document.getElementById('keyboard-active-indicator');
-      
-      if (mobileInput) {
-        try {
-          document.body.removeChild(mobileInput);
-        } catch (e) {
-          console.error('Error removing mobile input:', e);
-        }
-      }
-      
-      if (keyboardIndicator) {
-        try {
-          document.body.removeChild(keyboardIndicator);
-        } catch (e) {
-          console.error('Error removing keyboard indicator:', e);
-        }
-      }
-    };
   }, []);
   
   // Handle window resize and terminal dimension changes
@@ -813,148 +788,41 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     };
   }, [isLoading, loadingMessage]);
   
-  // Direct terminal input handling for mobile - fixed to work with direct terminal input
-  const handleMobileKeyboardClick = () => {
-    if (!terminalRef.current || !xtermRef.current) return;
-    
-    // Create a hidden textarea for capturing keyboard input
-    const textArea = document.createElement('textarea');
-    textArea.id = 'mobile-terminal-input';
-    textArea.style.position = 'fixed';
-    textArea.style.left = '0';
-    textArea.style.top = '0';
-    textArea.style.opacity = '0';
-    textArea.style.height = '1px';
-    textArea.style.width = '1px';
-    textArea.style.zIndex = '-1000';
-    textArea.style.pointerEvents = 'none';
-    
-    // Set input attributes to prevent auto-correction and zooming
-    textArea.setAttribute('autocomplete', 'off');
-    textArea.setAttribute('autocorrect', 'off');
-    textArea.setAttribute('autocapitalize', 'none');
-    textArea.setAttribute('spellcheck', 'false');
-    
-    // Current line being typed
-    let currentLine = '';
-    
-    // Function to update the terminal display
-    const updateTerminalDisplay = () => {
-      if (!xtermRef.current || !terminalRef.current) return;
-      
-      // Clear the current line
-      xtermRef.current.write('\r\x1b[K');
-      
-      // Write the prompt
-      writePrompt(xtermRef.current);
-      
-      // Write the current line
-      xtermRef.current.write(currentLine);
-      
-      // Scroll to the bottom to ensure the typing area is visible
-      const viewport = terminalRef.current.querySelector('.xterm-viewport');
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
-    };
-    
-    // Handle input
-    textArea.addEventListener('input', (e) => {
-      const target = e.target as HTMLTextAreaElement;
-      
-      // Update the current line with the textarea's value
-      currentLine = target.value;
-      
-      // Update the terminal display
-      updateTerminalDisplay();
-    });
-    
-    // Handle special keys
-    textArea.addEventListener('keydown', (e) => {
-      // The mobile keyboard can stop a running tour too
-      if (tourActiveRef.current) {
-        e.preventDefault();
-        stopTour();
-        return;
-      }
+  // Mobile command submit. The native input bar at the bottom captures
+  // the keystrokes (xterm cannot on phones); on submit we echo the line
+  // into the scrollback exactly like an Enter press would, run it through
+  // the same processCommand path, and clear the input. Submits on the Run
+  // button or the keyboard's Enter, so nothing is forced.
+  const submitMobileCommand = () => {
+    const term = xtermRef.current;
+    if (!term) return;
 
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        
-        if (currentLine.trim() && xtermRef.current) {
-          // Add a new line
-          xtermRef.current.writeln('');
-          
-          // Store the command
-          const commandToExecute = currentLine.trim();
-          
-          // Clear current line and textarea
-          currentLine = '';
-          textArea.value = '';
-          
-          // Process the command
-          processCommand(commandToExecute);
-
-          // Add to history
-          recordHistory(commandToExecute);
-          historyIndexRef.current = historyRef.current.length;
-        } else if (xtermRef.current) {
-          // Just write a new prompt if the command is empty
-          xtermRef.current.writeln('');
-          writePrompt(xtermRef.current);
-        }
-      } else if (e.key === 'Backspace') {
-        if (currentLine.length > 0) {
-          // Handle backspace manually to ensure correct behavior
-          e.preventDefault();
-          
-          // Remove the last character
-          currentLine = currentLine.substring(0, currentLine.length - 1);
-          textArea.value = currentLine;
-          
-          // Update the terminal display
-          updateTerminalDisplay();
-        }
-      }
-    });
-    
-    // Add to DOM and focus
-    document.body.appendChild(textArea);
-    
-    // Focus the textarea to bring up the keyboard
-    setTimeout(() => {
-      textArea.focus();
-    }, 100);
-    
-    // Show a notification to the user
-    if (xtermRef.current) {
-      xtermRef.current.writeln('\r\n\x1b[1;33mMobile keyboard activated. Type directly in the terminal.\x1b[0m\r\n');
-      writePrompt(xtermRef.current);
+    // Any input while a tour runs cancels it, same as desktop.
+    if (tourActiveRef.current) {
+      stopTour();
+      setMobileInput('');
+      return;
     }
-    
-    // Create a small indicator that keyboard is active
-    const indicator = document.createElement('div');
-    indicator.id = 'keyboard-active-indicator';
-    indicator.textContent = 'Keyboard Active';
-    indicator.style.position = 'fixed';
-    indicator.style.bottom = '10px';
-    indicator.style.right = '10px';
-    indicator.style.backgroundColor = 'rgba(51, 255, 51, 0.2)';
-    indicator.style.color = '#33ff33';
-    indicator.style.padding = '5px 10px';
-    indicator.style.borderRadius = '5px';
-    indicator.style.fontSize = '12px';
-    indicator.style.zIndex = '1000';
-    
-    // Close keyboard when indicator is tapped
-    indicator.addEventListener('click', () => {
-      document.body.removeChild(textArea);
-      document.body.removeChild(indicator);
-    });
-    
-    document.body.appendChild(indicator);
+
+    const command = mobileInput.trim();
+    // Echo the prompt + typed command into the scrollback, then a newline,
+    // so the history reads like a real session before the output lands.
+    term.write('\r\x1b[K');
+    writePrompt(term);
+    term.writeln(command);
+
+    if (command) {
+      processCommand(command);
+      recordHistory(command);
+      historyIndexRef.current = historyRef.current.length;
+    } else {
+      writePrompt(term);
+    }
+    setMobileInput('');
+    // Keep focus so the keyboard stays up for the next command.
+    mobileInputRef.current?.focus();
   };
-  
+
   return (
     <motion.div 
       className="w-full h-full rounded-md overflow-hidden border border-green-500 shadow-lg shadow-green-500/20 flex flex-col relative terminal-container"
@@ -976,34 +844,60 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           <span>system operational</span>
         </div>
       </div>
-      <div 
-        ref={terminalRef} 
+      <div
+        ref={terminalRef}
         className="flex-1 bg-black focus:outline-none overflow-auto"
         tabIndex={0} // Make the terminal div focusable
-        onClick={focusTerminal}
+        // Tapping the output focuses the native input on touch screens (so
+        // the keyboard comes up and captures input), or xterm on desktop.
+        onClick={() => {
+          if (typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches) {
+            focusTerminal();
+          } else {
+            mobileInputRef.current?.focus();
+          }
+        }}
         style={{ maxHeight: '100%', overflowY: 'auto' }}
       />
-      
-      {/* Mobile keyboard button - positioned at the bottom center for better visibility */}
-      <button
-        id="mobile-keyboard-button"
-        className="md:hidden fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center"
-        onClick={handleMobileKeyboardClick}
-        aria-label="Open keyboard"
-        style={{
-          animation: 'none',
-          zIndex: 50,
-          boxShadow: '0 0 15px rgba(51, 255, 51, 0.7)',
-          width: '160px',
-          height: '50px'
+
+      {/* Native mobile command bar. xterm cannot reliably take keyboard
+          input on phones, so on touch widths a real input drives the
+          terminal: tap it to type, Run or Enter submits. Hidden on desktop
+          (md+), where xterm handles the physical keyboard. */}
+      <form
+        className="md:hidden flex items-center gap-2 border-t border-green-500/40 bg-black px-2 py-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          submitMobileCommand();
         }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h18M3 6h18M3 18h18" />
-        </svg>
-        <span className="font-bold text-lg">KEYBOARD</span>
-      </button>
-      
+        <span className="font-mono text-green-400 text-base select-none" aria-hidden>&gt;</span>
+        <input
+          ref={mobileInputRef}
+          type="text"
+          inputMode="text"
+          enterKeyHint="send"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          value={mobileInput}
+          onChange={(e) => setMobileInput(e.target.value)}
+          placeholder="type a command, e.g. help"
+          aria-label="Terminal command input"
+          // 16px font so iOS does not auto-zoom the page on focus.
+          className="flex-1 min-w-0 bg-transparent text-green-300 placeholder:text-green-700 font-mono outline-none"
+          style={{ fontSize: '16px' }}
+        />
+        <button
+          type="submit"
+          aria-label="Run command"
+          className="shrink-0 rounded-md bg-green-600 px-4 py-2 font-mono text-sm font-bold text-white active:bg-green-500"
+        >
+          Run
+        </button>
+      </form>
+
       {/* Add some CSS for the pulse animation, terminal links, and glowing effect */}
       <style jsx>{`
         @keyframes pulse {

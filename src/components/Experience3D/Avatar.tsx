@@ -322,21 +322,28 @@ export default function Avatar({
           <span aria-hidden className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-300 rounded-bl-sm" />
           <span aria-hidden className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-300 rounded-br-sm" />
 
+          {/* On phones the card is trimmed to name + title so it does not
+              crowd the avatar: the "Identity holograph" label, email,
+              LinkedIn, and location lines show from sm up. Contact still
+              lives in the Hero icon row, /work, and the tappable stat
+              panels in this scene. */}
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 font-mono text-[10px] sm:text-[11px] tracking-[0.32em] text-cyan-200 uppercase">
+            <div className="hidden sm:inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.32em] text-cyan-200 uppercase">
               <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse" />
               Identity holograph
               <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse" />
             </div>
-            <div className="mt-2 font-mono text-2xl sm:text-3xl font-bold text-white tracking-[0.18em] drop-shadow-[0_0_8px_rgba(0,0,0,0.9)]">
+            <div className="sm:mt-2 font-mono text-2xl sm:text-3xl font-bold text-white tracking-[0.18em] drop-shadow-[0_0_8px_rgba(0,0,0,0.9)]">
               <Typewriter text="SAGAR BUDHATHOKI" speed={48} caret />
             </div>
             <div className="mt-1.5 font-mono text-[11px] sm:text-xs text-slate-200">
               Senior DevOps / SRE Engineer
-              <span className="mx-2 text-slate-500">·</span>
-              <span className="text-cyan-200">sagar@sagarbudhathoki.com</span>
+              <span className="hidden sm:inline">
+                <span className="mx-2 text-slate-500">·</span>
+                <span className="text-cyan-200">sagar@sagarbudhathoki.com</span>
+              </span>
             </div>
-            <div className="mt-0.5 font-mono text-[11px] sm:text-xs">
+            <div className="hidden sm:block mt-0.5 font-mono text-xs">
               <a
                 href="https://linkedin.com/in/sbmagar13"
                 target="_blank"
@@ -346,7 +353,7 @@ export default function Avatar({
                 linkedin.com/in/sbmagar13
               </a>
             </div>
-            <div className="mt-0.5 font-mono text-[9px] sm:text-[10px] text-slate-400 tracking-wider">
+            <div className="hidden sm:block mt-0.5 font-mono text-[10px] text-slate-400 tracking-wider">
               Kathmandu, Nepal · open to remote
             </div>
           </div>

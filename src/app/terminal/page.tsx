@@ -794,9 +794,12 @@ export default function Home() {
             </div>
           </motion.div>
           
-          {/* Version badge with effect selector */}
+          {/* Version badge with effect selector. Desktop only: on phones the
+              "online" badge is decorative and the background-effect selector
+              is a power-user toy (touch already defaults to the cheap
+              effect), and together they crowded the top of the header. */}
           <motion.div
-            className="fixed top-4 right-4 flex flex-col gap-2 z-20"
+            className="hidden md:flex fixed top-4 right-4 flex-col gap-2 z-20"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 1, duration: 0.5 }}

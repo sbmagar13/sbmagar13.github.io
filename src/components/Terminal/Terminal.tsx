@@ -459,8 +459,15 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     }
   }, []);
   
-  // Write prompt to terminal
+  // True on phone widths, where the native input bar is the prompt line.
+  const onMobileWidth = () =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+
+  // Write prompt to terminal. On phones the native input bar below is the
+  // single prompt line, so xterm must not draw its own (two prompts read
+  // as broken). Desktop keeps the inline xterm prompt.
   const writePrompt = (term: XTerm) => {
+    if (onMobileWidth()) return;
     term.write('\x1b[1;32m➜\x1b[0m ');
   };
 
@@ -805,18 +812,17 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
     }
 
     const command = mobileInput.trim();
-    // Echo the prompt + typed command into the scrollback, then a newline,
-    // so the history reads like a real session before the output lands.
+    // Echo "prompt + command" into the scrollback explicitly (writePrompt
+    // is a no-op on mobile), so the session reads like a real terminal:
+    // the line you just ran appears above its output, the input bar below
+    // is the next prompt.
     term.write('\r\x1b[K');
-    writePrompt(term);
-    term.writeln(command);
+    term.writeln(`\x1b[1;32m➜\x1b[0m ${command}`);
 
     if (command) {
       processCommand(command);
       recordHistory(command);
       historyIndexRef.current = historyRef.current.length;
-    } else {
-      writePrompt(term);
     }
     setMobileInput('');
     // Keep focus so the keyboard stays up for the next command.
@@ -860,18 +866,23 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
         style={{ maxHeight: '100%', overflowY: 'auto' }}
       />
 
-      {/* Native mobile command bar. xterm cannot reliably take keyboard
-          input on phones, so on touch widths a real input drives the
-          terminal: tap it to type, Run or Enter submits. Hidden on desktop
-          (md+), where xterm handles the physical keyboard. */}
+      {/* Native mobile command line. xterm cannot reliably take keyboard
+          input on phones, so on touch widths this real input IS the
+          terminal's prompt line: same black background, terminal green,
+          a leading prompt glyph, flush against the output above. Tap it
+          (or anywhere in the output) to type; the keyboard's send key or
+          the inline arrow submits. Hidden on desktop (md+), where xterm
+          handles the physical keyboard at its own inline prompt. */}
       <form
-        className="md:hidden flex items-center gap-2 border-t border-green-500/40 bg-black px-2 py-2"
+        className="md:hidden flex items-center gap-2 bg-black px-3 py-2.5 border-t border-green-900/50"
         onSubmit={(e) => {
           e.preventDefault();
           submitMobileCommand();
         }}
       >
-        <span className="font-mono text-green-400 text-base select-none" aria-hidden>&gt;</span>
+        <span className="font-mono text-green-400 text-base leading-none select-none" aria-hidden>
+          ➜
+        </span>
         <input
           ref={mobileInputRef}
           type="text"
@@ -885,16 +896,17 @@ const Terminal: React.FC<TerminalProps> = ({ initialCommand, onCommandExecuted }
           onChange={(e) => setMobileInput(e.target.value)}
           placeholder="type a command, e.g. help"
           aria-label="Terminal command input"
-          // 16px font so iOS does not auto-zoom the page on focus.
-          className="flex-1 min-w-0 bg-transparent text-green-300 placeholder:text-green-700 font-mono outline-none"
-          style={{ fontSize: '16px' }}
+          // 16px font so iOS does not auto-zoom the page on focus; caret and
+          // text match the terminal green so the bar reads as a prompt line.
+          className="flex-1 min-w-0 bg-transparent font-mono outline-none placeholder:text-green-800"
+          style={{ fontSize: '16px', color: '#4ade80', caretColor: '#4ade80' }}
         />
         <button
           type="submit"
           aria-label="Run command"
-          className="shrink-0 rounded-md bg-green-600 px-4 py-2 font-mono text-sm font-bold text-white active:bg-green-500"
+          className="shrink-0 px-2 font-mono text-xl leading-none text-green-500 active:text-green-300"
         >
-          Run
+          ↵
         </button>
       </form>
 

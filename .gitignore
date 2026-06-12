@@ -49,3 +49,6 @@ next-env.d.ts
 
 # Source resume PDF (has phone number, kept local only; public/resume.pdf is the generated phone-less one)
 /Sagar_Budhathoki_Senior_DevOps_SRE_Updated.pdf
+
+# Local screenshot helper (not committed)
+/_mshot.mjs

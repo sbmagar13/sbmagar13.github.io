@@ -350,7 +350,7 @@ const INTENTS: Intent[] = [
     phrases: ['why you', 'why hire', 'why should'],
     build: () => ({
       answer:
-        `I am a ${TITLE} with ${YEARS} who owns a production multi-tenant SaaS on AWS end to end. ` +
+        `I am a ${TITLE} with ${YEARS} who runs a production multi-tenant SaaS on AWS end to end. ` +
         `I have recovered a 19-minute platform outage and driven the 68-task reliability program that followed, and I built cross-region disaster recovery from eu-north-1 to eu-west-1 where none existed. ` +
         `Lately I am building AI agents for real DevOps work with MCP and LangGraph.`,
       sources: [SOURCE_WORK, SOURCE_OUTAGE],

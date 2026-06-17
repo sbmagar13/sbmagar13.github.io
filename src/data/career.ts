@@ -180,8 +180,8 @@ export interface StatCard {
 
 export const STAT_CARDS: StatCard[] = [
   { label: 'Experience', value: '5+ Years', color: 'text-cyan-300' },
-  { label: 'Owns', value: 'Multi-tenant event SaaS', sub: 'Grails · ECS Fargate · Aurora', color: 'text-purple-300' },
-  { label: 'Built', value: 'Cross-region DR', sub: 'Aurora Global · EFS · ECR', color: 'text-orange-300' },
+  { label: 'Operates', value: 'Multi-tenant event SaaS', sub: 'Grails · ECS Fargate · Aurora', color: 'text-purple-300' },
+  { label: 'Engineered', value: 'Cross-region DR', sub: 'Aurora Global · EFS · ECR', color: 'text-orange-300' },
   { label: 'Top Lang', value: 'Python', color: 'text-cyan-200' },
   { label: 'Building', value: 'AI Agents for DevOps', sub: 'self-learning projects', color: 'text-emerald-300' },
 ];
@@ -647,15 +647,15 @@ export const AVATAR_STATS: AvatarStat[] = [
   {
     id: 'specialty',
     label: 'Specialty',
-    value: 'Sole platform owner',
+    value: 'Sole platform operator',
     color: PALETTE.neonMagenta,
     position: [2.4, 0.3, 0.4],
     detail:
-      'One person owns the production platform end to end, rather than one seat on a larger infra team. Build it, run it, fix it.',
+      'One person runs the production platform end to end, rather than one seat on a larger infra team. Build it, run it, fix it.',
   },
   {
     id: 'built',
-    label: 'Built',
+    label: 'Engineered',
     value: 'Cross-region DR',
     color: PALETTE.neonPurple,
     position: [2.2, -0.7, 0.1],

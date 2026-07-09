@@ -229,6 +229,59 @@ export default function WorkPage() {
           </div>
         </Section>
 
+        <Section title="Side projects">
+          <article className="rounded-md border border-slate-800 bg-slate-900/40 p-5">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h3 className="font-mono text-base text-white">Recipe Jar</h3>
+              <span className="font-mono text-xs text-slate-500">local-first recipe keeper</span>
+              <span className="ml-auto rounded border border-emerald-500/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-emerald-300/90">
+                Live
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed">
+              Paste a recipe link, get a clean card: ingredients and steps, nothing else. Unlimited
+              saves that live in your browser, no account, works offline. A static site plus one
+              stateless Cloudflare proxy, so it costs nothing to run at any scale and stays free
+              forever.
+            </p>
+            <p className="mt-3 font-mono text-xs text-slate-400">
+              Svelte 5 · TypeScript · IndexedDB · Cloudflare Pages · PWA
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-xs">
+              <a
+                href="https://recipejar.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-300 underline underline-offset-4 transition-colors hover:text-cyan-200"
+              >
+                recipejar.app
+              </a>
+              <a
+                href="https://github.com/sbmagar13/recipe-jar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-300 underline underline-offset-4 transition-colors hover:text-cyan-200"
+              >
+                github.com/sbmagar13/recipe-jar
+              </a>
+            </div>
+            <a
+              href="https://www.producthunt.com/products/recipe-jar?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-recipe-jar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-block"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt="Recipe Jar - Just the recipe, yours to keep. Free, offline, unlimited | Product Hunt"
+                width={250}
+                height={54}
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1190857&theme=dark"
+              />
+            </a>
+          </article>
+        </Section>
+
         <Section title="War stories">
           <div className="space-y-5">
             {stories.map((s) => (
